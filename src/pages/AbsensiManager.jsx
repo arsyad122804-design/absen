@@ -1,0 +1,360 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { 
+  Users, CheckCircle2, BarChart2, XCircle, TrendingUp, Calendar, 
+  Download, Search, Filter, Eye, MoreVertical, Clock, Info, AlertTriangle
+} from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import './AbsensiManager.css';
+
+// --- MOCK DATA ---
+const initialTableData = [
+  { id: 1, img: 'https://ui-avatars.com/api/?name=Dewi+Hartati', name: 'Dewi Hartati', div: 'Operasional', status: 'Hadir', jamM: '07:32', statM: 'Tepat Waktu', jamP: '16:01', dur: '8j 29m', loc: 'Kantor Pusat' },
+  { id: 2, img: 'https://ui-avatars.com/api/?name=Rizky+Maulana', name: 'Rizky Maulana', div: 'Marketing', status: 'Terlambat', jamM: '08:15', statM: '45m Terlambat', jamP: '16:20', dur: '8j 5m', loc: 'Kantor Pusat' },
+  { id: 3, img: 'https://ui-avatars.com/api/?name=Siti+Nurhaliza', name: 'Siti Nurhaliza', div: 'IT Development', status: 'Hadir', jamM: '07:45', statM: 'Tepat Waktu', jamP: '16:10', dur: '8j 25m', loc: 'Kantor Pusat' },
+  { id: 4, img: 'https://ui-avatars.com/api/?name=Budi+Santoso', name: 'Budi Santoso', div: 'Finance', status: 'Hadir', jamM: '07:28', statM: 'Tepat Waktu', jamP: '16:00', dur: '8j 32m', loc: 'Kantor Pusat' },
+  { id: 5, img: 'https://ui-avatars.com/api/?name=Ahmad+Fauzi', name: 'Ahmad Fauzi', div: 'HR & GA', status: 'Tidak Hadir', jamM: '-', statM: '-', jamP: '-', dur: '-', loc: '-' },
+  { id: 6, img: 'https://ui-avatars.com/api/?name=Lina+Agustina', name: 'Lina Agustina', div: 'Finance', status: 'Hadir', jamM: '07:50', statM: 'Tepat Waktu', jamP: '16:05', dur: '8j 15m', loc: 'Kantor Pusat' },
+  { id: 7, img: 'https://ui-avatars.com/api/?name=Yoga+Pratama', name: 'Yoga Pratama', div: 'IT Development', status: 'Terlambat', jamM: '08:05', statM: '35m Terlambat', jamP: '16:00', dur: '7j 55m', loc: 'Kantor Pusat' },
+];
+
+const DONUT_COLORS = ['#10B981', '#F59E0B', '#EF4444'];
+
+export default function AbsensiManager() {
+  const [activeTab, setActiveTab] = useState('Semua');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterDivisi, setFilterDivisi] = useState('Semua Divisi');
+  
+  const [activeMenuId, setActiveMenuId] = useState(null);
+  
+  const tableRef = useRef(null);
+
+  const handleExportPDF = () => {
+    window.print();
+  };
+
+  const scrollToTable = () => {
+    tableRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const toggleMenu = (id) => {
+    if (activeMenuId === id) setActiveMenuId(null);
+    else setActiveMenuId(id);
+  };
+
+  useEffect(() => {
+    const closeMenu = () => setActiveMenuId(null);
+    window.addEventListener('click', closeMenu);
+    return () => window.removeEventListener('click', closeMenu);
+  }, []);
+
+  const divSet = new Set(initialTableData.map(d => d.div));
+
+  // APPLY FILTERS
+  const filteredData = initialTableData.filter(row => {
+    const matchTab = activeTab === 'Semua' || row.status === activeTab;
+    const matchSearch = row.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                        row.div.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchDivisi = filterDivisi === 'Semua Divisi' || row.div === filterDivisi;
+    
+    return matchTab && matchSearch && matchDivisi;
+  });
+
+  // Calculate dynamic stats
+  const total = initialTableData.length;
+  const hadir = initialTableData.filter(d => d.status === 'Hadir').length;
+  const terlambat = initialTableData.filter(d => d.status === 'Terlambat').length;
+  const tidakHadir = initialTableData.filter(d => d.status === 'Tidak Hadir').length;
+
+  const donutData = [
+    { name: 'Hadir', value: hadir },
+    { name: 'Terlambat', value: terlambat },
+    { name: 'Tidak Hadir', value: tidakHadir },
+  ];
+
+  return (
+    <div className="am-page">
+      
+      {/* HEADER */}
+      <div className="am-header-row hide-on-print">
+        <div className="am-hl">
+          <h1>Absensi Manager</h1>
+          <p>Pantau dan kelola kehadiran tim Anda secara real-time.</p>
+        </div>
+        <div className="am-hr">
+          <div className="am-date-picker">
+            <Calendar size={16} color="#64748B" />
+            <span>14 Mei 2026, Rabu</span>
+            <span className="caret">▼</span>
+          </div>
+          <button className="btn-export" onClick={handleExportPDF}>
+            <Download size={16} /> Ekspor Laporan
+          </button>
+          <div className="am-notif">
+            <BellIcon />
+          </div>
+        </div>
+      </div>
+
+      {/* 5 TOP CARDS */}
+      <div className="am-top-cards hide-on-print">
+        
+        <div className="am-tcard">
+          <div className="amt-left">
+            <div className="amt-icon blue"><Users size={24} /></div>
+          </div>
+          <div className="amt-right">
+            <h2>{total}</h2>
+            <p>Total Karyawan</p>
+            <span className="amt-desc">Semua Divisi</span>
+          </div>
+        </div>
+
+        <div className="am-tcard">
+          <div className="amt-left">
+            <div className="amt-icon green"><CheckCircle2 size={24} /></div>
+          </div>
+          <div className="amt-right">
+            <h2>{hadir}</h2>
+            <p>Hadir</p>
+            <span className="amt-desc flex-between">{Math.round((hadir/total)*100)}% dari total <span className="up">↑ 5%</span></span>
+          </div>
+        </div>
+
+        <div className="am-tcard">
+          <div className="amt-left">
+            <div className="amt-icon orange"><BarChart2 size={24} /></div>
+          </div>
+          <div className="amt-right">
+            <h2>{terlambat}</h2>
+            <p>Terlambat</p>
+            <span className="amt-desc flex-between">{Math.round((terlambat/total)*100)}% dari total <span className="up">↑ 2%</span></span>
+          </div>
+        </div>
+
+        <div className="am-tcard">
+          <div className="amt-left">
+            <div className="amt-icon red"><XCircle size={24} /></div>
+          </div>
+          <div className="amt-right">
+            <h2>{tidakHadir}</h2>
+            <p>Tidak Hadir</p>
+            <span className="amt-desc flex-between">{Math.round((tidakHadir/total)*100)}% dari total <span className="down">↓ 1%</span></span>
+          </div>
+        </div>
+
+        <div className="am-tcard">
+          <div className="amt-left">
+            <div className="amt-icon blue-light"><TrendingUp size={24} /></div>
+          </div>
+          <div className="amt-right">
+            <h2>{Math.round(((hadir+terlambat)/total)*100)}%</h2>
+            <p>Tingkat Kehadiran</p>
+            <span className="amt-desc flex-between"><span className="up">↑ 4% dari kemarin</span></span>
+          </div>
+        </div>
+
+      </div>
+
+      {/* 3 MIDDLE CARDS */}
+      <div className="am-mid-cards hide-on-print">
+        
+        {/* Ringkasan */}
+        <div className="am-mcard">
+          <h3>Ringkasan Kehadiran Hari Ini</h3>
+          <div className="am-mc-body">
+            <div className="mc-donut">
+              <ResponsiveContainer width={140} height={140}>
+                <PieChart>
+                  <Pie data={donutData} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={2} dataKey="value" stroke="none">
+                    {donutData.map((e, i) => <Cell key={i} fill={DONUT_COLORS[i]} />)}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="mc-donut-text">
+                <h2>{total}</h2>
+                <p>Total</p>
+              </div>
+            </div>
+            <div className="mc-legend">
+              <div className="mcl-item"><span className="dot green"></span> Hadir <strong style={{marginLeft: 'auto'}}>{hadir}</strong> ({Math.round((hadir/total)*100)}%)</div>
+              <div className="mcl-item"><span className="dot orange"></span> Terlambat <strong style={{marginLeft: 'auto'}}>{terlambat}</strong> ({Math.round((terlambat/total)*100)}%)</div>
+              <div className="mcl-item"><span className="dot red"></span> Tidak Hadir <strong style={{marginLeft: 'auto'}}>{tidakHadir}</strong> ({Math.round((tidakHadir/total)*100)}%)</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Real-time */}
+        <div className="am-mcard">
+          <div className="flex-between">
+            <h3>Kehadiran Real-time</h3>
+            <span className="badge-live">Live</span>
+          </div>
+          <div className="am-rt-list">
+            <div className="rt-item"><span><span className="icon">🏠</span> Sedang Check-in</span> <strong className="green">12</strong></div>
+            <div className="rt-item"><span><span className="icon">👥</span> Sedang Bekerja</span> <strong className="blue">94</strong></div>
+            <div className="rt-item"><span><span className="icon">🕒</span> Sedang Istirahat</span> <strong className="orange">8</strong></div>
+            <div className="rt-item"><span><span className="icon">✅</span> Sudah Check-out</span> <strong className="gray">14</strong></div>
+          </div>
+        </div>
+
+        {/* Rata-rata */}
+        <div className="am-mcard">
+          <h3>Rata-rata Jam Kerja</h3>
+          <div className="am-avg-body">
+            <div className="avg-big">
+              <div className="icon-blue"><Clock size={24} /></div>
+              <div className="avg-text">
+                <h2>7j 45m</h2>
+                <p>Dari 8 jam standar</p>
+              </div>
+            </div>
+            <div className="avg-bar-container">
+              <div className="avg-bar-fill"></div>
+            </div>
+            <div className="avg-eff flex-between">
+              <span>Efisiensi Hari Ini</span>
+              <strong className="green">96%</strong>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* TABLE SECTION */}
+      <div className="am-table-card print-section" ref={tableRef}>
+        <div className="print-header hide-on-screen">
+          <h1>Laporan Kehadiran Karyawan</h1>
+          <p>Periode: 14 Mei 2026</p>
+        </div>
+
+        <div className="am-tc-header hide-on-print">
+          <div className="tc-tabs">
+            <button className={`tc-tab ${activeTab === 'Semua' ? 'active' : ''}`} onClick={() => setActiveTab('Semua')}>Semua ({total})</button>
+            <button className={`tc-tab ${activeTab === 'Hadir' ? 'active' : ''}`} onClick={() => setActiveTab('Hadir')}>Hadir ({hadir})</button>
+            <button className={`tc-tab ${activeTab === 'Terlambat' ? 'active' : ''}`} onClick={() => setActiveTab('Terlambat')}>Terlambat ({terlambat})</button>
+            <button className={`tc-tab ${activeTab === 'Tidak Hadir' ? 'active' : ''}`} onClick={() => setActiveTab('Tidak Hadir')}>Tidak Hadir ({tidakHadir})</button>
+          </div>
+          <div className="tc-filters">
+            <div className="search-box">
+              <Search size={16} color="#94A3B8" />
+              <input type="text" placeholder="Cari karyawan..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+            </div>
+            <div className="filter-box" style={{padding: '0', position: 'relative'}}>
+              <select value={filterDivisi} onChange={e => setFilterDivisi(e.target.value)} style={{ appearance: 'none', background: 'transparent', border: 'none', width: '100%', height: '100%', padding: '8px 36px 8px 16px', color: '#0F172A', fontWeight: 500, outline: 'none', cursor: 'pointer' }}>
+                <option value="Semua Divisi">Semua Divisi</option>
+                {[...divSet].map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+              <span className="caret" style={{position: 'absolute', right: '12px', top: '10px', pointerEvents: 'none'}}>▼</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="table-wrapper">
+          <table className="am-table">
+            <thead>
+              <tr>
+                <th>Karyawan</th>
+                <th>Divisi</th>
+                <th>Status</th>
+                <th>Jam Masuk</th>
+                <th>Jam Pulang</th>
+                <th>Durasi Kerja</th>
+                <th>Lokasi</th>
+                <th className="hide-on-print">Aktivitas</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredData.length === 0 && (
+                <tr>
+                  <td colSpan="8" style={{textAlign: 'center', padding: '32px', color: '#64748B'}}>Tidak ada karyawan yang cocok dengan filter.</td>
+                </tr>
+              )}
+              {filteredData.map(row => (
+                <tr key={row.id}>
+                  <td>
+                    <div className="td-user">
+                      <img src={row.img} alt={row.name} />
+                      <strong>{row.name}</strong>
+                    </div>
+                  </td>
+                  <td>{row.div}</td>
+                  <td>
+                    <span className={`badge-status ${row.status.toLowerCase().replace(' ', '-')}`}>
+                      {row.status}
+                    </span>
+                  </td>
+                  <td>
+                    {row.jamM !== '-' ? (
+                      <div className="td-time">
+                        <strong>{row.jamM}</strong>
+                        <span className={`time-stat ${row.status === 'Terlambat' ? 'orange' : 'green'}`}>{row.statM}</span>
+                      </div>
+                    ) : '-'}
+                  </td>
+                  <td>{row.jamP}</td>
+                  <td>{row.dur}</td>
+                  <td>
+                    {row.loc !== '-' ? (
+                      <span className="td-loc"><span className="icon">📍</span> {row.loc}</span>
+                    ) : '-'}
+                  </td>
+                  <td className="hide-on-print">
+                    <div className="td-actions" style={{position: 'relative'}}>
+                      <button onClick={() => alert(`Detail Kehadiran: ${row.name}\nDivisi: ${row.div}\nStatus: ${row.status}`)}>
+                        <Eye size={16}/>
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); toggleMenu(row.id); }}>
+                        <MoreVertical size={16}/>
+                      </button>
+                      
+                      {activeMenuId === row.id && (
+                        <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', right: '0', top: '30px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', zIndex: 100, display: 'flex', flexDirection: 'column', padding: '8px', minWidth: '150px' }}>
+                          <button onClick={() => alert('Log Aktivitas ' + row.name)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#0F172A', fontSize: '13px', fontWeight: 500 }}>
+                            <Info size={14} /> Log Aktivitas
+                          </button>
+                          <button onClick={() => alert('Beri Surat Peringatan: ' + row.name)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#EF4444', fontSize: '13px', fontWeight: 500 }}>
+                            <AlertTriangle size={14} /> Peringatan
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="am-tc-footer hide-on-print">
+          <span>Menampilkan {filteredData.length} data karyawan</span>
+          <div className="tc-pagination">
+            <button className="pg-btn">‹</button>
+            <button className="pg-btn active">1</button>
+            <button className="pg-btn">›</button>
+          </div>
+          <div className="tc-show" style={{position: 'relative', cursor: 'pointer'}}>
+            Tampilkan 
+            <select style={{appearance: 'none', background: 'transparent', border: 'none', outline: 'none', padding: '0 16px 0 4px', fontWeight: 600, color: '#0F172A'}}>
+              <option>10</option>
+              <option>20</option>
+              <option>50</option>
+            </select>
+            <span style={{position: 'absolute', right: '4px', top: '2px', fontSize: '10px'}}>▼</span> 
+            data
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  );
+}
+
+function BellIcon() {
+  return (
+    <div style={{ position: 'relative' }}>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+      <div style={{ position: 'absolute', top: -4, right: -4, width: 16, height: 16, background: '#EF4444', color: 'white', borderRadius: '50%', fontSize: 10, fontWeight: 'bold', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '2px solid white' }}>3</div>
+    </div>
+  );
+}

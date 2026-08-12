@@ -1,0 +1,51 @@
+:root {
+  --primary-purple: #673AB7;
+  --primary-purple-hover: #5E35B1;
+  --bg-color: #F4F5F7;
+  --surface-color: #FFFFFF;
+  --text-primary: #1F2937;
+  --text-secondary: #4B5563;
+  --border-color: #E5E7EB;
+  --input-bg: #FFFFFF;
+  --prefix-bg: #F3F4F6;
+  --success: #10B981;
+  --error: #EF4444;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* SMART DARK MODE IMPLEMENTATION */
+body.dark-mode {
+  filter: invert(1) hue-rotate(180deg);
+  background-color: #111;
+}
+
+/* Re-invert media elements to preserve original colors */
+body.dark-mode img,
+body.dark-mode iframe,
+body.dark-mode video,
+body.dark-mode .avatar,
+body.dark-mode .map-placeholder,
+body.dark-mode [style*="background-image"] {
+  filter: invert(1) hue-rotate(180deg);
+}
