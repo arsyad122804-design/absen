@@ -3,6 +3,7 @@ import {
   Upload, Plus, Bell, Users, UserCheck, Clock, UserMinus, Network, 
   Search, ChevronDown, Filter, MoreVertical, X, Info, Trash2
 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import './TimKaryawan.css';
 
 const initialTableData = [
@@ -18,6 +19,7 @@ const initialTableData = [
 
 export default function TimKaryawan() {
   const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [filterDivisi, setFilterDivisi] = useState('Semua Divisi');
@@ -29,35 +31,53 @@ export default function TimKaryawan() {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    // Sinkronisasi data dari profil (jika ada guru yang mendaftar)
-    const isProfileComplete = localStorage.getItem('isProfileComplete');
-    const localEmps = localStorage.getItem('absen_employees');
-    
-    let baseData = localEmps ? JSON.parse(localEmps) : [...initialTableData];
-    
-    // Auto inject employee from ProfilSaya if profile is complete and not yet in list
-    if (isProfileComplete === 'true') {
-      const hasFikri = baseData.find(e => e.name === 'Fikri Arsyad');
-      if (!hasFikri) {
-        baseData.unshift({
-          id: 'KRY-9999', name: 'Fikri Arsyad', role: 'Technology Specialist', div: 'IT Development', type: 'Full Time', status: 'Aktif', join: 'Hari Ini', email: 'fikriarsyad@example.com', phone: '+62 812-3456-7890'
-        });
-        localStorage.setItem('absen_employees', JSON.stringify(baseData));
-      }
-    }
-    setEmployees(baseData);
+    fetchEmployees();
   }, []);
 
-  const saveEmployees = (newData) => {
-    setEmployees(newData);
-    localStorage.setItem('absen_employees', JSON.stringify(newData));
+  const fetchEmployees = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('karyawan')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching employees:', error);
+      } else {
+        // Map data dari Supabase ke format yang dibutuhkan UI jika perlu
+        const mappedData = (data || []).map(emp => ({
+          id: emp.id,
+          name: emp.name,
+          role: emp.role || 'Karyawan',
+          div: emp.divisi || '-',
+          type: 'Full Time',
+          status: emp.status || 'Aktif',
+          join: new Date(emp.created_at).toLocaleDateString('id-ID'),
+          email: emp.email,
+          phone: emp.phone || '-'
+        }));
+        setEmployees(mappedData);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleImportClick = () => {
     fileInputRef.current?.click();
   };
-  const handleResetData = () => {
-    saveEmployees(initialTableData);
+  
+  const handleDelete = async (id) => {
+    if (window.confirm('Hapus karyawan ini?')) {
+      const { error } = await supabase.from('karyawan').delete().eq('id', id);
+      if (!error) {
+        fetchEmployees();
+      }
+    }
+    setActiveMenuId(null);
   };
 
   const handleFileChange = (e) => {
@@ -65,17 +85,10 @@ export default function TimKaryawan() {
       alert('Simulasi: File ' + e.target.files[0].name + ' berhasil diimpor!');
       // Reset input so the same file can be selected again
       e.target.value = '';
-      saveEmployees(initialTableData);
     }
   };
 
-  const handleDelete = (id) => {
-    if(window.confirm('Yakin ingin menghapus karyawan ini?')) {
-      const filtered = employees.filter(e => e.id !== id);
-      saveEmployees(filtered);
-    }
-    setActiveMenuId(null);
-  };
+
 
   const toggleMenu = (id) => {
     if (activeMenuId === id) setActiveMenuId(null);

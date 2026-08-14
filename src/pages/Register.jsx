@@ -1,63 +1,58 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { User, Lock, EyeOff, Eye, ShieldCheck, Check } from 'lucide-react'
+import { User, Lock, EyeOff, Eye, ShieldCheck, Check, Mail, Briefcase } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
-export default function Login() {
+export default function Register() {
   const navigate = useNavigate()
-  const [username, setUsername] = useState('')
+  const [name, setName] = useState('')
   const [password, setPassword] = useState('')
+  const [role, setRole] = useState('Karyawan')
+  const [divisi, setDivisi] = useState('Kepesantrenan')
   const [errorMsg, setErrorMsg] = useState('')
+  const [successMsg, setSuccessMsg] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
 
-  const handleLogin = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault()
+    setLoading(true)
+    setErrorMsg('')
     
-    // Simpan status loading jika mau (opsional)
     try {
+      // Masukkan data pengguna ke tabel karyawan
       const { data, error } = await supabase
         .from('karyawan')
-        .select('*')
-        .or(`email.eq.${username},name.eq.${username}`)
-        .eq('password', password)
-        .maybeSingle();
+        .insert([
+          { 
+            name, 
+            password, // Dalam aplikasi nyata, password harus di-hash (misal menggunakan supabase auth)
+            role,
+            divisi,
+            status: 'Aktif'
+          }
+        ])
+        .select()
+        .single();
 
-      if (error || !data) {
-        // Fallback rahasia untuk Direktur/Manager
-        if (username === 'hibatullah' && password === 'hibatullah maju') {
-          const adminData = {
-            id: 'admin-1',
-            name: 'Direktur Hibatullah',
-            role: 'Manager',
-            divisi: 'Kepesantrenan'
-          };
-          localStorage.setItem('user', JSON.stringify(adminData));
-          navigate('/manager/dashboard');
-        } else if (username === '123456' && password === '123456') {
-          const karyawanData = {
-            id: 'karyawan-1',
-            name: 'Karyawan Demo',
-            role: 'Karyawan',
-            divisi: 'Sekolah'
-          };
-          localStorage.setItem('user', JSON.stringify(karyawanData));
-          navigate('/absen');
+      if (error) {
+        console.error(error)
+        if (error.code === '23505') {
+          setErrorMsg('Nama atau akun sudah terdaftar!')
         } else {
-          setErrorMsg('Nama atau Password salah!');
+          setErrorMsg('Terjadi kesalahan saat mendaftar.')
         }
       } else {
-        // Berhasil login dari Supabase
-        localStorage.setItem('user', JSON.stringify(data));
-        
-        if (data.role?.toLowerCase() === 'manager') {
-          navigate('/manager/dashboard');
-        } else {
-          navigate('/absen');
-        }
+        setSuccessMsg('Pendaftaran berhasil! Mengalihkan ke halaman Login...')
+        setTimeout(() => {
+          navigate('/')
+        }, 2000)
       }
     } catch (err) {
-      console.error(err);
-      setErrorMsg('Terjadi kesalahan pada sistem!');
+      console.error(err)
+      setErrorMsg('Terjadi kesalahan pada sistem!')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -69,7 +64,6 @@ export default function Login() {
         
         {/* LEFT SIDE */}
         <div className="login-left">
-          
           <div className="login-brand">
             <svg width="64" height="64" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="brand-logo">
               <path d="M50 0L65.4508 15.4508L87.3223 12.6777L90.0954 34.5492L100 50L90.0954 65.4508L87.3223 87.3223L65.4508 90.0954L50 100L34.5492 90.0954L12.6777 87.3223L9.90462 65.4508L0 50L9.90462 34.5492L12.6777 12.6777L34.5492 15.4508L50 0Z" fill="#1E3A8A"/>
@@ -81,23 +75,21 @@ export default function Login() {
             </svg>
             
             <h1 className="brand-title">HIBATULLAH</h1>
-            
             <div className="brand-subtitle">
               <div className="brand-line"></div>
               <span>IIBS</span>
               <div className="brand-line"></div>
             </div>
-            
             <p className="brand-motto">Beradab dan Berkarya</p>
           </div>
 
           <div className="login-welcome">
-            <h2>Selamat Datang<br/><span>Guru Hebat!</span></h2>
+            <h2>Bergabunglah<br/><span>Bersama Kami!</span></h2>
             <div className="welcome-divider"></div>
             <p>
-              Absensi mudah, cepat, dan akurat<br/>
-              untuk mendukung pendidikan<br/>
-              yang beradab dan berkarya.
+              Daftarkan diri Anda untuk mulai<br/>
+              menggunakan sistem absensi yang<br/>
+              cepat dan terintegrasi.
             </p>
           </div>
 
@@ -110,7 +102,6 @@ export default function Login() {
               <p>Data absensi Anda aman dan hanya dapat diakses oleh yang berwenang.</p>
             </div>
           </div>
-
         </div>
 
         {/* RIGHT SIDE */}
@@ -125,21 +116,47 @@ export default function Login() {
                 </div>
               </div>
               
-              <h2>Login</h2>
+              <h2>Daftar Akun</h2>
               <p>Sistem Absensi Guru Hibatullah</p>
             </div>
 
-            <form onSubmit={handleLogin} className="login-form">
+            <form onSubmit={handleRegister} className="login-form">
               
               <div className="input-group">
                 <User className="input-icon" size={20} />
                 <input 
                   type="text" 
-                  placeholder="Username atau Email" 
+                  placeholder="Nama Lengkap" 
                   required 
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                 />
+              </div>
+
+
+              <div className="input-group">
+                <Briefcase className="input-icon" size={20} />
+                <select 
+                  required 
+                  value={divisi}
+                  onChange={(e) => setDivisi(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '14px 44px',
+                    borderRadius: '12px',
+                    border: '1px solid #E2E8F0',
+                    background: '#F8FAFC',
+                    fontSize: '15px',
+                    color: '#334155',
+                    outline: 'none',
+                    appearance: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="Kepesantrenan">Kepesantrenan</option>
+                  <option value="Sekolah">Sekolah</option>
+                  <option value="Operasional">Operasional</option>
+                </select>
               </div>
               
               <div className="input-group">
@@ -165,43 +182,27 @@ export default function Login() {
                   {errorMsg}
                 </div>
               )}
+              {successMsg && (
+                <div style={{ color: '#10B981', fontSize: '13px', textAlign: 'center', marginTop: '-4px' }}>
+                  {successMsg}
+                </div>
+              )}
 
-              <div className="form-options">
-                <label className="checkbox-container">
-                  <input type="checkbox" defaultChecked />
-                  <span className="checkmark">
-                    <Check size={14} strokeWidth={3} />
-                  </span>
-                  Ingat saya
-                </label>
-                <a href="#" className="forgot-link">Lupa password?</a>
-              </div>
-
-              <button type="submit" className="btn-primary" style={{ justifyContent: 'center' }}>
-                Masuk
+              <button type="submit" className="login-btn" disabled={loading} style={{ marginTop: '16px' }}>
+                {loading ? 'Mendaftar...' : 'Daftar Sekarang'}
               </button>
-
             </form>
             
-            <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: '#64748B', position: 'relative', zIndex: 10 }}>
-              Belum punya akun?{' '}
-              <Link to="/register" style={{ color: '#3B82F6', fontWeight: 600, textDecoration: 'none' }}>
-                Daftar sekarang
+            <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: '#64748B' }}>
+              Sudah punya akun?{' '}
+              <Link to="/" style={{ color: '#3B82F6', fontWeight: 600, textDecoration: 'none' }}>
+                Login di sini
               </Link>
             </div>
-            
-            <div className="mosque-silhouette"></div>
+
           </div>
         </div>
       </div>
-      
-      {/* FOOTER */}
-      <div className="login-footer">
-        <div className="copyright">
-          © 2026 Hibatullah IIBS. All Rights Reserved.
-        </div>
-      </div>
-
     </div>
   )
 }

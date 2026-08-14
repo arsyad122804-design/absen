@@ -9,56 +9,101 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   PieChart, Pie, Cell 
 } from 'recharts';
+import { supabase } from '../lib/supabase';
 import './DashboardManager.css';
 
-// --- MOCK DATA ---
-const trendData = [
-  { name: '8 Mei', hadir: 70, terlambat: 22, absen: 15 },
-  { name: '9 Mei', hadir: 82, terlambat: 18, absen: 10 },
-  { name: '10 Mei', hadir: 75, terlambat: 21, absen: 14 },
-  { name: '11 Mei', hadir: 81, terlambat: 18, absen: 9 },
-  { name: '12 Mei', hadir: 87, terlambat: 19, absen: 11 },
-  { name: '13 Mei', hadir: 78, terlambat: 20, absen: 13 },
-  { name: '14 Mei', hadir: 72, terlambat: 19, absen: 14 },
-];
-
-const sparkHadir = [{uv: 30}, {uv: 40}, {uv: 35}, {uv: 50}, {uv: 49}, {uv: 60}, {uv: 75}];
-const sparkTerlambat = [{uv: 20}, {uv: 15}, {uv: 18}, {uv: 12}, {uv: 15}, {uv: 14}, {uv: 14}];
-const sparkAbsen = [{uv: 10}, {uv: 12}, {uv: 8}, {uv: 14}, {uv: 10}, {uv: 15}, {uv: 11}];
-
-const donutData = [
-  { name: 'Hadir', value: 96 },
-  { name: 'Terlambat', value: 18 },
-  { name: 'Tidak Hadir', value: 14 },
-];
-const DONUT_COLORS = ['#10B981', '#F59E0B', '#EF4444']; // Green, Orange, Red
-
-const divisiData = [
-  { name: 'Sekolah (Guru)', icon: BookOpen, iconColor: '#3B82F6', bg: '#EFF6FF', kar: 48, hadir: 38, telat: 6, absen: 4, pct: 79 },
-  { name: 'Pesantren (Asatidz)', icon: Users, iconColor: '#10B981', bg: '#ECFDF5', kar: 26, hadir: 21, telat: 3, absen: 2, pct: 81 },
-  { name: 'Operasional', icon: Briefcase, iconColor: '#8B5CF6', bg: '#F5F3FF', kar: 54, hadir: 44, telat: 5, absen: 4, pct: 81 },
-];
-
-const aktivitasData = [
-  { id: 1, type: 'blue', img: 'https://ui-avatars.com/api/?name=Dewi+Hartati', name: 'Dewi Hartati mengajukan izin', desc: 'Izin Sakit - 14 Mei 2026', time: '10:30' },
-  { id: 2, type: 'orange', img: 'https://ui-avatars.com/api/?name=Rizky+Maulana', name: 'Rizky Maulana check-in terlambat', desc: 'Terlambat 25 menit', time: '09:15' },
-  { id: 3, type: 'green', img: 'https://ui-avatars.com/api/?name=Siti+Nurhaliza', name: 'Siti Nurhaliza check-in', desc: '08:02 WIB', time: '08:02' },
-  { id: 4, type: 'purple', icon: FileText, name: 'Laporan mingguan telah dibuat', desc: 'Periode 1 - 7 Mei 2026', time: 'Kemarin' },
-  { id: 5, type: 'green', img: 'https://ui-avatars.com/api/?name=Budi+Santoso', name: 'Budi Santoso check-out', desc: '17:31 WIB', time: 'Kemarin' },
-];
+// MOCK DATA is removed to prevent bugs.
 
 export default function DashboardManager() {
   const navigate = useNavigate();
+  const [user, setUser] = useState({});
   const [showNotif, setShowNotif] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showDateFilter, setShowDateFilter] = useState(false);
   const [showTrendFilter, setShowTrendFilter] = useState(false);
-  const [dateRange, setDateRange] = useState('8 Mei 2026 - 14 Mei 2026');
-  const [trendFilter, setTrendFilter] = useState('Mingguan');
+  const [dateRange, setDateRange] = useState('Bulan Ini');
+  const [trendFilter, setTrendFilter] = useState('Harian');
+
+  const [stats, setStats] = useState({
+    totalKaryawan: 0,
+    hadir: 0,
+    terlambat: 0,
+    tidakHadir: 0,
+    kehadiranPct: 0
+  });
+
+  React.useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      // 1. Ambil total karyawan
+      const { data: karyawanData, error: errK } = await supabase.from('karyawan').select('*');
+      const totalKaryawan = karyawanData ? karyawanData.length : 0;
+
+      // 2. Ambil absensi hari ini (dummy table absensi)
+      const today = new Date().toISOString().split('T')[0];
+      const { data: absensiData, error: errA } = await supabase
+        .from('absensi')
+        .select('*')
+        .eq('tanggal', today);
+
+      let hadir = 0;
+      let terlambat = 0;
+      let tidakHadir = totalKaryawan; // default semua belum absen (dianggap tidak hadir/belum)
+
+      if (absensiData && absensiData.length > 0) {
+        absensiData.forEach(ab => {
+          if (ab.status === 'Hadir') hadir++;
+          if (ab.status === 'Terlambat') terlambat++;
+        });
+        tidakHadir = totalKaryawan - (hadir + terlambat);
+      }
+
+      const kehadiranPct = totalKaryawan > 0 ? Math.round(((hadir + terlambat) / totalKaryawan) * 100) : 0;
+
+      setStats({
+        totalKaryawan,
+        hadir,
+        terlambat,
+        tidakHadir: tidakHadir < 0 ? 0 : tidakHadir,
+        kehadiranPct
+      });
+
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleLogout = () => {
     navigate('/login');
   };
+
+  const trendData = stats.totalKaryawan > 0 ? [
+    { name: 'Hari Ini', hadir: stats.hadir, terlambat: stats.terlambat, absen: stats.tidakHadir }
+  ] : [];
+
+  const sparkHadir = stats.hadir > 0 ? [{uv: stats.hadir}] : [];
+  const sparkTerlambat = stats.terlambat > 0 ? [{uv: stats.terlambat}] : [];
+  const sparkAbsen = stats.tidakHadir > 0 ? [{uv: stats.tidakHadir}] : [];
+
+  const donutData = stats.totalKaryawan > 0 ? [
+    { name: 'Hadir', value: stats.hadir },
+    { name: 'Terlambat', value: stats.terlambat },
+    { name: 'Tidak Hadir', value: stats.tidakHadir },
+  ] : [];
+  const DONUT_COLORS = ['#10B981', '#F59E0B', '#EF4444'];
+
+  const divisiData = stats.totalKaryawan > 0 ? [
+    { name: 'Kepesantrenan', icon: Users, iconColor: '#10B981', bg: '#ECFDF5', kar: stats.totalKaryawan, hadir: stats.hadir, telat: stats.terlambat, absen: stats.tidakHadir, pct: stats.kehadiranPct },
+  ] : [];
+
+  const aktivitasData = []; // Kosong karena belum ada sistem tracking riwayat asli
 
   return (
       <div className="mgr-main">
@@ -67,7 +112,7 @@ export default function DashboardManager() {
         <div className="dm-header-row">
           <div className="dm-header-left">
             <h1>Dasbor Manager</h1>
-            <p className="dm-greeting">Selamat datang kembali, <strong>Fikri Arsyad</strong> 👋</p>
+            <p className="dm-greeting">Selamat datang kembali, <strong>{user.name || 'Manajer'}</strong> 👋</p>
             <p className="dm-subtitle">Berikut ringkasan kehadiran tim Anda hari ini.</p>
           </div>
           <div className="dm-header-right">
@@ -121,10 +166,10 @@ export default function DashboardManager() {
             {/* Profile Dropdown */}
             <div style={{ position: 'relative' }}>
               <div className="dm-profile-box" onClick={() => setShowProfile(!showProfile)} style={{ cursor: 'pointer' }}>
-                <img src="https://ui-avatars.com/api/?name=Fikri+Arsyad&background=0D8ABC&color=fff" alt="User" />
+                <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'Manager')}&background=0D8ABC&color=fff`} alt="User" />
                 <div className="dm-profile-info">
-                  <strong>Fikri Arsyad</strong>
-                  <span>Manager Operasional</span>
+                  <strong>{user.name || 'Manajer'}</strong>
+                  <span>{user.role || 'Manager'}</span>
                 </div>
               </div>
               {showProfile && (
@@ -132,8 +177,8 @@ export default function DashboardManager() {
                   <div style={{ position: 'fixed', inset: 0, zIndex: 999 }} onClick={() => setShowProfile(false)} />
                   <div style={{ position: 'absolute', right: 0, top: '56px', width: '220px', background: 'white', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid #E2E8F0', zIndex: 1000, padding: '8px' }}>
                     <div style={{ padding: '8px 12px', borderBottom: '1px solid #F1F5F9', marginBottom: '8px' }}>
-                      <strong style={{ display: 'block', fontSize: '14px', color: '#0F172A' }}>Fikri Arsyad</strong>
-                      <span style={{ fontSize: '12px', color: '#64748B' }}>fikri@inovasidigital.id</span>
+                      <strong style={{ display: 'block', fontSize: '14px', color: '#0F172A' }}>{user.name || 'Manajer'}</strong>
+                      <span style={{ fontSize: '12px', color: '#64748B' }}>Manager System</span>
                     </div>
                     <button style={{ width: '100%', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '10px', background: 'transparent', border: 'none', cursor: 'pointer', color: '#475569', borderRadius: '6px', fontSize: '13px', textAlign: 'left', fontWeight: 500 }} onClick={() => navigate('/manager/pengaturan')}>
                       <Settings size={16} /> Pengaturan
@@ -159,7 +204,7 @@ export default function DashboardManager() {
                 <Users size={24} />
               </div>
               <div className="dm-sc-val">
-                <h2>128</h2>
+                <h2>{stats.totalKaryawan}</h2>
                 <p>Total Karyawan</p>
               </div>
             </div>
@@ -175,12 +220,12 @@ export default function DashboardManager() {
                 <CheckCircle2 size={24} />
               </div>
               <div className="dm-sc-val">
-                <h2>96</h2>
+                <h2>{stats.hadir}</h2>
                 <p>Hadir</p>
               </div>
             </div>
             <div className="dm-sc-bot split">
-              <span className="dm-sc-desc">75% dari total</span>
+              <span className="dm-sc-desc">{stats.totalKaryawan > 0 ? Math.round((stats.hadir/stats.totalKaryawan)*100) : 0}% dari total</span>
               <div className="dm-sc-spark">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={sparkHadir}>
@@ -198,12 +243,12 @@ export default function DashboardManager() {
                 <Clock size={24} />
               </div>
               <div className="dm-sc-val">
-                <h2>18</h2>
+                <h2>{stats.terlambat}</h2>
                 <p>Terlambat</p>
               </div>
             </div>
             <div className="dm-sc-bot split">
-              <span className="dm-sc-desc">14% dari total</span>
+              <span className="dm-sc-desc">{stats.totalKaryawan > 0 ? Math.round((stats.terlambat/stats.totalKaryawan)*100) : 0}% dari total</span>
               <div className="dm-sc-spark">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={sparkTerlambat}>
@@ -221,12 +266,12 @@ export default function DashboardManager() {
                 <XCircle size={24} />
               </div>
               <div className="dm-sc-val">
-                <h2>14</h2>
+                <h2>{stats.tidakHadir}</h2>
                 <p>Tidak Hadir</p>
               </div>
             </div>
             <div className="dm-sc-bot split">
-              <span className="dm-sc-desc">11% dari total</span>
+              <span className="dm-sc-desc">{stats.totalKaryawan > 0 ? Math.round((stats.tidakHadir/stats.totalKaryawan)*100) : 0}% dari total</span>
               <div className="dm-sc-spark">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={sparkAbsen}>
@@ -244,7 +289,7 @@ export default function DashboardManager() {
                 <CalendarIcon size={24} />
               </div>
               <div className="dm-sc-val">
-                <h2>92%</h2>
+                <h2>{stats.kehadiranPct}%</h2>
                 <p>Tingkat Kehadiran</p>
               </div>
             </div>
@@ -386,22 +431,22 @@ export default function DashboardManager() {
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="donut-center">
-                    <h3>128</h3>
+                    <h3>{stats.totalKaryawan}</h3>
                     <p>Total</p>
                   </div>
                 </div>
                 <div className="donut-legend">
                   <div className="d-leg-item">
                     <div className="d-leg-left"><span className="dot bg-green"></span> Hadir</div>
-                    <div className="d-leg-right"><strong>96</strong> (75%)</div>
+                    <div className="d-leg-right"><strong>{stats.hadir}</strong></div>
                   </div>
                   <div className="d-leg-item">
                     <div className="d-leg-left"><span className="dot bg-orange"></span> Terlambat</div>
-                    <div className="d-leg-right"><strong>18</strong> (14%)</div>
+                    <div className="d-leg-right"><strong>{stats.terlambat}</strong></div>
                   </div>
                   <div className="d-leg-item">
                     <div className="d-leg-left"><span className="dot bg-red"></span> Tidak Hadir</div>
-                    <div className="d-leg-right"><strong>14</strong> (11%)</div>
+                    <div className="d-leg-right"><strong>{stats.tidakHadir}</strong></div>
                   </div>
                 </div>
               </div>
@@ -419,26 +464,32 @@ export default function DashboardManager() {
               <div className="dm-card-body p-0">
                 <div className="dm-act-list">
                   
-                  {aktivitasData.map(act => (
-                    <div className="dm-act-item" key={act.id}>
-                      <div className="act-indicator">
-                        <div className={`act-dot bg-${act.type}`}></div>
-                        <div className="act-line"></div>
-                      </div>
-                      {act.img ? (
-                        <img src={act.img} alt={act.name} className="act-avatar" />
-                      ) : (
-                        <div className="act-icon-wrapper">
-                          <act.icon size={16} color="#3B82F6" />
+                  {aktivitasData.length > 0 ? (
+                    aktivitasData.map(act => (
+                      <div className="dm-act-item" key={act.id}>
+                        <div className="act-indicator">
+                          <div className={`act-dot bg-${act.type}`}></div>
+                          <div className="act-line"></div>
                         </div>
-                      )}
-                      <div className="act-content-text">
-                        <h4>{act.name}</h4>
-                        <p>{act.desc}</p>
+                        {act.img ? (
+                          <img src={act.img} alt={act.name} className="act-avatar" />
+                        ) : (
+                          <div className="act-icon-wrapper">
+                            <act.icon size={16} color="#3B82F6" />
+                          </div>
+                        )}
+                        <div className="act-content-text">
+                          <h4>{act.name}</h4>
+                          <p>{act.desc}</p>
+                        </div>
+                        <div className="act-time-text">{act.time}</div>
                       </div>
-                      <div className="act-time-text">{act.time}</div>
+                    ))
+                  ) : (
+                    <div style={{ padding: '20px', textAlign: 'center', color: '#64748B', fontSize: '14px' }}>
+                      Belum ada aktivitas terekam.
                     </div>
-                  ))}
+                  )}
 
                 </div>
               </div>

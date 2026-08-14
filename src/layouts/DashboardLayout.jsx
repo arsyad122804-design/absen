@@ -13,6 +13,14 @@ export default function DashboardLayout() {
 
   const [showNotif, setShowNotif] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [user, setUser] = useState({});
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
 
   const [isProfileComplete, setIsProfileComplete] = useState(() => {
     return localStorage.getItem('isProfileComplete') === 'true'
@@ -120,29 +128,23 @@ export default function DashboardLayout() {
             {showNotif && (
               <div style={{ position: 'absolute', top: '100%', right: '40px', width: '300px', background: 'white', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid #F1F5F9', zIndex: 9999, marginTop: '8px', overflow: 'hidden' }}>
                 <div style={{ padding: '12px 16px', borderBottom: '1px solid #F1F5F9', fontWeight: 600, color: '#0F172A' }}>Notifikasi</div>
-                <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                  <div style={{ padding: '12px 16px', borderBottom: '1px solid #F1F5F9', background: '#F8FAFC', cursor: 'pointer' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#0F172A', marginBottom: '4px' }}>Verifikasi Wajah Gagal</div>
-                    <div style={{ fontSize: '12px', color: '#64748B' }}>Sistem tidak mengenali wajah Anda pada absen pagi ini. Hubungi admin.</div>
-                  </div>
-                  <div style={{ padding: '12px 16px', borderBottom: '1px solid #F1F5F9', cursor: 'pointer' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#0F172A', marginBottom: '4px' }}>Pengajuan Cuti Disetujui</div>
-                    <div style={{ fontSize: '12px', color: '#64748B' }}>Cuti tahunan Anda pada 20-22 Mei telah disetujui.</div>
-                  </div>
+                <div style={{ padding: '20px', textAlign: 'center', color: '#64748B', fontSize: '13px' }}>
+                  Belum ada notifikasi baru.
                 </div>
-                <div style={{ padding: '10px', textAlign: 'center', fontSize: '12px', color: '#3B82F6', fontWeight: 600, cursor: 'pointer' }}>Lihat Semua</div>
               </div>
             )}
 
             {/* PROFILE BUTTON */}
-            <div className="user-avatar" onClick={() => {setShowProfile(!showProfile); setShowNotif(false)}} style={{ cursor: 'pointer' }}>MF</div>
+            <div className="user-avatar" onClick={() => {setShowProfile(!showProfile); setShowNotif(false)}} style={{ cursor: 'pointer' }}>
+              {(user?.name || 'User').substring(0, 2).toUpperCase()}
+            </div>
             
             {/* PROFILE DROPDOWN */}
             {showProfile && (
               <div style={{ position: 'absolute', top: '100%', right: '0', width: '220px', background: 'white', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid #F1F5F9', zIndex: 9999, marginTop: '8px', padding: '8px' }}>
                 <div style={{ padding: '8px 12px', borderBottom: '1px solid #F1F5F9', marginBottom: '4px' }}>
-                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#0F172A' }}>Muhammad Fikri</div>
-                  <div style={{ fontSize: '12px', color: '#64748B' }}>IT Development</div>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#0F172A' }}>{user?.name || 'User'}</div>
+                  <div style={{ fontSize: '12px', color: '#64748B' }}>{user?.divisi || 'Karyawan'}</div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                   <div onClick={() => {navigate('/absen/profil'); setShowProfile(false)}} style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#334155', cursor: 'pointer', borderRadius: '6px' }} onMouseOver={e => e.currentTarget.style.background='#F1F5F9'} onMouseOut={e => e.currentTarget.style.background='transparent'}>

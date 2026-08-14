@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { 
   Home, Users, Clock, History, Calendar, FileText, 
@@ -7,6 +7,15 @@ import {
 import '../pages/DashboardManager.css';
 
 export default function ManagerLayout() {
+  const [user, setUser] = useState({});
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
+
   return (
     <div className="manager-page">
       {/* SIDEBAR MANAGER */}
@@ -53,10 +62,10 @@ export default function ManagerLayout() {
           
 
           <div className="mgr-v2-profile-card">
-            <img src="https://ui-avatars.com/api/?name=Fikri+Arsyad&background=0D8ABC&color=fff" alt="User" />
+            <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'Manager')}&background=0D8ABC&color=fff`} alt="User" />
             <div className="mp-text">
-              <strong>Fikri Arsyad</strong>
-              <span>Manager Operasional</span>
+              <strong>{user?.name || 'Manager'}</strong>
+              <span>{user?.role || 'Manager'}</span>
             </div>
             <ChevronDown size={14} color="#64748B" style={{marginLeft: 'auto'}} />
           </div>

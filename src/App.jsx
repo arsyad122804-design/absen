@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
+import Register from './pages/Register'
 import Absensi from './pages/Absensi'
 import DashboardLayout from './layouts/DashboardLayout'
 import RiwayatAbsen from './pages/RiwayatAbsen'
@@ -25,6 +26,7 @@ function App() {
       <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Navigate to="/manager/dashboard" replace />} />
         
         {/* Manager Routes */}

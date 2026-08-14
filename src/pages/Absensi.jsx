@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react'
 import { Calendar as Cal, MapPin, Clock, Camera, Check, X, Maximize } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
+import { supabase } from '../lib/supabase'
 
 export default function Absensi() {
   const { t } = useLanguage()
   const [selectedStatus, setSelectedStatus] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [user, setUser] = useState(null)
 
   useEffect(() => {
+    const userData = localStorage.getItem('user')
+    if (userData) {
+      setUser(JSON.parse(userData))
+    }
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
@@ -110,26 +116,48 @@ export default function Absensi() {
     }
   }
 
-  const submitHadir = () => {
-    const existingData = JSON.parse(localStorage.getItem('attendance_records') || '[]')
-    const newRecord = {
-      id: Date.now(),
-      dateStr: currentTime.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }),
-      timestamp: currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB',
-      status: 'hadir',
-      reason: '-'
+  const submitHadir = async () => {
+    if (!user) {
+      alert("Sesi login tidak valid. Silakan login ulang.");
+      return;
     }
-    localStorage.setItem('attendance_records', JSON.stringify([...existingData, newRecord]))
-    setShowModal(false)
-    setSelectedStatus(null)
-    alert('Kehadiran berhasil dicatat!')
+
+    try {
+      const today = currentTime.toISOString().split('T')[0];
+      const timeStr = currentTime.toTimeString().split(' ')[0]; // HH:MM:SS
+      const isLate = currentTime.getHours() >= 8; // contoh: > jam 8 = terlambat
+      const status = isLate ? 'Terlambat' : 'Hadir';
+
+      const { error } = await supabase
+        .from('absensi')
+        .insert([
+          {
+            karyawan_id: user.id,
+            tanggal: today,
+            waktu_masuk: timeStr,
+            status: status
+          }
+        ]);
+
+      if (error) {
+        console.error("Error submitting attendance:", error);
+        alert('Gagal mencatat kehadiran! Pastikan tabel absensi sudah ada.');
+      } else {
+        setShowModal(false)
+        setSelectedStatus(null)
+        alert('Kehadiran berhasil dicatat di Database!')
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Terjadi kesalahan sistem.');
+    }
   }
 
   return (
     <div className="content-container">
       <div className="page-header">
         <div className="greeting">
-          <h1>{t.halo}, Muhammad Fikri!</h1>
+          <h1>{t.halo}, {user ? user.name : 'Karyawan'}!</h1>
           <p>{t.pilihKondisi}</p>
         </div>
         <div className="date-badge">

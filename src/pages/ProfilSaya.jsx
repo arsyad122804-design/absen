@@ -16,13 +16,15 @@ export default function ProfilSaya() {
   const [activeTab, setActiveTab] = useState('Ringkasan');
   const [showEditModal, setShowEditModal] = useState(false);
 
+  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user')) || {});
   const [profile, setProfile] = useState({
-    name: 'Fikri Arsyad',
-    role: 'IT Development',
+    name: user.name || 'User',
+    role: user.role || 'Karyawan',
+    divisi: user.divisi || 'Umum',
     location: 'Full Time',
-    birthDate: '28 Desember 2004',
-    about: 'Saya adalah Technology Specialist yang memiliki passion di bidang teknologi, AI, dan dakwah. Ingin menjadi investor muda, content creator, dan dai yang bermanfaat bagi banyak orang.',
-    email: 'fikriarsyad@example.com',
+    birthDate: '-',
+    about: 'Belum ada bio.',
+    email: '-',
     phone: '+62 812-3456-7890',
     skills: [
       { name: 'AI & Machine Learning', pct: '90%' },
