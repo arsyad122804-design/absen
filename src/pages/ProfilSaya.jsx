@@ -7,6 +7,7 @@ import {
   Activity, Zap, Target, BookOpen, PenTool, LayoutGrid, Heart, Camera, Settings
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { supabase } from '../lib/supabase';
 
 export default function ProfilSaya() {
   const { t } = useLanguage();
@@ -94,7 +95,7 @@ export default function ProfilSaya() {
 
   const [avatarUrl, setAvatarUrl] = useState(() => {
     const stored = localStorage.getItem('avatar_' + (user.id || 'default'));
-    return stored || `https://ui-avatars.com/api/?name=${(user.name || 'User').replace(/ /g, '+')}&size=200&background=0D8ABC&color=fff`;
+    return stored || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&size=200&background=0D8ABC&color=fff`;
   });
 
   const handleAvatarChange = (e) => {
