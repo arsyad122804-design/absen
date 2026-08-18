@@ -11,11 +11,13 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
 
   const handleLogin = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
+    if (!username || !password) {
+      setErrorMsg('Masukkan nama dan password!');
+      return;
+    }
     
-    // Simpan status loading jika mau (opsional)
-    // Cek fallback / dummy login TERLEBIH DAHULU agar tetap bisa login 
-    // meski Supabase sedang bermasalah atau tabel belum dibuat.
+    // 1. Cek Admin Demo
     if (username === 'hibatullah' && password === 'hibatullah maju') {
       const adminData = {
         id: 'admin-1',
@@ -26,7 +28,10 @@ export default function Login() {
       localStorage.setItem('user', JSON.stringify(adminData));
       navigate('/manager/dashboard');
       return;
-    } else if (username === '123456' && password === '123456') {
+    } 
+    
+    // 2. Cek Demo Karyawan (123456)
+    if (username === '123456' && password === '123456') {
       const karyawanData = {
         id: 'karyawan-1',
         name: 'Karyawan Demo',
@@ -38,6 +43,29 @@ export default function Login() {
       return;
     }
 
+    // 3. Cek data terdaftar di local_karyawan (localStorage)
+    const localUsers = JSON.parse(localStorage.getItem('local_karyawan')) || [];
+    const foundLocal = localUsers.find(u => 
+      (u.name?.toLowerCase() === username.trim().toLowerCase() || u.email?.toLowerCase() === username.trim().toLowerCase())
+    );
+
+    if (foundLocal) {
+      const userData = {
+        id: foundLocal.id || `kry-${Date.now()}`,
+        name: foundLocal.name,
+        role: foundLocal.role || 'Karyawan',
+        divisi: foundLocal.div || foundLocal.divisi || 'Kepesantrenan'
+      };
+      localStorage.setItem('user', JSON.stringify(userData));
+      if (userData.role?.toLowerCase() === 'manager') {
+        navigate('/manager/dashboard');
+      } else {
+        navigate('/absen');
+      }
+      return;
+    }
+
+    // 4. Cek Supabase
     try {
       const { data, error } = await supabase
         .from('karyawan')
@@ -46,23 +74,35 @@ export default function Login() {
         .eq('password', password)
         .maybeSingle();
 
-      if (error || !data) {
-        setErrorMsg('Nama atau Password salah!');
-      } else {
-        // Berhasil login dari Supabase
+      if (!error && data) {
         localStorage.setItem('user', JSON.stringify(data));
-        
         if (data.role?.toLowerCase() === 'manager') {
           navigate('/manager/dashboard');
         } else {
           navigate('/absen');
         }
+        return;
       }
     } catch (err) {
       console.error(err);
-      setErrorMsg('Koneksi Database bermasalah. Gunakan akun demo (123456) untuk sementara.');
-
     }
+
+    // 5. Mendaftarkan & mengizinkan login langsung untuk akun baru
+    const newUser = {
+      id: `KRY-${String(localUsers.length + 1).padStart(4, '0')}`,
+      name: username,
+      role: 'Karyawan',
+      divisi: 'Kepesantrenan',
+      type: 'Full Time',
+      status: 'Aktif',
+      join: new Date().toLocaleDateString('id-ID'),
+      email: `${username.toLowerCase().replace(/\s+/g, '')}@inovasidigital.id`,
+      phone: '+62 812-0000-0000'
+    };
+    localUsers.push(newUser);
+    localStorage.setItem('local_karyawan', JSON.stringify(localUsers));
+    localStorage.setItem('user', JSON.stringify(newUser));
+    navigate('/absen');
   }
 
   return (
