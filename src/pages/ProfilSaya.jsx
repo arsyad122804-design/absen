@@ -55,7 +55,7 @@ export default function ProfilSaya() {
         name: userData.name,
         role: userData.role || 'Karyawan',
         divisi: userData.divisi || 'Kepesantrenan',
-        email: `${userData.name.toLowerCase().replace(/\s+/g, '')}@inovasidigital.id`
+        email: `${String(userData.name || 'User').toLowerCase().replace(/\s+/g, '')}@inovasidigital.id`
       }));
     }
     const local = JSON.parse(localStorage.getItem('local_absensi')) || [];
