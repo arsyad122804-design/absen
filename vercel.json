@@ -1,7 +1,7 @@
 {
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!assets/|.*\\.(js|css|png|jpg|jpeg|gif|ico|svg|json)).*)",
       "destination": "/index.html"
     }
   ]
