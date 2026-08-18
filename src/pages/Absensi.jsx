@@ -3,6 +3,17 @@ import { Calendar as Cal, MapPin, Clock, Camera, Check, X, Maximize } from 'luci
 import { useLanguage } from '../contexts/LanguageContext'
 import { supabase } from '../lib/supabase'
 
+const safeJsonParse = (key, fallback = {}) => {
+  try {
+    const item = localStorage.getItem(key);
+    if (!item || item === 'undefined' || item === 'null') return fallback;
+    const parsed = JSON.parse(item);
+    return parsed !== null && parsed !== undefined ? parsed : fallback;
+  } catch (e) {
+    return fallback;
+  }
+};
+
 export default function Absensi() {
   const { t } = useLanguage()
   const [selectedStatus, setSelectedStatus] = useState(null)
@@ -13,13 +24,9 @@ export default function Absensi() {
   const [hasStream, setHasStream] = useState(false)
 
   useEffect(() => {
-    try {
-      const userData = localStorage.getItem('user')
-      if (userData && userData !== 'undefined' && userData !== 'null') {
-        setUser(JSON.parse(userData))
-      }
-    } catch (e) {
-      console.error(e)
+    const userData = safeJsonParse('user', null);
+    if (userData) {
+      setUser(userData);
     }
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     checkLocation();
@@ -171,7 +178,7 @@ export default function Absensi() {
         keterangan: '-',
         lokasi: lokasiStr
       };
-      const local = JSON.parse(localStorage.getItem('local_absensi')) || [];
+      const local = safeJsonParse('local_absensi', []);
       local.unshift(localRec);
       localStorage.setItem('local_absensi', JSON.stringify(local));
 
