@@ -9,6 +9,17 @@ import {
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../lib/supabase';
 
+const safeJsonParse = (key, fallback = {}) => {
+  try {
+    const item = localStorage.getItem(key);
+    if (!item || item === 'undefined' || item === 'null') return fallback;
+    const parsed = JSON.parse(item);
+    return parsed !== null && parsed !== undefined ? parsed : fallback;
+  } catch (e) {
+    return fallback;
+  }
+};
+
 export default function ProfilSaya() {
   const { t } = useLanguage();
   const outletContext = useOutletContext();
@@ -20,33 +31,38 @@ export default function ProfilSaya() {
   const [userHistory, setUserHistory] = useState([]);
   const fileInputRef = useRef(null);
 
-  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user')) || {});
-  const [profile, setProfile] = useState({
-    id: user.id || 'default',
-    name: user.name || 'User',
-    role: user.role || 'Karyawan',
-    divisi: user.divisi || 'Umum',
-    location: 'Full Time',
-    birthDate: '-',
-    about: 'Belum ada bio.',
-    email: '-',
-    phone: '+62 812-3456-7890',
-    skills: [
-      { name: 'AI & Machine Learning', pct: '90%' },
-      { name: 'Coding (AI)', pct: '80%' },
-      { name: 'Trading & Investasi', pct: '80%' },
-      { name: 'Desain', pct: '75%' },
-      { name: 'Beladiri (Silat & Karate)', pct: '70%' }
-    ],
-    education: [
-      { title: 'D1 Dakwah (ADI)', subtitle: 'Akademi Dakwah Indonesia (Elkisi)' },
-      { title: 'SMA Elkisi', subtitle: '' },
-      { title: 'SMP AL Anwar', subtitle: '' }
-    ]
+  const [user, setUser] = useState(() => safeJsonParse('user', { name: 'Karyawan', role: 'Karyawan' }));
+  const [profile, setProfile] = useState(() => {
+    const u = safeJsonParse('user', {});
+    return {
+      id: u.id || 'default',
+      name: u.name || 'User',
+      role: u.role || 'Karyawan',
+      divisi: u.divisi || 'Kepesantrenan',
+      location: 'Full Time',
+      birthDate: '-',
+      about: 'Belum ada bio.',
+      email: `${String(u.name || 'User').toLowerCase().replace(/\s+/g, '')}@inovasidigital.id`,
+      phone: '+62 812-3456-7890',
+      skills: [
+        { name: 'AI & Machine Learning', pct: '90%' },
+        { name: 'Coding (AI)', pct: '80%' },
+        { name: 'Trading & Investasi', pct: '80%' },
+        { name: 'Desain', pct: '75%' },
+        { name: 'Beladiri (Silat & Karate)', pct: '70%' }
+      ],
+      education: [
+        { title: 'D1 Dakwah (ADI)', subtitle: 'Akademi Dakwah Indonesia (Elkisi)' },
+        { title: 'SMA Elkisi', subtitle: '' },
+        { title: 'SMP AL Anwar', subtitle: '' }
+      ]
+    };
   });
 
+  const [editForm, setEditForm] = useState({ ...profile });
+
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem('user')) || {};
+    const userData = safeJsonParse('user', {});
     setUser(userData);
     if (userData.name) {
       setProfile(prev => ({
@@ -58,12 +74,11 @@ export default function ProfilSaya() {
         email: `${String(userData.name || 'User').toLowerCase().replace(/\s+/g, '')}@inovasidigital.id`
       }));
     }
-    const local = JSON.parse(localStorage.getItem('local_absensi')) || [];
-    setUserHistory(local);
+    const local = safeJsonParse('local_absensi', []);
+    setUserHistory(Array.isArray(local) ? local : []);
   }, []);
 
   // State untuk form edit
-  const [editForm, setEditForm] = useState({ ...profile });
 
   const handleEditChange = (e) => {
     setEditForm({ ...editForm, [e.target.name]: e.target.value });
