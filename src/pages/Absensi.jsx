@@ -12,9 +12,13 @@ export default function Absensi() {
   const [alasan, setAlasan] = useState('')
 
   useEffect(() => {
-    const userData = localStorage.getItem('user')
-    if (userData) {
-      setUser(JSON.parse(userData))
+    try {
+      const userData = localStorage.getItem('user')
+      if (userData && userData !== 'undefined' && userData !== 'null') {
+        setUser(JSON.parse(userData))
+      }
+    } catch (e) {
+      console.error(e)
     }
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     checkLocation();

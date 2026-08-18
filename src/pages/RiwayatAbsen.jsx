@@ -4,6 +4,17 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../lib/supabase';
 import './RiwayatAbsen.css';
 
+const safeJsonParse = (key, fallback = {}) => {
+  try {
+    const item = localStorage.getItem(key);
+    if (!item || item === 'undefined' || item === 'null') return fallback;
+    const parsed = JSON.parse(item);
+    return parsed !== null && parsed !== undefined ? parsed : fallback;
+  } catch (e) {
+    return fallback;
+  }
+};
+
 export default function RiwayatAbsen() {
   const { t } = useLanguage();
   const [filter, setFilter] = useState('Semua');
@@ -19,8 +30,8 @@ export default function RiwayatAbsen() {
     }
 
     const fetchRecords = async () => {
-      const userData = JSON.parse(localStorage.getItem('user')) || {};
-      const local = JSON.parse(localStorage.getItem('local_absensi')) || [];
+      const userData = safeJsonParse('user', {});
+      const local = safeJsonParse('local_absensi', []);
       
       // Filter data lokal milik user ini
       const userLocal = local.filter(r => r.karyawan_id === userData.id);
