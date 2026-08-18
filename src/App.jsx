@@ -20,12 +20,12 @@ import PengajuanManager from './pages/PengajuanManager'
 import PengaturanManager from './pages/PengaturanManager'
 import { LanguageProvider } from './contexts/LanguageContext'
 import './App.css'
-function DashboardRedirect() {
+function ManagerRoute() {
   const user = JSON.parse(localStorage.getItem('user')) || {};
-  if (user.role?.toLowerCase() === 'manager') {
-    return <Navigate to="/manager/dashboard" replace />;
+  if (user.role?.toLowerCase() !== 'manager') {
+    return <Navigate to="/absen" replace />;
   }
-  return <Navigate to="/absen" replace />;
+  return <ManagerLayout />;
 }
 
 function App() {
@@ -37,8 +37,8 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<DashboardRedirect />} />
         
-        {/* Manager Routes */}
-        <Route path="/manager" element={<ManagerLayout />}>
+        {/* Manager Routes (Protected for Manager role only) */}
+        <Route path="/manager" element={<ManagerRoute />}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="absensi" element={<AbsensiManager />} />
           <Route path="tim" element={<TimKaryawan />} />
