@@ -20,6 +20,18 @@ export default function ProfilSaya() {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem('user')) || {};
+    setUser(userData);
+    if (userData.name) {
+      setProfile(prev => ({
+        ...prev,
+        id: userData.id || 'default',
+        name: userData.name,
+        role: userData.role || 'Karyawan',
+        divisi: userData.divisi || 'Kepesantrenan',
+        email: `${userData.name.toLowerCase().replace(/\s+/g, '')}@inovasidigital.id`
+      }));
+    }
     const local = JSON.parse(localStorage.getItem('local_absensi')) || [];
     setUserHistory(local);
   }, []);
@@ -405,7 +417,7 @@ export default function ProfilSaya() {
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '32px' }}>
                 <div style={{ position: 'relative' }}>
                   <img 
-                    src={`https://ui-avatars.com/api/?name=${profile.name.replace(/ /g, '+')}&size=120&background=0D8ABC&color=fff`} 
+                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.name || 'User')}&size=120&background=0D8ABC&color=fff`} 
                     alt="Avatar" 
                     style={{ width: '96px', height: '96px', borderRadius: '50%', border: '4px solid white', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} 
                   />

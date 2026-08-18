@@ -1,8 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ClipboardList, Check, X, AlertCircle } from 'lucide-react';
 import './PengajuanManager.css';
-
-import { useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
 const initialPengajuan = [];

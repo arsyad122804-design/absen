@@ -52,10 +52,28 @@ export default function TimKaryawan() {
       // Gabungkan data lokal & Supabase (tanpa duplikat nama)
       const combined = [...local];
       dbData.forEach(d => {
-        if (!combined.some(c => c.name === d.name)) {
+        if (!combined.some(c => c.name?.toLowerCase() === d.name?.toLowerCase())) {
           combined.push(d);
         }
       });
+
+      // Tambahkan juga user yang sedang login jika tipe Karyawan
+      const loggedUser = JSON.parse(localStorage.getItem('user'));
+      if (loggedUser && loggedUser.name && loggedUser.role?.toLowerCase() !== 'manager') {
+        if (!combined.some(c => c.name?.toLowerCase() === loggedUser.name?.toLowerCase())) {
+          combined.push({
+            id: loggedUser.id || `KRY-${String(combined.length + 1).padStart(4, '0')}`,
+            name: loggedUser.name,
+            role: loggedUser.role || 'Karyawan',
+            div: loggedUser.divisi || loggedUser.div || 'Kepesantrenan',
+            type: 'Full Time',
+            status: 'Aktif',
+            join: new Date().toLocaleDateString('id-ID'),
+            email: `${loggedUser.name.toLowerCase().replace(/\s+/g, '')}@inovasidigital.id`,
+            phone: '+62 812-0000-0000'
+          });
+        }
+      }
 
       setEmployees(combined);
     } catch (err) {
