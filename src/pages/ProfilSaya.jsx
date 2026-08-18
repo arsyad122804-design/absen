@@ -16,7 +16,13 @@ export default function ProfilSaya() {
 
   const [activeTab, setActiveTab] = useState('Ringkasan');
   const [showEditModal, setShowEditModal] = useState(false);
+  const [userHistory, setUserHistory] = useState([]);
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    const local = JSON.parse(localStorage.getItem('local_absensi')) || [];
+    setUserHistory(local);
+  }, []);
 
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user')) || {});
   const [profile, setProfile] = useState({
@@ -283,25 +289,25 @@ export default function ProfilSaya() {
           <div className="profil-card stats-card">
             <div className="p-stat-item">
               <div className="p-stat-icon blue"><Calendar size={24} /></div>
-              <h2>22</h2>
+              <h2>{userHistory.length}</h2>
               <p>Total Absen</p>
             </div>
             <div className="p-stat-divider"></div>
             <div className="p-stat-item">
               <div className="p-stat-icon green"><Check size={24} /></div>
-              <h2>22</h2>
+              <h2>{userHistory.filter(r => r.status === 'Hadir').length}</h2>
               <p>Hadir</p>
             </div>
             <div className="p-stat-divider"></div>
             <div className="p-stat-item">
               <div className="p-stat-icon orange"><Clock size={24} /></div>
-              <h2>3</h2>
+              <h2>{userHistory.filter(r => r.status === 'Terlambat').length}</h2>
               <p>Terlambat</p>
             </div>
             <div className="p-stat-divider"></div>
             <div className="p-stat-item">
               <div className="p-stat-icon red"><X size={24} /></div>
-              <h2>1</h2>
+              <h2>{userHistory.filter(r => r.status === 'Alpha' || r.status === 'Izin' || r.status === 'Sakit').length}</h2>
               <p>Tidak Hadir</p>
             </div>
           </div>
@@ -316,21 +322,24 @@ export default function ProfilSaya() {
               <span className="pc-link" style={{ cursor: 'pointer' }} onClick={() => alert("Seluruh data sudah ditampilkan.")}>Lihat Semua</span>
             </div>
             <div className="pc-body flex-row gap-16">
-              <div className="badge-card">
-                <div className="bc-icon hexagon blue"><Target size={24} /></div>
-                <h4>Disiplin Tinggi</h4>
-                <p>Hadir tepat waktu 20 kali</p>
-              </div>
-              <div className="badge-card">
-                <div className="bc-icon hexagon green"><Calendar size={24} /></div>
-                <h4>Konsisten</h4>
-                <p>Hadir 5 hari berturut-turut</p>
-              </div>
-              <div className="badge-card">
-                <div className="bc-icon hexagon purple"><Award size={24} /></div>
-                <h4>Aktif</h4>
-                <p>Menggunakan aplikasi secara aktif</p>
-              </div>
+              {userHistory.length === 0 ? (
+                <div style={{ textAlign: 'center', width: '100%', padding: '16px 0', color: '#64748B', fontSize: '13px' }}>
+                  Belum ada pencapaian. Tingkatkan kehadiran Anda!
+                </div>
+              ) : (
+                <>
+                  <div className="badge-card">
+                    <div className="bc-icon hexagon blue"><Target size={24} /></div>
+                    <h4>Disiplin Tinggi</h4>
+                    <p>Hadir tepat waktu</p>
+                  </div>
+                  <div className="badge-card">
+                    <div className="bc-icon hexagon green"><Calendar size={24} /></div>
+                    <h4>Konsisten</h4>
+                    <p>Aktif absensi</p>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -344,34 +353,24 @@ export default function ProfilSaya() {
               <span className="pc-link" style={{ cursor: 'pointer' }} onClick={() => alert("Seluruh data sudah ditampilkan.")}>Lihat Semua</span>
             </div>
             <div className="pc-body list-body">
-              
-              <div className="act-item">
-                <div className="act-icon-wrapper green"><Check size={16} /></div>
-                <div className="act-content">
-                  <h4>Check-in</h4>
-                  <p>Sabtu, 10 Agustus 2026</p>
+              {userHistory.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '24px 0', color: '#64748B', fontSize: '13px' }}>
+                  Belum ada aktivitas absensi terbaru.
                 </div>
-                <div className="act-time">07:32</div>
-              </div>
-
-              <div className="act-item">
-                <div className="act-icon-wrapper red"><X size={16} /></div>
-                <div className="act-content">
-                  <h4>Tidak Hadir</h4>
-                  <p>Selasa, 6 Agustus 2026</p>
-                </div>
-                <div className="act-time">-</div>
-              </div>
-
-              <div className="act-item">
-                <div className="act-icon-wrapper orange"><Clock size={16} /></div>
-                <div className="act-content">
-                  <h4>Terlambat</h4>
-                  <p>Jumat, 9 Agustus 2026</p>
-                </div>
-                <div className="act-time">07:46</div>
-              </div>
-
+              ) : (
+                userHistory.slice(0, 5).map((row, idx) => (
+                  <div key={idx} className="act-item">
+                    <div className={`act-icon-wrapper ${row.status === 'Hadir' ? 'green' : row.status === 'Terlambat' ? 'orange' : 'red'}`}>
+                      {row.status === 'Hadir' ? <Check size={16} /> : row.status === 'Terlambat' ? <Clock size={16} /> : <X size={16} />}
+                    </div>
+                    <div className="act-content">
+                      <h4>{row.status}</h4>
+                      <p>{row.tanggal || 'Hari ini'}</p>
+                    </div>
+                    <div className="act-time">{row.jam_masuk || row.jam || '-'}</div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
