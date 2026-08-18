@@ -20,23 +20,6 @@ export default function ProfilSaya() {
   const [userHistory, setUserHistory] = useState([]);
   const fileInputRef = useRef(null);
 
-  useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem('user')) || {};
-    setUser(userData);
-    if (userData.name) {
-      setProfile(prev => ({
-        ...prev,
-        id: userData.id || 'default',
-        name: userData.name,
-        role: userData.role || 'Karyawan',
-        divisi: userData.divisi || 'Kepesantrenan',
-        email: `${userData.name.toLowerCase().replace(/\s+/g, '')}@inovasidigital.id`
-      }));
-    }
-    const local = JSON.parse(localStorage.getItem('local_absensi')) || [];
-    setUserHistory(local);
-  }, []);
-
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user')) || {});
   const [profile, setProfile] = useState({
     id: user.id || 'default',
@@ -61,6 +44,23 @@ export default function ProfilSaya() {
       { title: 'SMP AL Anwar', subtitle: '' }
     ]
   });
+
+  useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem('user')) || {};
+    setUser(userData);
+    if (userData.name) {
+      setProfile(prev => ({
+        ...prev,
+        id: userData.id || 'default',
+        name: userData.name,
+        role: userData.role || 'Karyawan',
+        divisi: userData.divisi || 'Kepesantrenan',
+        email: `${userData.name.toLowerCase().replace(/\s+/g, '')}@inovasidigital.id`
+      }));
+    }
+    const local = JSON.parse(localStorage.getItem('local_absensi')) || [];
+    setUserHistory(local);
+  }, []);
 
   // State untuk form edit
   const [editForm, setEditForm] = useState({ ...profile });
