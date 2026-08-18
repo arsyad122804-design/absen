@@ -56,6 +56,9 @@ export default function ManagerLayout() {
           <NavLink to="/manager/pengaturan" className={({isActive}) => isActive ? "mgr-v2-link active" : "mgr-v2-link"}>
             <Settings size={18} /> Pengaturan
           </NavLink>
+          <NavLink to="/absen" className="mgr-v2-link" style={{ marginTop: '16px', background: 'rgba(255,255,255,0.08)', color: '#38BDF8', borderRadius: '10px' }}>
+            <Home size={18} /> Mode Karyawan
+          </NavLink>
         </div>
 
         <div className="mgr-v2-bottom">

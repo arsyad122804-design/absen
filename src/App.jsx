@@ -20,6 +20,14 @@ import PengajuanManager from './pages/PengajuanManager'
 import PengaturanManager from './pages/PengaturanManager'
 import { LanguageProvider } from './contexts/LanguageContext'
 import './App.css'
+function DashboardRedirect() {
+  const user = JSON.parse(localStorage.getItem('user')) || {};
+  if (user.role?.toLowerCase() === 'manager') {
+    return <Navigate to="/manager/dashboard" replace />;
+  }
+  return <Navigate to="/absen" replace />;
+}
+
 function App() {
   return (
     <LanguageProvider>
@@ -27,7 +35,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<Navigate to="/manager/dashboard" replace />} />
+        <Route path="/dashboard" element={<DashboardRedirect />} />
         
         {/* Manager Routes */}
         <Route path="/manager" element={<ManagerLayout />}>

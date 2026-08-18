@@ -89,6 +89,13 @@ export default function DashboardLayout() {
           >
             <HelpCircle size={20} /> {t.bantuan}
           </NavLink>
+          <NavLink 
+            to="/manager/dashboard" 
+            className={getNavClass} 
+            style={{ background: '#EEF2FF', color: '#4F46E5', marginTop: '8px' }}
+          >
+            <Settings size={20} /> Panel Manager
+          </NavLink>
         </div>
 
         <div className="sidebar-mosque-bg"></div>
