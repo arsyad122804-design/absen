@@ -122,12 +122,8 @@ export default function DashboardLayout() {
             )}
 
             {/* PROFILE BUTTON */}
-            <div className="user-avatar" onClick={() => {setShowProfile(!showProfile); setShowNotif(false)}} style={{ cursor: 'pointer', overflow: 'hidden', background: '#e2e8f0' }}>
-              <img 
-                src={localStorage.getItem('avatar_' + (user.id || 'default')) || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&size=100&background=0D8ABC&color=fff`} 
-                alt="Avatar" 
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
+            <div className="user-avatar" onClick={() => {setShowProfile(!showProfile); setShowNotif(false)}} style={{ cursor: 'pointer' }}>
+              {String(user?.name || 'User').substring(0, 2).toUpperCase()}
             </div>
             
             {/* PROFILE DROPDOWN */}
