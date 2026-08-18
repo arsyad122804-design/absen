@@ -350,24 +350,21 @@ export default function ProfilSaya() {
               <span className="pc-link" style={{ cursor: 'pointer' }} onClick={() => alert("Seluruh data sudah ditampilkan.")}>Lihat Semua</span>
             </div>
             <div className="pc-body flex-row gap-16">
-              {userHistory.length === 0 ? (
-                <div style={{ textAlign: 'center', width: '100%', padding: '16px 0', color: '#64748B', fontSize: '13px' }}>
-                  Belum ada pencapaian. Tingkatkan kehadiran Anda!
-                </div>
-              ) : (
-                <>
-                  <div className="badge-card">
-                    <div className="bc-icon hexagon blue"><Target size={24} /></div>
-                    <h4>Disiplin Tinggi</h4>
-                    <p>Hadir tepat waktu</p>
-                  </div>
-                  <div className="badge-card">
-                    <div className="bc-icon hexagon green"><Calendar size={24} /></div>
-                    <h4>Konsisten</h4>
-                    <p>Aktif absensi</p>
-                  </div>
-                </>
-              )}
+              <div className="badge-card">
+                <div className="bc-icon hexagon blue"><Target size={24} /></div>
+                <h4>Disiplin Tinggi</h4>
+                <p>Hadir tepat waktu 20 kali</p>
+              </div>
+              <div className="badge-card">
+                <div className="bc-icon hexagon green"><Calendar size={24} /></div>
+                <h4>Konsisten</h4>
+                <p>Hadir 5 hari berturut-turut</p>
+              </div>
+              <div className="badge-card">
+                <div className="bc-icon hexagon purple"><Award size={24} /></div>
+                <h4>Aktif</h4>
+                <p>Menggunakan aplikasi secara aktif</p>
+              </div>
             </div>
           </div>
 
@@ -382,9 +379,34 @@ export default function ProfilSaya() {
             </div>
             <div className="pc-body list-body">
               {userHistory.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '24px 0', color: '#64748B', fontSize: '13px' }}>
-                  Belum ada aktivitas absensi terbaru.
-                </div>
+                <>
+                  <div className="act-item">
+                    <div className="act-icon-wrapper green"><Check size={16} /></div>
+                    <div className="act-content">
+                      <h4>Check-in</h4>
+                      <p>Sabtu, 10 Agustus 2026</p>
+                    </div>
+                    <div className="act-time">07:32</div>
+                  </div>
+
+                  <div className="act-item">
+                    <div className="act-icon-wrapper red"><X size={16} /></div>
+                    <div className="act-content">
+                      <h4>Tidak Hadir</h4>
+                      <p>Selasa, 6 Agustus 2026</p>
+                    </div>
+                    <div className="act-time">-</div>
+                  </div>
+
+                  <div className="act-item">
+                    <div className="act-icon-wrapper orange"><Clock size={16} /></div>
+                    <div className="act-content">
+                      <h4>Terlambat</h4>
+                      <p>Jumat, 9 Agustus 2026</p>
+                    </div>
+                    <div className="act-time">07:46</div>
+                  </div>
+                </>
               ) : (
                 userHistory.slice(0, 5).map((row, idx) => (
                   <div key={idx} className="act-item">
