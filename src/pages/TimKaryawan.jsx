@@ -6,17 +6,6 @@ import {
 import { supabase } from '../lib/supabase';
 import './TimKaryawan.css';
 
-const initialTableData = [
-  { id: 'KRY-0001', name: 'Dewi Hartati', role: 'Manager Operasional', div: 'Operasional', type: 'Full Time', status: 'Aktif', join: '12 Jan 2024', email: 'dewi@inovasidigital.id', phone: '0812-3456-7890' },
-  { id: 'KRY-0002', name: 'Rizky Maulana', role: 'Staff Marketing', div: 'Marketing', type: 'Full Time', status: 'Aktif', join: '18 Feb 2024', email: 'rizky@inovasidigital.id', phone: '0813-2345-6789' },
-  { id: 'KRY-0003', name: 'Siti Nurhaliza', role: 'UI/UX Designer', div: 'IT Development', type: 'Full Time', status: 'Aktif', join: '05 Mar 2024', email: 'siti@inovasidigital.id', phone: '0821-2345-9876' },
-  { id: 'KRY-0004', name: 'Budi Santoso', role: 'Staff Finance', div: 'Finance', type: 'Full Time', status: 'Aktif', join: '21 Mar 2024', email: 'budi@inovasidigital.id', phone: '0812-8765-4321' },
-  { id: 'KRY-0005', name: 'Ahmad Fauzi', role: 'HR Officer', div: 'HR & GA', type: 'Full Time', status: 'Cuti', join: '02 Apr 2024', email: 'fauzi@inovasidigital.id', phone: '0822-3344-5566' },
-  { id: 'KRY-0006', name: 'Lina Agustina', role: 'Staff Accounting', div: 'Finance', type: 'Full Time', status: 'Aktif', join: '11 Apr 2024', email: 'lina@inovasidigital.id', phone: '0821-4455-6677' },
-  { id: 'KRY-0007', name: 'Yoga Pratama', role: 'IT Support', div: 'IT Development', type: 'Full Time', status: 'Non-Aktif', join: '15 Des 2023', email: 'yoga@inovasidigital.id', phone: '0813-9988-7766' },
-  { id: 'KRY-0008', name: 'Dinda Aulia', role: 'Staff Marketing', div: 'Marketing', type: 'Part Time', status: 'Aktif', join: '28 Apr 2024', email: 'dinda@inovasidigital.id', phone: '0821-6677-8899' },
-];
-
 export default function TimKaryawan() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,6 +16,7 @@ export default function TimKaryawan() {
   const [filterKerja, setFilterKerja] = useState('Semua');
 
   const [activeMenuId, setActiveMenuId] = useState(null);
+  const [showNotif, setShowNotif] = useState(false);
   
   const fileInputRef = useRef(null);
 
@@ -37,30 +27,41 @@ export default function TimKaryawan() {
   const fetchEmployees = async () => {
     setLoading(true);
     try {
+      const local = JSON.parse(localStorage.getItem('local_karyawan')) || [];
+      
+      let dbData = [];
       const { data, error } = await supabase
         .from('karyawan')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching employees:', error);
-      } else {
-        // Map data dari Supabase ke format yang dibutuhkan UI jika perlu
-        const mappedData = (data || []).map(emp => ({
+      if (!error && data) {
+        dbData = data.map(emp => ({
           id: emp.id,
           name: emp.name,
           role: emp.role || 'Karyawan',
-          div: emp.divisi || '-',
+          div: emp.divisi || 'Sekolah',
           type: 'Full Time',
           status: emp.status || 'Aktif',
-          join: new Date(emp.created_at).toLocaleDateString('id-ID'),
-          email: emp.email,
-          phone: emp.phone || '-'
+          join: emp.created_at ? new Date(emp.created_at).toLocaleDateString('id-ID') : 'Baru saja',
+          email: `${emp.name.toLowerCase().replace(/\s+/g, '')}@inovasidigital.id`,
+          phone: emp.phone || '+62 812-0000-0000'
         }));
-        setEmployees(mappedData);
       }
+
+      // Gabungkan data lokal & Supabase (tanpa duplikat nama)
+      const combined = [...local];
+      dbData.forEach(d => {
+        if (!combined.some(c => c.name === d.name)) {
+          combined.push(d);
+        }
+      });
+
+      setEmployees(combined);
     } catch (err) {
       console.error(err);
+      const local = JSON.parse(localStorage.getItem('local_karyawan')) || [];
+      setEmployees(local);
     } finally {
       setLoading(false);
     }
@@ -129,13 +130,26 @@ export default function TimKaryawan() {
           <p>Kelola data tim dan informasi karyawan perusahaan.</p>
         </div>
         <div className="tkh-right">
-          <input type="file" ref={fileInputRef} style={{display: 'none'}} accept=".pdf,.xlsx,.csv" onChange={handleFileChange} />
-          <button className="btn-outline-blue" onClick={handleResetData}>
-            <Upload size={16} /> Impor Data
-          </button>
-          <div className="tk-notif">
-            <Bell size={20} color="#64748B" />
-            <span className="notif-badge">3</span>
+          <div style={{ position: 'relative' }}>
+            <div className="tk-notif" style={{ cursor: 'pointer' }} onClick={() => setShowNotif(!showNotif)}>
+              <Bell size={20} color="#64748B" />
+            </div>
+            {showNotif && (
+              <>
+                <div style={{ position: 'fixed', inset: 0, zIndex: 999 }} onClick={() => setShowNotif(false)} />
+                <div style={{ position: 'absolute', right: 0, top: '48px', width: '320px', background: 'white', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid #E2E8F0', zIndex: 1000, overflow: 'hidden' }}>
+                  <div style={{ padding: '16px', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: '#0F172A' }}>Notifikasi Tim</h3>
+                    <span onClick={() => setShowNotif(false)} style={{ fontSize: '12px', color: '#3B82F6', cursor: 'pointer', fontWeight: 500 }}>Tutup</span>
+                  </div>
+                  <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                    <div style={{ padding: '24px', textAlign: 'center', color: '#64748B', fontSize: '13px' }}>
+                      Belum ada notifikasi baru.
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -151,7 +165,7 @@ export default function TimKaryawan() {
             <h2>{totalEmps}</h2>
             <p>Total Karyawan</p>
           </div>
-          <div className="tkt-trend up">↑ 8 dari bulan lalu</div>
+          {totalEmps > 0 && <div className="tkt-trend up">↑ 8 dari bulan lalu</div>}
         </div>
 
         <div className="tk-tcard">
@@ -162,7 +176,7 @@ export default function TimKaryawan() {
             <h2>{activeEmps}</h2>
             <p>Karyawan Aktif</p>
           </div>
-          <div className="tkt-trend up">↑ 6 dari bulan lalu</div>
+          {totalEmps > 0 && <div className="tkt-trend up">↑ 6 dari bulan lalu</div>}
         </div>
 
         <div className="tk-tcard">
@@ -173,7 +187,7 @@ export default function TimKaryawan() {
             <h2>{cutiEmps}</h2>
             <p>Cuti / Izin</p>
           </div>
-          <div className="tkt-trend down">↓ 2 dari bulan lalu</div>
+          {totalEmps > 0 && <div className="tkt-trend down">↓ 2 dari bulan lalu</div>}
         </div>
 
         <div className="tk-tcard">
@@ -184,7 +198,7 @@ export default function TimKaryawan() {
             <h2>{nonActiveEmps}</h2>
             <p>Non-Aktif</p>
           </div>
-          <div className="tkt-trend down">↓ 1 dari bulan lalu</div>
+          {totalEmps > 0 && <div className="tkt-trend down">↓ 1 dari bulan lalu</div>}
         </div>
 
         <div className="tk-tcard">
@@ -195,7 +209,7 @@ export default function TimKaryawan() {
             <h2>{divSet.size}</h2>
             <p>Total Divisi</p>
           </div>
-          <div className="tkt-trend neutral">Tetap</div>
+          {totalEmps > 0 && <div className="tkt-trend neutral">Tetap</div>}
         </div>
 
       </div>

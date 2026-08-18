@@ -4,17 +4,24 @@ import {
   Settings2, BellRing, Lock, Mail, ChevronRight, Check, MapPin
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import './Pengaturan.css';
 
 export default function Pengaturan() {
   const { language, setLanguage, t } = useLanguage();
   
   // Local state for UI toggles
-  const [toggles, setToggles] = React.useState({
-    notifPush: true,
-    notifEmail: false,
-    darkMode: false,
-    biometrik: true,
-    lokasiAkurat: true
+  const [toggles, setToggles] = React.useState(() => {
+    const saved = localStorage.getItem('app_toggles');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return {
+      notifPush: true,
+      notifEmail: true,
+      darkMode: false,
+      biometrik: true,
+      lokasiAkurat: true
+    };
   });
   
   const [toast, setToast] = React.useState(null);
@@ -22,11 +29,14 @@ export default function Pengaturan() {
   const handleToggle = (key, label) => {
     setToggles(prev => {
       const newVal = !prev[key];
-      // Show toast
+      const updated = { ...prev, [key]: newVal };
+      localStorage.setItem('app_toggles', JSON.stringify(updated));
+      localStorage.setItem(`setting_${key}`, newVal ? 'true' : 'false');
+      
       if (label) {
         showToast(`${label} berhasil ${newVal ? 'diaktifkan' : 'dinonaktifkan'}.`);
       }
-      return { ...prev, [key]: newVal };
+      return updated;
     });
   };
 

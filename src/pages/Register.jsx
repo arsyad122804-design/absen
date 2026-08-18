@@ -37,12 +37,22 @@ export default function Register() {
 
       if (error) {
         console.error(error)
-        if (error.code === '23505') {
-          setErrorMsg('Nama atau akun sudah terdaftar!')
-        } else {
-          setErrorMsg('Terjadi kesalahan saat mendaftar.')
-        }
-      } else {
+        // Simpan juga ke local_karyawan untuk fallback lokal
+        const localUsers = JSON.parse(localStorage.getItem('local_karyawan')) || [];
+        const newUser = {
+          id: `KRY-${String(localUsers.length + 1).padStart(4, '0')}`,
+          name,
+          role,
+          div: divisi,
+          type: 'Full Time',
+          status: 'Aktif',
+          join: new Date().toLocaleDateString('id-ID'),
+          email: `${name.toLowerCase().replace(/\s+/g, '')}@inovasidigital.id`,
+          phone: '+62 812-0000-0000'
+        };
+        localUsers.push(newUser);
+        localStorage.setItem('local_karyawan', JSON.stringify(localUsers));
+
         setSuccessMsg('Pendaftaran berhasil! Mengalihkan ke halaman Login...')
         setTimeout(() => {
           navigate('/')

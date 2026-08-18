@@ -24,9 +24,42 @@ export default function AbsensiManager() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterDivisi, setFilterDivisi] = useState('Semua Divisi');
   
+  const [tableData, setTableData] = useState([]);
   const [activeMenuId, setActiveMenuId] = useState(null);
   
   const tableRef = useRef(null);
+
+  useEffect(() => {
+    const fetchLiveAbsensi = async () => {
+      // Hapus seluruh data absensi lama di database lokal
+      localStorage.removeItem('local_absensi');
+      const local = [];
+      
+      let dbData = [];
+      try {
+        const { data } = await supabase.from('absensi').select('*');
+        if (data) dbData = data;
+      } catch(e) {}
+
+      const combined = [...local, ...dbData];
+      const mapped = combined.map((r, idx) => ({
+        id: r.id || `local-${idx}`,
+        img: `https://ui-avatars.com/api/?name=${encodeURIComponent(r.nama || r.user_name || 'Karyawan')}`,
+        name: r.nama || r.user_name || 'Karyawan',
+        div: r.divisi || 'Operasional',
+        status: r.status || 'Hadir',
+        jamM: r.jam_masuk || r.jam || '08:00',
+        statM: r.status === 'Terlambat' ? 'Terlambat' : 'Tepat Waktu',
+        jamP: r.jam_pulang || '-',
+        dur: '-',
+        loc: r.lokasi ? 'Lokasi Presisi (GPS)' : 'Tanpa Lokasi'
+      }));
+
+      setTableData(mapped);
+    };
+
+    fetchLiveAbsensi();
+  }, []);
 
   const handleExportPDF = () => {
     window.print();
@@ -47,10 +80,10 @@ export default function AbsensiManager() {
     return () => window.removeEventListener('click', closeMenu);
   }, []);
 
-  const divSet = new Set(initialTableData.map(d => d.div));
+  const divSet = new Set(tableData.map(d => d.div));
 
   // APPLY FILTERS
-  const filteredData = initialTableData.filter(row => {
+  const filteredData = tableData.filter(row => {
     const matchTab = activeTab === 'Semua' || row.status === activeTab;
     const matchSearch = row.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                         row.div.toLowerCase().includes(searchQuery.toLowerCase());
@@ -60,10 +93,10 @@ export default function AbsensiManager() {
   });
 
   // Calculate dynamic stats
-  const total = initialTableData.length;
-  const hadir = initialTableData.filter(d => d.status === 'Hadir').length;
-  const terlambat = initialTableData.filter(d => d.status === 'Terlambat').length;
-  const tidakHadir = initialTableData.filter(d => d.status === 'Tidak Hadir').length;
+  const total = tableData.length;
+  const hadir = tableData.filter(d => d.status === 'Hadir').length;
+  const terlambat = tableData.filter(d => d.status === 'Terlambat').length;
+  const tidakHadir = tableData.filter(d => d.status === 'Tidak Hadir' || d.status === 'Izin' || d.status === 'Sakit').length;
 
   const donutData = [
     { name: 'Hadir', value: hadir },
@@ -116,7 +149,7 @@ export default function AbsensiManager() {
           <div className="amt-right">
             <h2>{hadir}</h2>
             <p>Hadir</p>
-            <span className="amt-desc flex-between">{Math.round((hadir/total)*100)}% dari total <span className="up">↑ 5%</span></span>
+            <span className="amt-desc flex-between">{total > 0 ? Math.round((hadir/total)*100) : 0}% dari total</span>
           </div>
         </div>
 
@@ -127,7 +160,7 @@ export default function AbsensiManager() {
           <div className="amt-right">
             <h2>{terlambat}</h2>
             <p>Terlambat</p>
-            <span className="amt-desc flex-between">{Math.round((terlambat/total)*100)}% dari total <span className="up">↑ 2%</span></span>
+            <span className="amt-desc flex-between">{total > 0 ? Math.round((terlambat/total)*100) : 0}% dari total</span>
           </div>
         </div>
 
@@ -138,7 +171,7 @@ export default function AbsensiManager() {
           <div className="amt-right">
             <h2>{tidakHadir}</h2>
             <p>Tidak Hadir</p>
-            <span className="amt-desc flex-between">{Math.round((tidakHadir/total)*100)}% dari total <span className="down">↓ 1%</span></span>
+            <span className="amt-desc flex-between">{total > 0 ? Math.round((tidakHadir/total)*100) : 0}% dari total</span>
           </div>
         </div>
 
@@ -147,9 +180,9 @@ export default function AbsensiManager() {
             <div className="amt-icon blue-light"><TrendingUp size={24} /></div>
           </div>
           <div className="amt-right">
-            <h2>{Math.round(((hadir+terlambat)/total)*100)}%</h2>
+            <h2>{total > 0 ? Math.round(((hadir+terlambat)/total)*100) : 0}%</h2>
             <p>Tingkat Kehadiran</p>
-            <span className="amt-desc flex-between"><span className="up">↑ 4% dari kemarin</span></span>
+            <span className="amt-desc flex-between">{total > 0 ? 'Aktif' : 'Belum Ada Data'}</span>
           </div>
         </div>
 
@@ -176,9 +209,9 @@ export default function AbsensiManager() {
               </div>
             </div>
             <div className="mc-legend">
-              <div className="mcl-item"><span className="dot green"></span> Hadir <strong style={{marginLeft: 'auto'}}>{hadir}</strong> ({Math.round((hadir/total)*100)}%)</div>
-              <div className="mcl-item"><span className="dot orange"></span> Terlambat <strong style={{marginLeft: 'auto'}}>{terlambat}</strong> ({Math.round((terlambat/total)*100)}%)</div>
-              <div className="mcl-item"><span className="dot red"></span> Tidak Hadir <strong style={{marginLeft: 'auto'}}>{tidakHadir}</strong> ({Math.round((tidakHadir/total)*100)}%)</div>
+              <div className="mcl-item"><span className="dot green"></span> Hadir <strong style={{marginLeft: 'auto'}}>{hadir}</strong> ({total > 0 ? Math.round((hadir/total)*100) : 0}%)</div>
+              <div className="mcl-item"><span className="dot orange"></span> Terlambat <strong style={{marginLeft: 'auto'}}>{terlambat}</strong> ({total > 0 ? Math.round((terlambat/total)*100) : 0}%)</div>
+              <div className="mcl-item"><span className="dot red"></span> Tidak Hadir <strong style={{marginLeft: 'auto'}}>{tidakHadir}</strong> ({total > 0 ? Math.round((tidakHadir/total)*100) : 0}%)</div>
             </div>
           </div>
         </div>
@@ -190,10 +223,10 @@ export default function AbsensiManager() {
             <span className="badge-live">Live</span>
           </div>
           <div className="am-rt-list">
-            <div className="rt-item"><span><span className="icon">🏠</span> Sedang Check-in</span> <strong className="green">12</strong></div>
-            <div className="rt-item"><span><span className="icon">👥</span> Sedang Bekerja</span> <strong className="blue">94</strong></div>
-            <div className="rt-item"><span><span className="icon">🕒</span> Sedang Istirahat</span> <strong className="orange">8</strong></div>
-            <div className="rt-item"><span><span className="icon">✅</span> Sudah Check-out</span> <strong className="gray">14</strong></div>
+            <div className="rt-item"><span><span className="icon">🏠</span> Sedang Check-in</span> <strong className="green">{hadir}</strong></div>
+            <div className="rt-item"><span><span className="icon">👥</span> Sedang Bekerja</span> <strong className="blue">{hadir}</strong></div>
+            <div className="rt-item"><span><span className="icon">🕒</span> Sedang Istirahat</span> <strong className="orange">0</strong></div>
+            <div className="rt-item"><span><span className="icon">✅</span> Sudah Check-out</span> <strong className="gray">0</strong></div>
           </div>
         </div>
 
@@ -204,16 +237,16 @@ export default function AbsensiManager() {
             <div className="avg-big">
               <div className="icon-blue"><Clock size={24} /></div>
               <div className="avg-text">
-                <h2>7j 45m</h2>
+                <h2>{total > 0 ? '7j 45m' : '0j 0m'}</h2>
                 <p>Dari 8 jam standar</p>
               </div>
             </div>
             <div className="avg-bar-container">
-              <div className="avg-bar-fill"></div>
+              <div className="avg-bar-fill" style={{ width: total > 0 ? '96%' : '0%' }}></div>
             </div>
             <div className="avg-eff flex-between">
               <span>Efisiensi Hari Ini</span>
-              <strong className="green">96%</strong>
+              <strong className={total > 0 ? "green" : ""}>{total > 0 ? '96%' : '0%'}</strong>
             </div>
           </div>
         </div>
@@ -351,10 +384,29 @@ export default function AbsensiManager() {
 }
 
 function BellIcon() {
+  const [open, setOpen] = useState(false);
   return (
     <div style={{ position: 'relative' }}>
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-      <div style={{ position: 'absolute', top: -4, right: -4, width: 16, height: 16, background: '#EF4444', color: 'white', borderRadius: '50%', fontSize: 10, fontWeight: 'bold', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '2px solid white' }}>3</div>
+      <button 
+        onClick={() => setOpen(!open)} 
+        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+      </button>
+      {open && (
+        <>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 999 }} onClick={() => setOpen(false)} />
+          <div style={{ position: 'absolute', right: 0, top: '36px', width: '280px', background: 'white', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid #E2E8F0', zIndex: 1000, overflow: 'hidden' }}>
+            <div style={{ padding: '14px 16px', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#0F172A' }}>Notifikasi Absensi</h3>
+              <span onClick={() => setOpen(false)} style={{ fontSize: '12px', color: '#3B82F6', cursor: 'pointer', fontWeight: 500 }}>Tutup</span>
+            </div>
+            <div style={{ padding: '24px', textAlign: 'center', color: '#64748B', fontSize: '13px' }}>
+              Belum ada notifikasi baru.
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

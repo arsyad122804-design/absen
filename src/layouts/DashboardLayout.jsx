@@ -22,28 +22,16 @@ export default function DashboardLayout() {
     }
   }, []);
 
-  const [isProfileComplete, setIsProfileComplete] = useState(() => {
-    return localStorage.getItem('isProfileComplete') === 'true'
-  })
-
-  // Redirect ke profil jika belum lengkap
-  useEffect(() => {
-    if (!isProfileComplete && location.pathname !== '/absen/profil') {
-      navigate('/absen/profil', { replace: true })
-    }
-  }, [isProfileComplete, location, navigate])
+  const [isProfileComplete, setIsProfileComplete] = useState(true);
   
-  const getNavClass = ({ isActive }, isLocked) => {
+  const getNavClass = ({ isActive }) => {
     let base = 'menu-item'
     if (isActive && location.pathname !== '/absen') base += ' active'
-    if (isLocked) base += ' locked'
     return base
   }
   
-  const getIndexNavClass = (isLocked) => {
-    let base = location.pathname === '/absen' ? 'menu-item active' : 'menu-item'
-    if (isLocked) base += ' locked'
-    return base
+  const getIndexNavClass = () => {
+    return location.pathname === '/absen' ? 'menu-item active' : 'menu-item'
   }
 
   return (
@@ -71,39 +59,35 @@ export default function DashboardLayout() {
         <div className="sidebar-menu">
           <NavLink 
             to="/absen" 
-            className={(nav) => getIndexNavClass(!isProfileComplete)} 
-            onClick={(e) => !isProfileComplete && e.preventDefault()}
+            className={getIndexNavClass} 
             end
           >
-            <Home size={20} /> {t.dashboard} {!isProfileComplete && <Lock size={16} style={{marginLeft: 'auto'}}/>}
+            <Home size={20} /> {t.dashboard}
           </NavLink>
           <NavLink 
             to="/absen/riwayat" 
-            className={(nav) => getNavClass(nav, !isProfileComplete)}
-            onClick={(e) => !isProfileComplete && e.preventDefault()}
+            className={getNavClass}
           >
-            <Calendar size={20} /> {t.riwayatAbsen} {!isProfileComplete && <Lock size={16} style={{marginLeft: 'auto'}}/>}
+            <Calendar size={20} /> {t.riwayatAbsen}
           </NavLink>
           <NavLink 
             to="/absen/profil" 
-            className={(nav) => getNavClass(nav, false)}
+            className={getNavClass}
           >
             <User size={20} /> {t.profilSaya}
           </NavLink>
           <NavLink 
             to="/absen/pengaturan" 
-            className={(nav) => getNavClass(nav, !isProfileComplete)}
-            onClick={(e) => !isProfileComplete && e.preventDefault()}
+            className={getNavClass}
           >
-            <Settings size={20} /> {t.pengaturan} {!isProfileComplete && <Lock size={16} style={{marginLeft: 'auto'}}/>}
+            <Settings size={20} /> {t.pengaturan}
           </NavLink>
           <NavLink 
             to="/absen/bantuan" 
-            className={(nav) => getNavClass(nav, !isProfileComplete)} 
+            className={getNavClass} 
             style={{ marginTop: 'auto' }}
-            onClick={(e) => !isProfileComplete && e.preventDefault()}
           >
-            <HelpCircle size={20} /> {t.bantuan} {!isProfileComplete && <Lock size={16} style={{marginLeft: 'auto'}}/>}
+            <HelpCircle size={20} /> {t.bantuan}
           </NavLink>
         </div>
 
@@ -121,7 +105,6 @@ export default function DashboardLayout() {
             {/* NOTIF BUTTON */}
             <button className="notification-btn" onClick={() => {setShowNotif(!showNotif); setShowProfile(false)}}>
               <Bell size={20} />
-              <div className="notification-dot"></div>
             </button>
             
             {/* NOTIF DROPDOWN */}

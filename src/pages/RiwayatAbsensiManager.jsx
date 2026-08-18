@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, Filter, Calendar, Clock, Download, ChevronDown, MoreVertical, 
   FileText, Info, CheckCircle2, AlertCircle, XCircle, X, MapPin, Image as ImageIcon
@@ -16,9 +16,54 @@ const mockData = [
   { id: 7, name: 'Lina Agustina', div: 'Finance', date: '10 Agu 2026', status: 'Sakit', inTime: '-', outTime: '-', detail: 'Tipes (Istirahat 3 Hari)' },
 ];
 
+import { supabase } from '../lib/supabase';
+
 export default function RiwayatAbsensiManager() {
   const [filterStatus, setFilterStatus] = useState('Semua');
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [dataList, setDataList] = useState([]);
+
+  useEffect(() => {
+    const fetchAllHistory = async () => {
+      // Hapus seluruh data absensi lama di database lokal
+      localStorage.removeItem('local_absensi');
+      const local = [];
+      
+      let dbData = [];
+      try {
+        const { data, error } = await supabase.from('absensi').select('*').order('created_at', { ascending: false });
+        if (!error && data) {
+          dbData = data;
+        }
+      } catch (e) {}
+
+      const combined = [...local, ...dbData];
+      
+      const mapped = combined.map((r, i) => {
+        const dateObj = r.tanggal ? new Date(r.tanggal) : new Date();
+        const monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+        const formattedDate = `${dateObj.getDate()} ${monthNames[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
+        
+        return {
+          id: r.id || `local-his-${i}`,
+          name: r.nama || r.user_name || 'Karyawan',
+          div: r.divisi || 'Operasional',
+          date: formattedDate,
+          status: r.status || 'Hadir',
+          inTime: r.jam_masuk || r.jam || '08:00',
+          outTime: r.jam_pulang || '-',
+          detail: r.alasan || '',
+          lat: r.lokasi ? r.lokasi.split(',')[0] : null,
+          lng: r.lokasi ? r.lokasi.split(',')[1] : null,
+          lokasi: r.lokasi
+        };
+      });
+
+      setDataList(mapped);
+    };
+
+    fetchAllHistory();
+  }, []);
 
   // Fungsi untuk mensimulasikan unduh dokumen
   const handleDownload = (filename) => {
@@ -33,8 +78,8 @@ export default function RiwayatAbsensiManager() {
 
   // Filter Data
   const filteredData = filterStatus === 'Semua' 
-    ? mockData 
-    : mockData.filter(item => item.status === filterStatus);
+    ? dataList 
+    : dataList.filter(item => item.status === filterStatus);
 
   const renderDetail = (row) => {
     if (row.status === 'Hadir' || row.status === 'Terlambat') {

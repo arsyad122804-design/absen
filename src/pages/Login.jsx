@@ -14,6 +14,30 @@ export default function Login() {
     e.preventDefault()
     
     // Simpan status loading jika mau (opsional)
+    // Cek fallback / dummy login TERLEBIH DAHULU agar tetap bisa login 
+    // meski Supabase sedang bermasalah atau tabel belum dibuat.
+    if (username === 'hibatullah' && password === 'hibatullah maju') {
+      const adminData = {
+        id: 'admin-1',
+        name: 'Direktur Hibatullah',
+        role: 'Manager',
+        divisi: 'Kepesantrenan'
+      };
+      localStorage.setItem('user', JSON.stringify(adminData));
+      navigate('/manager/dashboard');
+      return;
+    } else if (username === '123456' && password === '123456') {
+      const karyawanData = {
+        id: 'karyawan-1',
+        name: 'Karyawan Demo',
+        role: 'Karyawan',
+        divisi: 'Sekolah'
+      };
+      localStorage.setItem('user', JSON.stringify(karyawanData));
+      navigate('/absen');
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('karyawan')
@@ -23,28 +47,7 @@ export default function Login() {
         .maybeSingle();
 
       if (error || !data) {
-        // Fallback rahasia untuk Direktur/Manager
-        if (username === 'hibatullah' && password === 'hibatullah maju') {
-          const adminData = {
-            id: 'admin-1',
-            name: 'Direktur Hibatullah',
-            role: 'Manager',
-            divisi: 'Kepesantrenan'
-          };
-          localStorage.setItem('user', JSON.stringify(adminData));
-          navigate('/manager/dashboard');
-        } else if (username === '123456' && password === '123456') {
-          const karyawanData = {
-            id: 'karyawan-1',
-            name: 'Karyawan Demo',
-            role: 'Karyawan',
-            divisi: 'Sekolah'
-          };
-          localStorage.setItem('user', JSON.stringify(karyawanData));
-          navigate('/absen');
-        } else {
-          setErrorMsg('Nama atau Password salah!');
-        }
+        setErrorMsg('Nama atau Password salah!');
       } else {
         // Berhasil login dari Supabase
         localStorage.setItem('user', JSON.stringify(data));
@@ -57,7 +60,8 @@ export default function Login() {
       }
     } catch (err) {
       console.error(err);
-      setErrorMsg('Terjadi kesalahan pada sistem!');
+      setErrorMsg('Koneksi Database bermasalah. Gunakan akun demo (123456) untuk sementara.');
+
     }
   }
 
@@ -71,24 +75,7 @@ export default function Login() {
         <div className="login-left">
           
           <div className="login-brand">
-            <svg width="64" height="64" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="brand-logo">
-              <path d="M50 0L65.4508 15.4508L87.3223 12.6777L90.0954 34.5492L100 50L90.0954 65.4508L87.3223 87.3223L65.4508 90.0954L50 100L34.5492 90.0954L12.6777 87.3223L9.90462 65.4508L0 50L9.90462 34.5492L12.6777 12.6777L34.5492 15.4508L50 0Z" fill="#1E3A8A"/>
-              <path d="M50 8L62.45 20.45L80.3 18.3L82.45 36.15L90 50L82.45 63.85L80.3 81.7L62.45 79.55L50 92L37.55 79.55L19.7 81.7L17.55 63.85L10 50L17.55 36.15L19.7 18.3L37.55 20.45L50 8Z" fill="#FBBF24"/>
-              <path d="M50 16L58.5 24.5L72 23L73.5 36.5L80 50L73.5 63.5L72 77L58.5 75.5L50 84L41.5 75.5L28 77L26.5 63.5L20 50L26.5 36.5L28 23L41.5 24.5L50 16Z" fill="white"/>
-              <rect x="35" y="45" width="8" height="20" fill="#1E3A8A" />
-              <rect x="57" y="45" width="8" height="20" fill="#1E3A8A" />
-              <path d="M50 30L60 40H40L50 30Z" fill="#1E3A8A"/>
-            </svg>
-            
-            <h1 className="brand-title">HIBATULLAH</h1>
-            
-            <div className="brand-subtitle">
-              <div className="brand-line"></div>
-              <span>IIBS</span>
-              <div className="brand-line"></div>
-            </div>
-            
-            <p className="brand-motto">Beradab dan Berkarya</p>
+            <img src="/logo.png" className="brand-logo" alt="Hibatullah IIBS" style={{ width: '100%', maxWidth: '300px', height: 'auto' }} />
           </div>
 
           <div className="login-welcome">

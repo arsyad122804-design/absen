@@ -1,0 +1,170 @@
+/* PENGAJUAN MANAGER STYLES */
+
+.pm-header {
+  margin-bottom: 32px;
+}
+
+.pm-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0 0 6px 0;
+}
+
+.pm-header p {
+  color: #64748B;
+  font-size: 15px;
+  margin: 0;
+}
+
+.pm-card {
+  background: white;
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  border: 1px solid #E2E8F0;
+}
+
+.pm-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.pm-card-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+}
+
+.pm-empty {
+  text-align: center;
+  padding: 60px 24px;
+  color: #64748B;
+}
+
+.pm-empty p {
+  font-size: 15px;
+  font-weight: 500;
+  margin: 12px 0 0 0;
+}
+
+.pm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pm-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  background: #F8FAFC;
+  transition: all 0.2s ease;
+}
+
+.pm-item:hover {
+  background: white;
+  border-color: #CBD5E1;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+
+.pm-item-left {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.pm-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4F46E5;
+  font-weight: 700;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.pm-details h4 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0 0 6px 0;
+  display: flex;
+  align-items: center;
+}
+
+.pm-badge {
+  font-size: 12px;
+  background: #DBEAFE;
+  color: #1D4ED8;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-left: 10px;
+  font-weight: 600;
+}
+
+.pm-details p {
+  font-size: 13px;
+  color: #64748B;
+  margin: 0 0 4px 0;
+  line-height: 1.4;
+}
+
+.pm-details p span {
+  font-weight: 600;
+  color: #334155;
+}
+
+.pm-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.pm-btn-reject {
+  padding: 10px 18px;
+  background: white;
+  border: 1px solid #FCA5A5;
+  color: #EF4444;
+  border-radius: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pm-btn-reject:hover {
+  background: #FEE2E2;
+  border-color: #EF4444;
+}
+
+.pm-btn-approve {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  border: none;
+  color: white;
+  border-radius: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+  transition: all 0.2s ease;
+}
+
+.pm-btn-approve:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3);
+}

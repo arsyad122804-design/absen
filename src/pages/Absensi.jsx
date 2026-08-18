@@ -9,6 +9,7 @@ export default function Absensi() {
   const [showModal, setShowModal] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
   const [user, setUser] = useState(null)
+  const [alasan, setAlasan] = useState('')
 
   useEffect(() => {
     const userData = localStorage.getItem('user')
@@ -16,20 +17,21 @@ export default function Absensi() {
       setUser(JSON.parse(userData))
     }
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    checkLocation();
     return () => clearInterval(timer);
   }, []);
 
   const videoRef = React.useRef(null)
   const [locationStatus, setLocationStatus] = useState('idle'); // idle, loading, inside, outside, error
   const [distance, setDistance] = useState(null);
+  const [coords, setCoords] = useState(null);
 
-  // Kumpulan titik koordinat (Polygon) yang membentuk area batas sekolah (Sesuai garis merah di peta)
-  // TODO: Ganti titik-titik ini dengan koordinat asli ujung-ujung wilayah sekolah Anda
+  // Kumpulan titik koordinat (Polygon) area sekolah (Jl. Wonosari No.16, Sambeng, Kasiman, Bojonegoro)
   const SCHOOL_POLYGON = [
-    { lat: 0.144000, lng: 117.485000 }, // Titik 1 (Kiri Atas)
-    { lat: 0.142000, lng: 117.485000 }, // Titik 2 (Kiri Bawah)
-    { lat: 0.142000, lng: 117.488000 }, // Titik 3 (Kanan Bawah)
-    { lat: 0.144000, lng: 117.488000 }, // Titik 4 (Kanan Atas)
+    { lat: -7.1330, lng: 111.6240 },
+    { lat: -7.1360, lng: 111.6240 },
+    { lat: -7.1360, lng: 111.6270 },
+    { lat: -7.1330, lng: 111.6270 },
   ];
 
   // Algoritma Ray-Casting untuk mendeteksi apakah lokasi user berada di DALAM area Polygon
@@ -64,9 +66,13 @@ export default function Absensi() {
       return;
     }
 
+    const isHighAccuracy = localStorage.getItem('setting_lokasiAkurat') !== 'false';
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const userPoint = { lat: position.coords.latitude, lng: position.coords.longitude };
+        setCoords(userPoint);
+        localStorage.setItem('user_last_coords', JSON.stringify(userPoint));
         
         // Simpan titik saat ini untuk debugging / pembuatan poligon asli
         window.userCurrentLocation = userPoint;
@@ -86,7 +92,7 @@ export default function Absensi() {
         console.error("Error getting location:", error);
         setLocationStatus('error');
       },
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: isHighAccuracy, timeout: 10000, maximumAge: 0 }
     );
   };
 
@@ -123,30 +129,131 @@ export default function Absensi() {
     }
 
     try {
-      const today = currentTime.toISOString().split('T')[0];
-      const timeStr = currentTime.toTimeString().split(' ')[0]; // HH:MM:SS
-      const isLate = currentTime.getHours() >= 8; // contoh: > jam 8 = terlambat
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const today = `${year}-${month}-${day}`;
+
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const timeStr = `${hours}:${minutes}:${seconds}`;
+
+      const isLate = now.getHours() >= 8; // terlambat jika jam >= 8
       const status = isLate ? 'Terlambat' : 'Hadir';
 
-      const { error } = await supabase
-        .from('absensi')
-        .insert([
-          {
-            karyawan_id: user.id,
-            tanggal: today,
-            waktu_masuk: timeStr,
-            status: status
-          }
-        ]);
-
-      if (error) {
-        console.error("Error submitting attendance:", error);
-        alert('Gagal mencatat kehadiran! Pastikan tabel absensi sudah ada.');
-      } else {
-        setShowModal(false)
-        setSelectedStatus(null)
-        alert('Kehadiran berhasil dicatat di Database!')
+      let activeCoords = coords;
+      if (!activeCoords) {
+        const savedCoords = localStorage.getItem('user_last_coords');
+        if (savedCoords) {
+          try { activeCoords = JSON.parse(savedCoords); } catch (e) {}
+        }
       }
+      const lokasiStr = activeCoords ? `${activeCoords.lat},${activeCoords.lng}` : '-7.1344,111.6256';
+
+      // 1. Simpan ke LocalStorage agar langsung muncul di riwayat (offline/demo fallback)
+      const localRec = {
+        id: Date.now(),
+        karyawan_id: user.id,
+        tanggal: today,
+        waktu_masuk: timeStr,
+        waktu_keluar: null,
+        status: status,
+        keterangan: '-',
+        lokasi: lokasiStr
+      };
+      const local = JSON.parse(localStorage.getItem('local_absensi')) || [];
+      local.unshift(localRec);
+      localStorage.setItem('local_absensi', JSON.stringify(local));
+
+      // 2. Coba simpan ke Supabase jika bukan akun demo
+      const isDemo = !user.id || user.id.startsWith('karyawan-') || user.id.startsWith('admin-');
+      if (!isDemo) {
+        const { error } = await supabase
+          .from('absensi')
+          .insert([
+            {
+              karyawan_id: user.id,
+              tanggal: today,
+              waktu_masuk: timeStr,
+              status: status,
+              lokasi: lokasiStr
+            }
+          ]);
+        if (error) console.error("Error submitting attendance to Supabase:", error);
+      }
+
+      setShowModal(false);
+      setSelectedStatus(null);
+      alert('Kehadiran berhasil dicatat!');
+    } catch (err) {
+      console.error(err);
+      alert('Terjadi kesalahan sistem.');
+    }
+  }
+
+  const submitIzinSakit = async () => {
+    if (!user) {
+      alert("Sesi login tidak valid. Silakan login ulang.");
+      return;
+    }
+    if (alasan.trim().length < 5) {
+      alert("Alasan terlalu singkat!");
+      return;
+    }
+    
+    try {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const today = `${year}-${month}-${day}`;
+
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const timeStr = `${hours}:${minutes}:${seconds}`;
+
+      const status = selectedStatus === 'izin' ? 'Izin' : 'Sakit';
+      const lokasiStr = null; // Tidak mencatat lokasi GPS untuk Izin / Sakit
+
+      // 1. Simpan ke LocalStorage agar langsung muncul di riwayat (offline/demo fallback)
+      const localRec = {
+        id: Date.now(),
+        karyawan_id: user.id,
+        tanggal: today,
+        waktu_masuk: timeStr,
+        waktu_keluar: null,
+        status: status,
+        keterangan: alasan,
+        lokasi: lokasiStr
+      };
+      const local = JSON.parse(localStorage.getItem('local_absensi')) || [];
+      local.unshift(localRec);
+      localStorage.setItem('local_absensi', JSON.stringify(local));
+
+      // 2. Coba simpan ke Supabase jika bukan akun demo
+      const isDemo = !user.id || user.id.startsWith('karyawan-') || user.id.startsWith('admin-');
+      if (!isDemo) {
+        const { error } = await supabase
+          .from('absensi')
+          .insert([
+            {
+              karyawan_id: user.id,
+              tanggal: today,
+              waktu_masuk: timeStr,
+              status: status,
+              keterangan: alasan,
+              lokasi: lokasiStr
+            }
+          ]);
+        if (error) console.error("Error submitting reason to Supabase:", error);
+      }
+
+      setSelectedStatus(null);
+      setAlasan('');
+      alert('Pengajuan berhasil dicatat!');
     } catch (err) {
       console.error(err);
       alert('Terjadi kesalahan sistem.');
@@ -225,9 +332,17 @@ export default function Absensi() {
         <div className="alasan-box slide-down">
           <h4>{t.keterangan} / Alasan</h4>
           <p>Tuliskan alasan {selectedStatus === 'izin' ? 'izin' : 'sakit'} Anda agar dapat diverifikasi oleh admin.</p>
-          <textarea placeholder={t.tulisAlasan}></textarea>
-          <div className="char-count">0 / 200 karakter</div>
-          <button className="btn-primary" style={{ marginTop: '16px', padding: '12px', borderRadius: '12px' }}>
+          <textarea 
+            placeholder={t.tulisAlasan}
+            value={alasan}
+            onChange={(e) => setAlasan(e.target.value)}
+          ></textarea>
+          <div className="char-count">{alasan.length} / 200 karakter</div>
+          <button 
+            className="btn-primary" 
+            style={{ marginTop: '16px', padding: '12px', borderRadius: '12px' }}
+            onClick={submitIzinSakit}
+          >
             {t.kirimAlasan}
           </button>
         </div>

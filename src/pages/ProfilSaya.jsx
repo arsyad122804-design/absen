@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
+import './ProfilSaya.css';
 import { 
   Edit3, Bell, BadgeCheck, MapPin, Calendar, Quote, 
   User, Mail, Phone, Briefcase, Award, Clock, X, Check,
@@ -15,9 +16,11 @@ export default function ProfilSaya() {
 
   const [activeTab, setActiveTab] = useState('Ringkasan');
   const [showEditModal, setShowEditModal] = useState(false);
+  const fileInputRef = useRef(null);
 
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user')) || {});
   const [profile, setProfile] = useState({
+    id: user.id || 'default',
     name: user.name || 'User',
     role: user.role || 'Karyawan',
     divisi: user.divisi || 'Umum',
@@ -71,17 +74,61 @@ export default function ProfilSaya() {
     setEditForm({ ...editForm, education: newEdu });
   };
 
-  const handleSave = () => {
+  const [avatarUrl, setAvatarUrl] = useState(() => {
+    const stored = localStorage.getItem('avatar_' + (user.id || 'default'));
+    return stored || `https://ui-avatars.com/api/?name=${(user.name || 'User').replace(/ /g, '+')}&size=200&background=0D8ABC&color=fff`;
+  });
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target.result;
+        setAvatarUrl(base64);
+        localStorage.setItem('avatar_' + profile.id, base64);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSave = async () => {
+    // 1. Update state lokal & localStorage terlebih dahulu
+    const updatedUser = { ...user, name: editForm.name, role: editForm.role };
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    setUser(updatedUser);
     setProfile(editForm);
     setShowEditModal(false);
-    
-    // Unlock fitur jika ini adalah save pertama kali
+
+    // 2. Coba update ke Supabase (hanya jika bukan akun demo)
+    const isDemo = !user.id || user.id.startsWith('karyawan-') || user.id.startsWith('admin-');
+    if (!isDemo) {
+      try {
+        const { error } = await supabase
+          .from('karyawan')
+          .update({
+            name: editForm.name,
+            role: editForm.role
+          })
+          .eq('id', user.id);
+
+        if (error) {
+          console.error("Supabase update error:", error);
+          // Kita tidak perlu memblokir user jika hanya koneksi Supabase gagal
+        }
+      } catch (err) {
+        console.error("Failed to connect to Supabase database:", err);
+      }
+    }
+
+    // 3. Buka (unlock) fitur yang terkunci jika ini pertama kali menyimpan profil
     if (localStorage.getItem('isProfileComplete') !== 'true') {
       localStorage.setItem('isProfileComplete', 'true');
       if (setIsProfileComplete) setIsProfileComplete(true);
-      // Optional: beri toast notifikasi atau arahkan ke dashboard
       alert("Profil berhasil disimpan! Fitur lainnya kini sudah terbuka.");
       navigate('/absen', { replace: true });
+    } else {
+      alert("Profil berhasil diperbarui!");
     }
   };
 
@@ -101,10 +148,6 @@ export default function ProfilSaya() {
           >
             <Edit3 size={18} /> Edit Profil
           </button>
-          <button className="btn-icon">
-            <Bell size={20} color="#475569" />
-            <span className="notif-badge"></span>
-          </button>
         </div>
       </div>
 
@@ -113,10 +156,17 @@ export default function ProfilSaya() {
         <div className="ph-overlay"></div>
         <div className="ph-content">
           <div className="ph-avatar-container">
-            <img src={`https://ui-avatars.com/api/?name=${profile.name.replace(/ /g, '+')}&size=200&background=0D8ABC&color=fff`} alt={profile.name} className="ph-avatar" />
-            <div className="ph-avatar-badge">
+            <img src={avatarUrl} alt={profile.name} className="ph-avatar" />
+            <div className="ph-avatar-badge" onClick={() => fileInputRef.current && fileInputRef.current.click()}>
               <span className="camera-icon">📷</span>
             </div>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              style={{ display: 'none' }} 
+              accept="image/*"
+              onChange={handleAvatarChange} 
+            />
           </div>
           
           <div className="ph-info">
@@ -143,7 +193,7 @@ export default function ProfilSaya() {
 
       {/* TABS */}
       <div className="profil-tabs-card">
-        {['Ringkasan', 'Informasi Pribadi', 'Pendidikan', 'Keahlian', 'Pengaturan'].map(tab => (
+        {['Ringkasan', 'Informasi Pribadi', 'Pengaturan'].map(tab => (
           <button 
             key={tab} 
             className={`profil-tab-btn ${activeTab === tab ? 'active' : ''}`}
@@ -218,7 +268,7 @@ export default function ProfilSaya() {
                 </div>
               </div>
 
-              <button className="btn-outline-full">Lihat Selengkapnya</button>
+              <button className="btn-outline-full" onClick={() => alert("Seluruh informasi sudah ditampilkan.")}>Lihat Selengkapnya</button>
             </div>
           </div>
 
@@ -263,7 +313,7 @@ export default function ProfilSaya() {
                 <Award size={20} color="#3B82F6" />
                 <h3>Pencapaian</h3>
               </div>
-              <a href="#" className="pc-link">Lihat Semua</a>
+              <span className="pc-link" style={{ cursor: 'pointer' }} onClick={() => alert("Seluruh data sudah ditampilkan.")}>Lihat Semua</span>
             </div>
             <div className="pc-body flex-row gap-16">
               <div className="badge-card">
@@ -291,7 +341,7 @@ export default function ProfilSaya() {
                 <Activity size={20} color="#3B82F6" />
                 <h3>Aktivitas Terbaru</h3>
               </div>
-              <a href="#" className="pc-link">Lihat Semua</a>
+              <span className="pc-link" style={{ cursor: 'pointer' }} onClick={() => alert("Seluruh data sudah ditampilkan.")}>Lihat Semua</span>
             </div>
             <div className="pc-body list-body">
               
@@ -328,110 +378,7 @@ export default function ProfilSaya() {
         </div>
         )}
 
-        {/* KOLOM KANAN */}
-        {['Ringkasan', 'Keahlian', 'Pendidikan', 'Informasi Pribadi'].includes(activeTab) && (
-        <div className="profil-col-right">
-          
-          {/* Keahlian */}
-          {['Ringkasan', 'Keahlian'].includes(activeTab) && (
-          <div className="profil-card">
-            <div className="pc-header justify-between">
-              <div className="pc-h-left">
-                <Zap size={20} color="#3B82F6" />
-                <h3>Keahlian</h3>
-              </div>
-              <a href="#" className="pc-link">Lihat Semua</a>
-            </div>
-            <div className="pc-body">
-              {profile.skills.map((skill, idx) => (
-                <div className="skill-item" key={idx}>
-                  <div className="si-header">
-                    <div className="si-icon"><Zap size={16} color="#3B82F6"/></div>
-                    <span>{skill.name}</span>
-                  </div>
-                  <div className="si-progress-wrapper">
-                    <div className="si-progress-bar"><div className="si-progress" style={{ width: skill.pct }}></div></div>
-                    <span className="si-pct">{skill.pct}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          )}
 
-          {/* Riwayat Pendidikan */}
-          {['Ringkasan', 'Pendidikan'].includes(activeTab) && (
-          <div className="profil-card">
-            <div className="pc-header justify-between">
-              <div className="pc-h-left">
-                <BookOpen size={20} color="#3B82F6" />
-                <h3>Riwayat Pendidikan</h3>
-              </div>
-              <a href="#" className="pc-link">Lihat Semua</a>
-            </div>
-            <div className="pc-body">
-              <div className="timeline-list">
-                {profile.education.map((edu, idx) => (
-                  <div className="tl-item" key={idx}>
-                    <div className="tl-dot"></div>
-                    <div className="tl-content">
-                      <h4>{edu.title}</h4>
-                      {edu.subtitle && <p>{edu.subtitle}</p>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-          )}
-
-          {/* Informasi Cepat */}
-          {['Ringkasan', 'Informasi Pribadi'].includes(activeTab) && (
-          <div className="profil-card">
-            <div className="pc-header">
-              <Briefcase size={20} color="#3B82F6" />
-              <h3>Informasi Cepat</h3>
-            </div>
-            <div className="pc-body list-body">
-              
-              <div className="act-item no-border">
-                <div className="act-icon-wrapper gray"><Briefcase size={16} /></div>
-                <div className="act-content">
-                  <p>Pekerjaan</p>
-                  <h4 style={{ fontWeight: 500 }}>Technology Specialist</h4>
-                </div>
-              </div>
-
-              <div className="act-item no-border">
-                <div className="act-icon-wrapper gray"><Target size={16} /></div>
-                <div className="act-content">
-                  <p>Hobi</p>
-                  <h4 style={{ fontWeight: 500 }}>Sepak Bola, Basket, Coding, Membaca</h4>
-                </div>
-              </div>
-
-              <div className="act-item no-border">
-                <div className="act-icon-wrapper gray"><LayoutGrid size={16} /></div>
-                <div className="act-content">
-                  <p>Bahasa</p>
-                  <h4 style={{ fontWeight: 500 }}>Indonesia, English, العربية</h4>
-                </div>
-              </div>
-
-              <div className="act-item no-border">
-                <div className="act-icon-wrapper gray"><Heart size={16} /></div>
-                <div className="act-content">
-                  <p>Status</p>
-                  <h4 style={{ fontWeight: 500 }}>LDR dengan Dewi Hartati 💙</h4>
-                </div>
-              </div>
-
-            </div>
-          </div>
-          )}
-
-        </div>
-        )}
 
       </div>
 
@@ -596,69 +543,7 @@ export default function ProfilSaya() {
                   ></textarea>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '8px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Keahlian</label>
-                  </div>
-                  {editForm.skills.map((skill, idx) => (
-                    <div key={idx} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                      <input 
-                        type="text" 
-                        placeholder="Nama Skill (Misal: Coding)"
-                        value={skill.name} 
-                        onChange={(e) => handleSkillChange(idx, 'name', e.target.value)}
-                        style={{ flex: 2, padding: '10px 16px', borderRadius: '8px', border: '1px solid #E2E8F0', background: '#F8FAFC', fontSize: '14px', color: '#0F172A', outline: 'none' }}
-                      />
-                      <input 
-                        type="text" 
-                        placeholder="90%"
-                        value={skill.pct} 
-                        onChange={(e) => handleSkillChange(idx, 'pct', e.target.value)}
-                        style={{ flex: 1, padding: '10px 16px', borderRadius: '8px', border: '1px solid #E2E8F0', background: '#F8FAFC', fontSize: '14px', color: '#0F172A', outline: 'none' }}
-                      />
-                      <button 
-                        onClick={() => removeSkill(idx)}
-                        style={{ background: '#FEE2E2', color: '#EF4444', border: 'none', borderRadius: '8px', width: '38px', height: '38px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
-                      >
-                        <X size={16} />
-                      </button>
-                    </div>
-                  ))}
-                  <button onClick={addSkill} style={{ alignSelf: 'flex-start', background: 'transparent', color: '#3B82F6', border: '1px dashed #3B82F6', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>+ Tambah Keahlian</button>
-                </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Riwayat Pendidikan</label>
-                  </div>
-                  {editForm.education.map((edu, idx) => (
-                    <div key={idx} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <input 
-                          type="text" 
-                          placeholder="Gelar / Institusi Utama"
-                          value={edu.title} 
-                          onChange={(e) => handleEduChange(idx, 'title', e.target.value)}
-                          style={{ width: '100%', padding: '10px 16px', borderRadius: '8px', border: '1px solid #E2E8F0', background: '#F8FAFC', fontSize: '14px', color: '#0F172A', outline: 'none', boxSizing: 'border-box' }}
-                        />
-                        <input 
-                          type="text" 
-                          placeholder="Deskripsi Opsional (Misal: Universitas Indonesia)"
-                          value={edu.subtitle} 
-                          onChange={(e) => handleEduChange(idx, 'subtitle', e.target.value)}
-                          style={{ width: '100%', padding: '10px 16px', borderRadius: '8px', border: '1px solid #E2E8F0', background: '#F8FAFC', fontSize: '14px', color: '#0F172A', outline: 'none', boxSizing: 'border-box' }}
-                        />
-                      </div>
-                      <button 
-                        onClick={() => removeEdu(idx)}
-                        style={{ background: '#FEE2E2', color: '#EF4444', border: 'none', borderRadius: '8px', width: '38px', height: '38px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', marginTop: '2px' }}
-                      >
-                        <X size={16} />
-                      </button>
-                    </div>
-                  ))}
-                  <button onClick={addEdu} style={{ alignSelf: 'flex-start', background: 'transparent', color: '#3B82F6', border: '1px dashed #3B82F6', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>+ Tambah Pendidikan</button>
-                </div>
 
               </div>
 

@@ -136,7 +136,7 @@ export default function DashboardManager() {
             <div style={{ position: 'relative' }}>
               <button className="dm-btn-notif" onClick={() => setShowNotif(!showNotif)}>
                 <Bell size={20} color="#0F172A" />
-                <span className="dm-badge">3</span>
+                {stats.tidakHadir > 0 && <span className="dm-badge">{stats.tidakHadir}</span>}
               </button>
               {showNotif && (
                 <>
@@ -144,18 +144,11 @@ export default function DashboardManager() {
                   <div style={{ position: 'absolute', right: 0, top: '48px', width: '320px', background: 'white', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid #E2E8F0', zIndex: 1000, overflow: 'hidden' }}>
                     <div style={{ padding: '16px', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600 }}>Notifikasi</h3>
-                      <span style={{ fontSize: '12px', color: '#3B82F6', cursor: 'pointer', fontWeight: 500 }}>Tandai semua dibaca</span>
+                      <span onClick={() => setShowNotif(false)} style={{ fontSize: '12px', color: '#3B82F6', cursor: 'pointer', fontWeight: 500 }}>Tutup</span>
                     </div>
                     <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                      <div style={{ padding: '16px', borderBottom: '1px solid #F1F5F9', background: '#F8FAFC', cursor: 'pointer' }}>
-                        <p style={{ margin: '0 0 4px 0', fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>Pengajuan Cuti Baru</p>
-                        <p style={{ margin: 0, fontSize: '12px', color: '#64748B' }}>Dewi Hartati mengajukan cuti tahunan.</p>
-                        <span style={{ fontSize: '11px', color: '#94A3B8', marginTop: '6px', display: 'block' }}>10 menit yang lalu</span>
-                      </div>
-                      <div style={{ padding: '16px', borderBottom: '1px solid #F1F5F9', cursor: 'pointer' }}>
-                        <p style={{ margin: '0 0 4px 0', fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>Laporan Mingguan</p>
-                        <p style={{ margin: 0, fontSize: '12px', color: '#64748B' }}>Laporan kehadiran minggu ini telah siap.</p>
-                        <span style={{ fontSize: '11px', color: '#94A3B8', marginTop: '6px', display: 'block' }}>1 jam yang lalu</span>
+                      <div style={{ padding: '24px', textAlign: 'center', color: '#64748B', fontSize: '13px' }}>
+                        Belum ada notifikasi baru.
                       </div>
                     </div>
                   </div>
@@ -209,7 +202,7 @@ export default function DashboardManager() {
               </div>
             </div>
             <div className="dm-sc-bot">
-              <span className="dm-sc-trend up"><ArrowUp size={12}/> 5 dari bulan lalu</span>
+              {stats.totalKaryawan > 0 && <span className="dm-sc-trend up"><ArrowUp size={12}/> 5 dari bulan lalu</span>}
             </div>
           </div>
 
@@ -294,7 +287,7 @@ export default function DashboardManager() {
               </div>
             </div>
             <div className="dm-sc-bot">
-              <span className="dm-sc-trend up"><ArrowUp size={12}/> 4% dari minggu lalu</span>
+              {stats.totalKaryawan > 0 && <span className="dm-sc-trend up"><ArrowUp size={12}/> 4% dari minggu lalu</span>}
             </div>
           </div>
 
