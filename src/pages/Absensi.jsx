@@ -10,6 +10,7 @@ export default function Absensi() {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [user, setUser] = useState(null)
   const [alasan, setAlasan] = useState('')
+  const [hasStream, setHasStream] = useState(false)
 
   useEffect(() => {
     try {
@@ -105,9 +106,11 @@ export default function Absensi() {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        setHasStream(true);
       }
     } catch (err) {
       console.error("Gagal mengakses kamera:", err);
+      setHasStream(false);
     }
   };
 
@@ -117,6 +120,7 @@ export default function Absensi() {
       tracks.forEach(track => track.stop());
       videoRef.current.srcObject = null;
     }
+    setHasStream(false);
   };
 
   const handleStatusSelect = (status) => {
@@ -366,7 +370,7 @@ export default function Absensi() {
                 muted 
                 style={{ width: '100%', height: '240px', objectFit: 'cover', transform: 'scaleX(-1)' }}
               />
-              {!videoRef.current?.srcObject && (
+              {!hasStream && (
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '12px', background: '#F8FAFC' }}>
                   <div style={{ padding: '16px', background: '#EEF2FF', borderRadius: '50%', color: '#4F46E5' }}>
                     <Camera size={36} />
