@@ -16,9 +16,13 @@ export default function DashboardLayout() {
   const [user, setUser] = useState({});
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData && userData !== 'undefined' && userData !== 'null') {
+        setUser(JSON.parse(userData));
+      }
+    } catch (e) {
+      console.error(e);
     }
   }, []);
 
@@ -119,7 +123,7 @@ export default function DashboardLayout() {
 
             {/* PROFILE BUTTON */}
             <div className="user-avatar" onClick={() => {setShowProfile(!showProfile); setShowNotif(false)}} style={{ cursor: 'pointer' }}>
-              {(user?.name || 'User').substring(0, 2).toUpperCase()}
+              {String(user?.name || 'User').substring(0, 2).toUpperCase()}
             </div>
             
             {/* PROFILE DROPDOWN */}

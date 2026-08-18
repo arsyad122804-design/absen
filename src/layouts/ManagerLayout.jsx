@@ -10,9 +10,13 @@ export default function ManagerLayout() {
   const [user, setUser] = useState({});
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData && userData !== 'undefined' && userData !== 'null') {
+        setUser(JSON.parse(userData));
+      }
+    } catch (e) {
+      console.error(e);
     }
   }, []);
 
