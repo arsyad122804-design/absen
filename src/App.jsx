@@ -20,8 +20,27 @@ import PengajuanManager from './pages/PengajuanManager'
 import PengaturanManager from './pages/PengaturanManager'
 import { LanguageProvider } from './contexts/LanguageContext'
 import './App.css'
+const safeJsonParse = (key, fallback = {}) => {
+  try {
+    const item = localStorage.getItem(key);
+    if (!item || item === 'undefined' || item === 'null') return fallback;
+    const parsed = JSON.parse(item);
+    return parsed !== null && parsed !== undefined ? parsed : fallback;
+  } catch (e) {
+    return fallback;
+  }
+};
+
+function DashboardRedirect() {
+  const user = safeJsonParse('user', {});
+  if (user.role?.toLowerCase() === 'manager') {
+    return <Navigate to="/manager/dashboard" replace />;
+  }
+  return <Navigate to="/absen" replace />;
+}
+
 function ManagerRoute() {
-  const user = JSON.parse(localStorage.getItem('user')) || {};
+  const user = safeJsonParse('user', {});
   if (user.role?.toLowerCase() !== 'manager') {
     return <Navigate to="/absen" replace />;
   }
