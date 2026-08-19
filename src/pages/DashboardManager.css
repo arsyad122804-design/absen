@@ -623,6 +623,17 @@
   .mgr-main {
     padding: 16px !important;
     overflow-x: hidden !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Force main content areas to stretch full-width on mobile */
+  .manager-page > :not(.mgr-sidebar-v2):not(.mgr-mobile-topbar):not(.mgr-sidebar-backdrop) {
+    flex: 1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
   }
 
   .dm-header-row {
