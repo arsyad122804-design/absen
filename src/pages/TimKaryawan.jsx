@@ -282,15 +282,15 @@ export default function TimKaryawan() {
           />
         </div>
         
-        <div className="filter-dropdown select-wrap">
-          <select value={filterDivisi} onChange={e => setFilterDivisi(e.target.value)} style={{border: 'none', background: 'transparent', outline: 'none', color: '#0F172A', fontWeight: 500, paddingRight: '20px', appearance: 'none', WebkitAppearance: 'none'}}>
+        <div className="filter-dropdown select-wrap" style={{position: 'relative'}}>
+          <select value={filterDivisi} onChange={e => setFilterDivisi(e.target.value)} style={{border: 'none', background: 'transparent', outline: 'none', color: '#0F172A', fontWeight: 500, padding: '12px 24px 12px 0', width: '100%', height: '100%', appearance: 'none', WebkitAppearance: 'none'}}>
             <option value="Semua Divisi">Semua Divisi</option>
             {[...divSet].map(d => <option key={d} value={d}>{d}</option>)}
           </select>
           <ChevronDown size={16} style={{position: 'absolute', right: '12px', pointerEvents: 'none'}} />
         </div>
         <div className="filter-dropdown select-wrap" style={{position: 'relative'}}>
-          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{border: 'none', background: 'transparent', outline: 'none', color: '#0F172A', fontWeight: 500, paddingRight: '20px', appearance: 'none', WebkitAppearance: 'none'}}>
+          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{border: 'none', background: 'transparent', outline: 'none', color: '#0F172A', fontWeight: 500, padding: '12px 24px 12px 0', width: '100%', height: '100%', appearance: 'none', WebkitAppearance: 'none'}}>
             <option value="Semua">Status: Semua</option>
             <option value="Aktif">Aktif</option>
             <option value="Cuti">Cuti / Izin</option>
@@ -299,7 +299,7 @@ export default function TimKaryawan() {
           <ChevronDown size={16} style={{position: 'absolute', right: '12px', pointerEvents: 'none'}} />
         </div>
         <div className="filter-dropdown select-wrap" style={{position: 'relative'}}>
-          <select value={filterKerja} onChange={e => setFilterKerja(e.target.value)} style={{border: 'none', background: 'transparent', outline: 'none', color: '#0F172A', fontWeight: 500, paddingRight: '20px', appearance: 'none', WebkitAppearance: 'none'}}>
+          <select value={filterKerja} onChange={e => setFilterKerja(e.target.value)} style={{border: 'none', background: 'transparent', outline: 'none', color: '#0F172A', fontWeight: 500, padding: '12px 24px 12px 0', width: '100%', height: '100%', appearance: 'none', WebkitAppearance: 'none'}}>
             <option value="Semua">Tipe Kerja: Semua</option>
             <option value="Full Time">Full Time</option>
             <option value="Part Time">Part Time</option>
