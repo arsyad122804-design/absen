@@ -12,7 +12,16 @@ import {
 import { supabase } from '../lib/supabase';
 import './DashboardManager.css';
 
-// MOCK DATA is removed to prevent bugs.
+const safeJsonParse = (key, fallback = {}) => {
+  try {
+    const item = localStorage.getItem(key);
+    if (!item || item === 'undefined' || item === 'null') return fallback;
+    const parsed = JSON.parse(item);
+    return parsed !== null && parsed !== undefined ? parsed : fallback;
+  } catch (e) {
+    return fallback;
+  }
+};
 
 export default function DashboardManager() {
   const navigate = useNavigate();
@@ -33,37 +42,62 @@ export default function DashboardManager() {
   });
 
   React.useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
+    const userData = safeJsonParse('user', {});
+    setUser(userData);
     fetchStats();
   }, []);
 
   const fetchStats = async () => {
     try {
-      // 1. Ambil total karyawan
-      const { data: karyawanData, error: errK } = await supabase.from('karyawan').select('*');
-      const totalKaryawan = karyawanData ? karyawanData.length : 0;
+      // 1. Ambil total karyawan (local + db)
+      const localKaryawan = safeJsonParse('local_karyawan', []);
+      let dbKaryawan = [];
+      try {
+        const { data } = await supabase.from('karyawan').select('*');
+        if (data) dbKaryawan = data;
+      } catch(e) {}
+      
+      const allKaryawan = [...localKaryawan, ...dbKaryawan];
+      const uniqueKaryawan = [];
+      allKaryawan.forEach(emp => {
+        if (emp.name && !uniqueKaryawan.some(u => u.name?.toLowerCase() === emp.name?.toLowerCase())) {
+          uniqueKaryawan.push(emp);
+        }
+      });
+      const totalKaryawan = uniqueKaryawan.length;
 
-      // 2. Ambil absensi hari ini (dummy table absensi)
-      const today = new Date().toISOString().split('T')[0];
-      const { data: absensiData, error: errA } = await supabase
-        .from('absensi')
-        .select('*')
-        .eq('tanggal', today);
+      // 2. Ambil absensi hari ini (local + db)
+      const tzoffset = (new Date()).getTimezoneOffset() * 60000;
+      const today = (new Date(Date.now() - tzoffset)).toISOString().split('T')[0];
+
+      const localAbs = safeJsonParse('local_absensi', []);
+      let dbAbs = [];
+      try {
+        const { data } = await supabase.from('absensi').select('*').eq('tanggal', today);
+        if (data) dbAbs = data;
+      } catch(e) {}
+
+      // Ambil absensi lokal hari ini
+      const localTodayAbs = localAbs.filter(ab => ab.tanggal === today);
+      const combinedAbs = [...localTodayAbs, ...dbAbs];
+
+      // Hilangkan duplikat absensi per karyawan_id
+      const uniqueAbs = [];
+      combinedAbs.forEach(ab => {
+        if (ab.karyawan_id && !uniqueAbs.some(u => String(u.karyawan_id) === String(ab.karyawan_id))) {
+          uniqueAbs.push(ab);
+        }
+      });
 
       let hadir = 0;
       let terlambat = 0;
-      let tidakHadir = totalKaryawan; // default semua belum absen (dianggap tidak hadir/belum)
+      let tidakHadir = totalKaryawan;
 
-      if (absensiData && absensiData.length > 0) {
-        absensiData.forEach(ab => {
-          if (ab.status === 'Hadir') hadir++;
-          if (ab.status === 'Terlambat') terlambat++;
-        });
-        tidakHadir = totalKaryawan - (hadir + terlambat);
-      }
+      uniqueAbs.forEach(ab => {
+        if (ab.status === 'Hadir') hadir++;
+        if (ab.status === 'Terlambat') terlambat++;
+      });
+      tidakHadir = totalKaryawan - (hadir + terlambat);
 
       const kehadiranPct = totalKaryawan > 0 ? Math.round(((hadir + terlambat) / totalKaryawan) * 100) : 0;
 
@@ -201,9 +235,6 @@ export default function DashboardManager() {
                 <p>Total Karyawan</p>
               </div>
             </div>
-            <div className="dm-sc-bot">
-              {stats.totalKaryawan > 0 && <span className="dm-sc-trend up"><ArrowUp size={12}/> 5 dari bulan lalu</span>}
-            </div>
           </div>
 
           {/* Card 2 */}
@@ -285,9 +316,6 @@ export default function DashboardManager() {
                 <h2>{stats.kehadiranPct}%</h2>
                 <p>Tingkat Kehadiran</p>
               </div>
-            </div>
-            <div className="dm-sc-bot">
-              {stats.totalKaryawan > 0 && <span className="dm-sc-trend up"><ArrowUp size={12}/> 4% dari minggu lalu</span>}
             </div>
           </div>
 
