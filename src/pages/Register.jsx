@@ -36,28 +36,31 @@ export default function Register() {
         .single();
 
       if (error) {
-        console.error(error)
-        // Simpan juga ke local_karyawan untuk fallback lokal
-        const localUsers = JSON.parse(localStorage.getItem('local_karyawan')) || [];
-        const newUser = {
-          id: `KRY-${String(localUsers.length + 1).padStart(4, '0')}`,
-          name,
-          role,
-          div: divisi,
-          type: 'Full Time',
-          status: 'Aktif',
-          join: new Date().toLocaleDateString('id-ID'),
-          email: `${name.toLowerCase().replace(/\s+/g, '')}@inovasidigital.id`,
-          phone: '+62 812-0000-0000'
-        };
+        console.error(error);
+      }
+
+      // Simpan ke local_karyawan untuk fallback lokal
+      const localUsers = JSON.parse(localStorage.getItem('local_karyawan')) || [];
+      const newUser = {
+        id: data?.id || `KRY-${String(localUsers.length + 1).padStart(4, '0')}`,
+        name,
+        role,
+        div: divisi,
+        type: 'Full Time',
+        status: 'Aktif',
+        join: new Date().toLocaleDateString('id-ID'),
+        email: `${name.toLowerCase().replace(/\s+/g, '')}@inovasidigital.id`,
+        phone: '+62 812-0000-0000'
+      };
+      if (!localUsers.some(u => u.name?.toLowerCase() === name.toLowerCase())) {
         localUsers.push(newUser);
         localStorage.setItem('local_karyawan', JSON.stringify(localUsers));
-
-        setSuccessMsg('Pendaftaran berhasil! Mengalihkan ke halaman Login...')
-        setTimeout(() => {
-          navigate('/')
-        }, 2000)
       }
+
+      setSuccessMsg('Pendaftaran berhasil! Mengalihkan ke halaman Login...');
+      setTimeout(() => {
+        navigate('/');
+      }, 2000);
     } catch (err) {
       console.error(err)
       setErrorMsg('Terjadi kesalahan pada sistem!')

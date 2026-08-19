@@ -90,8 +90,11 @@ export default function DashboardManager() {
       const totalKaryawan = uniqueKaryawan.length;
 
       // 2. Ambil absensi hari ini (local + db)
-      const tzoffset = (new Date()).getTimezoneOffset() * 60000;
-      const today = (new Date(Date.now() - tzoffset)).toISOString().split('T')[0];
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const today = `${year}-${month}-${day}`;
 
       const localAbs = safeJsonParse('local_absensi', []);
       let dbAbs = [];
