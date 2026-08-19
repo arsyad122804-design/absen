@@ -444,13 +444,30 @@
 
   .am-hr {
     width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
     gap: 8px !important;
   }
 
-  .am-date-picker, .btn-export {
+  .am-date-picker {
     flex: 1 !important;
-    justify-content: center !important;
     min-width: 0 !important;
+    width: auto !important;
+    padding: 10px !important;
+    justify-content: center !important;
+  }
+
+  .am-notif {
+    width: 44px !important;
+    height: 44px !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .btn-export {
+    width: 100% !important;
+    flex: none !important;
+    justify-content: center !important;
     padding: 10px !important;
   }
 
@@ -599,6 +616,14 @@
     color: #64748B;
     cursor: pointer;
     z-index: 10;
+  }
+
+
+  .am-tc-footer {
+    flex-direction: column !important;
+    gap: 12px !important;
+    align-items: center !important;
+    text-align: center !important;
   }
 
   /* Force main content areas to stretch full-width on mobile */
