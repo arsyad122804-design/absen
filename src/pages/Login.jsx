@@ -17,17 +17,24 @@ export default function Login() {
       return;
     }
     
+    const cleanUsername = username.trim().toLowerCase();
+    
     // 1. Cek Admin Demo
-    if (username === 'hibatullah' && password === 'hibatullah maju') {
-      const adminData = {
-        id: 'admin-1',
-        name: 'Direktur Hibatullah',
-        role: 'Manager',
-        divisi: 'Kepesantrenan'
-      };
-      localStorage.setItem('user', JSON.stringify(adminData));
-      navigate('/manager/dashboard');
-      return;
+    if (cleanUsername === 'hibatullah') {
+      if (password === 'hibatullah maju') {
+        const adminData = {
+          id: 'admin-1',
+          name: 'Direktur Hibatullah',
+          role: 'Manager',
+          divisi: 'Kepesantrenan'
+        };
+        localStorage.setItem('user', JSON.stringify(adminData));
+        navigate('/manager/dashboard');
+        return;
+      } else {
+        setErrorMsg('Password untuk akun Manager Hibatullah salah!');
+        return;
+      }
     } 
     
     // 2. Cek Demo Karyawan (123456)
