@@ -128,7 +128,7 @@ export default function ProfilSaya() {
 
   const handleSave = async () => {
     // 1. Update state lokal & localStorage terlebih dahulu
-    const updatedUser = { ...user, name: editForm.name, role: editForm.role };
+    const updatedUser = { ...user, name: editForm.name, divisi: editForm.divisi };
     localStorage.setItem('user', JSON.stringify(updatedUser));
     setUser(updatedUser);
     setProfile(editForm);
@@ -142,7 +142,7 @@ export default function ProfilSaya() {
           .from('karyawan')
           .update({
             name: editForm.name,
-            role: editForm.role
+            divisi: editForm.divisi
           })
           .eq('id', user.id);
 
@@ -489,20 +489,16 @@ export default function ProfilSaya() {
                     <div style={{ position: 'relative' }}>
                       <Briefcase size={18} color="#94A3B8" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />
                       <select 
-                        name="role" 
-                        value={editForm.role} 
+                        name="divisi" 
+                        value={editForm.divisi} 
                         onChange={handleEditChange}
                         style={{ width: '100%', padding: '12px 16px 12px 44px', borderRadius: '12px', border: '1px solid #E2E8F0', background: '#F8FAFC', fontSize: '14px', color: '#0F172A', outline: 'none', transition: '0.2s', boxSizing: 'border-box', appearance: 'none' }}
                         onFocus={(e) => { e.target.style.background = 'white'; e.target.style.borderColor = '#3B82F6'; e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.1)'; }}
                         onBlur={(e) => { e.target.style.background = '#F8FAFC'; e.target.style.borderColor = '#E2E8F0'; e.target.style.boxShadow = 'none'; }}
                       >
-                        <option value="Operasional">Operasional</option>
-                        <option value="IT Development">IT Development</option>
-                        <option value="HR & GA">HR & GA</option>
-                        <option value="Finance">Finance</option>
-                        <option value="Marketing">Marketing</option>
+                        <option value="Kepesantrenan">Kepesantrenan</option>
                         <option value="Sekolah">Sekolah</option>
-                        <option value="Pesantren">Pesantren</option>
+                        <option value="Operasional">Operasional</option>
                       </select>
                     </div>
                   </div>
