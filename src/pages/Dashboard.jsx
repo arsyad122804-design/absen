@@ -30,7 +30,29 @@ export default function DashboardManager() {
   const [showProfile, setShowProfile] = useState(false);
   const [showDateFilter, setShowDateFilter] = useState(false);
   const [showTrendFilter, setShowTrendFilter] = useState(false);
-  const [dateRange, setDateRange] = useState('Bulan Ini');
+
+  const getTodayLabel = () => {
+    const now = new Date();
+    return now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+  
+  const getWeekLabel = () => {
+    const now = new Date();
+    const d1 = new Date(now);
+    const d2 = new Date(now);
+    const firstDay = new Date(d1.setDate(d1.getDate() - d1.getDay() + 1));
+    const lastDay = new Date(d2.setDate(d2.getDate() - d2.getDay() + 7));
+    return `${firstDay.getDate()} ${firstDay.toLocaleDateString('id-ID', { month: 'short' })} - ${lastDay.getDate()} ${lastDay.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' })}`;
+  };
+
+  const getMonthLabel = () => {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    return `${firstDay.getDate()} ${firstDay.toLocaleDateString('id-ID', { month: 'short' })} - ${lastDay.getDate()} ${lastDay.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' })}`;
+  };
+
+  const [dateRange, setDateRange] = useState(() => getMonthLabel());
   const [trendFilter, setTrendFilter] = useState('Harian');
   const [divisiData, setDivisiData] = useState([]);
 
@@ -206,9 +228,9 @@ export default function DashboardManager() {
                 <>
                   <div style={{ position: 'fixed', inset: 0, zIndex: 999 }} onClick={(e) => { e.stopPropagation(); setShowDateFilter(false); }} />
                   <div style={{ position: 'absolute', right: 0, top: '40px', width: '200px', background: 'white', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', border: '1px solid #E2E8F0', zIndex: 1000, overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
-                    <button style={{ width: '100%', padding: '10px 16px', background: 'white', border: 'none', borderBottom: '1px solid #F1F5F9', textAlign: 'left', cursor: 'pointer' }} onClick={() => { setDateRange('Hari Ini'); setShowDateFilter(false); }}>Hari Ini</button>
-                    <button style={{ width: '100%', padding: '10px 16px', background: 'white', border: 'none', borderBottom: '1px solid #F1F5F9', textAlign: 'left', cursor: 'pointer' }} onClick={() => { setDateRange('8 Mei 2026 - 14 Mei 2026'); setShowDateFilter(false); }}>Minggu Ini</button>
-                    <button style={{ width: '100%', padding: '10px 16px', background: 'white', border: 'none', textAlign: 'left', cursor: 'pointer' }} onClick={() => { setDateRange('1 Mei 2026 - 31 Mei 2026'); setShowDateFilter(false); }}>Bulan Ini</button>
+                    <button style={{ width: '100%', padding: '10px 16px', background: 'white', border: 'none', borderBottom: '1px solid #F1F5F9', textAlign: 'left', cursor: 'pointer' }} onClick={() => { setDateRange(getTodayLabel()); setShowDateFilter(false); }}>Hari Ini</button>
+                    <button style={{ width: '100%', padding: '10px 16px', background: 'white', border: 'none', borderBottom: '1px solid #F1F5F9', textAlign: 'left', cursor: 'pointer' }} onClick={() => { setDateRange(getWeekLabel()); setShowDateFilter(false); }}>Minggu Ini</button>
+                    <button style={{ width: '100%', padding: '10px 16px', background: 'white', border: 'none', textAlign: 'left', cursor: 'pointer' }} onClick={() => { setDateRange(getMonthLabel()); setShowDateFilter(false); }}>Bulan Ini</button>
                   </div>
                 </>
               )}
