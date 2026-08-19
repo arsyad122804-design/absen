@@ -1068,7 +1068,7 @@ input.read-only { color: #64748B; }
   display: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .sidebar-backdrop {
     position: fixed;
     inset: 0;
