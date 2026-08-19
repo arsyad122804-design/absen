@@ -32,6 +32,7 @@ export default function DashboardManager() {
   const [showTrendFilter, setShowTrendFilter] = useState(false);
   const [dateRange, setDateRange] = useState('Bulan Ini');
   const [trendFilter, setTrendFilter] = useState('Harian');
+  const [divisiData, setDivisiData] = useState([]);
 
   const [stats, setStats] = useState({
     totalKaryawan: 0,
@@ -101,6 +102,55 @@ export default function DashboardManager() {
 
       const kehadiranPct = totalKaryawan > 0 ? Math.round(((hadir + terlambat) / totalKaryawan) * 100) : 0;
 
+      // 3. Hitung stats per divisi
+      const divisionMap = {};
+      uniqueKaryawan.forEach(emp => {
+        const divName = emp.divisi || emp.div || 'Operasional';
+        if (!divisionMap[divName]) {
+          divisionMap[divName] = {
+            kar: 0,
+            hadir: 0,
+            telat: 0
+          };
+        }
+        divisionMap[divName].kar++;
+      });
+
+      uniqueAbs.forEach(ab => {
+        const emp = uniqueKaryawan.find(e => String(e.id) === String(ab.karyawan_id));
+        if (emp) {
+          const divName = emp.divisi || emp.div || 'Operasional';
+          if (divisionMap[divName]) {
+            if (ab.status === 'Hadir') divisionMap[divName].hadir++;
+            if (ab.status === 'Terlambat') divisionMap[divName].telat++;
+          }
+        }
+      });
+
+      const getIconAndBg = (name) => {
+        if (name === 'Kepesantrenan') return { icon: Users, color: '#10B981', bg: '#ECFDF5' };
+        if (name === 'Sekolah') return { icon: BookOpen, color: '#3B82F6', bg: '#EFF6FF' };
+        return { icon: Briefcase, color: '#F59E0B', bg: '#FFFBEB' }; // Operasional
+      };
+
+      const computedDivisiData = Object.keys(divisionMap).map(name => {
+        const d = divisionMap[name];
+        const { icon, color, bg } = getIconAndBg(name);
+        return {
+          name,
+          icon,
+          iconColor: color,
+          bg,
+          kar: d.kar,
+          hadir: d.hadir,
+          telat: d.telat,
+          absen: d.kar - (d.hadir + d.telat),
+          pct: d.kar > 0 ? Math.round(((d.hadir + d.telat) / d.kar) * 100) : 0
+        };
+      });
+
+      setDivisiData(computedDivisiData);
+
       setStats({
         totalKaryawan,
         hadir,
@@ -133,9 +183,7 @@ export default function DashboardManager() {
   ] : [];
   const DONUT_COLORS = ['#10B981', '#F59E0B', '#EF4444'];
 
-  const divisiData = stats.totalKaryawan > 0 ? [
-    { name: 'Kepesantrenan', icon: Users, iconColor: '#10B981', bg: '#ECFDF5', kar: stats.totalKaryawan, hadir: stats.hadir, telat: stats.terlambat, absen: stats.tidakHadir, pct: stats.kehadiranPct },
-  ] : [];
+
 
   const aktivitasData = []; // Kosong karena belum ada sistem tracking riwayat asli
 
