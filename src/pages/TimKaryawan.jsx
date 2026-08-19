@@ -27,7 +27,8 @@ export default function TimKaryawan() {
   const fetchEmployees = async () => {
     setLoading(true);
     try {
-      const local = JSON.parse(localStorage.getItem('local_karyawan')) || [];
+      localStorage.removeItem('local_karyawan');
+      const local = [];
       
       let dbData = [];
       const { data, error } = await supabase
