@@ -700,6 +700,38 @@
     grid-column: span 2 !important;
   }
 
+  .dm-stat-card {
+    padding: 12px !important;
+    gap: 8px !important;
+  }
+
+  .dm-sc-top {
+    margin-bottom: 12px !important;
+    gap: 10px !important;
+  }
+
+  .dm-sc-icon-box {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .dm-sc-icon-box svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .dm-sc-val h2 {
+    font-size: 20px !important;
+  }
+
+  .dm-sc-val p {
+    font-size: 11px !important;
+  }
+
+  .dm-sc-desc {
+    font-size: 10px !important;
+  }
+
   .dm-main-grid {
     grid-template-columns: 1fr !important;
     gap: 20px !important;
