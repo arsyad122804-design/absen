@@ -33,6 +33,9 @@ export default function RiwayatAbsensiManager() {
   const [filterStatus, setFilterStatus] = useState('Semua');
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [dataList, setDataList] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dateRange, setDateRange] = useState('Bulan Ini');
+  const [showDateDropdown, setShowDateDropdown] = useState(false);
 
   useEffect(() => {
     const fetchAllHistory = async () => {
@@ -64,6 +67,7 @@ export default function RiwayatAbsensiManager() {
           name: emp.name || r.nama || r.user_name || 'Karyawan',
           div: emp.divisi || emp.div || r.divisi || 'Operasional',
           date: formattedDate,
+          rawDate: r.tanggal,
           status: r.status || 'Hadir',
           inTime: r.waktu_masuk || r.jam_masuk || r.jam || '08:00',
           outTime: r.waktu_keluar || r.jam_pulang || '-',
@@ -92,9 +96,37 @@ export default function RiwayatAbsensiManager() {
   };
 
   // Filter Data
-  const filteredData = filterStatus === 'Semua' 
-    ? dataList 
-    : dataList.filter(item => item.status === filterStatus);
+  const filteredData = dataList.filter(item => {
+    // 1. Filter Status
+    const matchStatus = filterStatus === 'Semua' || item.status === filterStatus;
+    
+    // 2. Filter Search Query
+    const matchSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        item.div.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // 3. Filter Date Range
+    let matchDate = true;
+    if (item.rawDate) {
+      const itemDate = new Date(item.rawDate);
+      const now = new Date();
+      if (dateRange === 'Hari Ini') {
+        const todayStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+        matchDate = item.rawDate === todayStr;
+      } else if (dateRange === 'Minggu Ini') {
+        const d1 = new Date(now);
+        const d2 = new Date(now);
+        const startOfWeek = new Date(d1.setDate(d1.getDate() - d1.getDay() + 1));
+        startOfWeek.setHours(0, 0, 0, 0);
+        const endOfWeek = new Date(d2.setDate(d2.getDate() - d2.getDay() + 7));
+        endOfWeek.setHours(23, 59, 59, 999);
+        matchDate = itemDate >= startOfWeek && itemDate <= endOfWeek;
+      } else if (dateRange === 'Bulan Ini') {
+        matchDate = itemDate.getMonth() === now.getMonth() && itemDate.getFullYear() === now.getFullYear();
+      }
+    }
+    
+    return matchStatus && matchSearch && matchDate;
+  });
 
   const renderDetail = (row) => {
     if (row.status === 'Hadir' || row.status === 'Terlambat') {
@@ -158,7 +190,12 @@ export default function RiwayatAbsensiManager() {
       <div className="rm-filter-card">
         <div className="search-wrapper">
           <Search size={18} color="#94A3B8" />
-          <input type="text" placeholder="Cari nama karyawan..." />
+          <input 
+            type="text" 
+            placeholder="Cari nama karyawan..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
         
         <div className="rm-filter-tabs">
@@ -173,8 +210,24 @@ export default function RiwayatAbsensiManager() {
           ))}
         </div>
 
-        <div className="filter-dropdown">
-          <Calendar size={16} /> <span>Bulan Ini</span> <ChevronDown size={14} />
+        <div className="filter-dropdown" style={{ cursor: 'pointer', position: 'relative' }} onClick={() => setShowDateDropdown(!showDateDropdown)}>
+          <Calendar size={16} /> <span>{dateRange}</span> <ChevronDown size={14} />
+          {showDateDropdown && (
+            <>
+              <div style={{ position: 'fixed', inset: 0, zIndex: 999 }} onClick={(e) => { e.stopPropagation(); setShowDateDropdown(false); }} />
+              <div style={{ position: 'absolute', right: 0, top: '40px', width: '150px', background: 'white', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', border: '1px solid #E2E8F0', zIndex: 1000, overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
+                {['Hari Ini', 'Minggu Ini', 'Bulan Ini', 'Semua'].map(range => (
+                  <button 
+                    key={range}
+                    style={{ width: '100%', padding: '10px 16px', background: 'white', border: 'none', borderBottom: '1px solid #F1F5F9', textAlign: 'left', cursor: 'pointer' }} 
+                    onClick={() => { setDateRange(range); setShowDateDropdown(false); }}
+                  >
+                    {range}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
