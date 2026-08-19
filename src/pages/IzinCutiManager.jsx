@@ -96,24 +96,14 @@ export default function IzinCutiManager() {
     loadData();
   };
 
-  const handleDeleteEmployee = async (id, name) => {
-    if (!window.confirm(`Apakah Anda yakin ingin menghapus karyawan "${name}"?`)) return;
+  const handleResetQuota = (id, name) => {
+    if (!window.confirm(`Apakah Anda yakin ingin me-reset kuota cuti karyawan "${name}" kembali ke default (12 hari)?`)) return;
     try {
-      // 1. Hapus dari database (jika bukan akun demo)
-      const { error } = await supabase.from('karyawan').delete().eq('id', id);
-      if (error) console.error(error);
-      
-      // 2. Hapus dari local storage
-      const local = safeJsonParse('local_karyawan', []);
-      const updated = local.filter(emp => String(emp.id) !== String(id));
-      localStorage.setItem('local_karyawan', JSON.stringify(updated));
-      
-      // 3. Hapus juga kuota cutinya
       const savedQuotas = safeJsonParse('leave_quotas', {});
       delete savedQuotas[id];
       localStorage.setItem('leave_quotas', JSON.stringify(savedQuotas));
 
-      alert('Karyawan berhasil dihapus!');
+      alert('Kuota cuti berhasil di-reset ke default!');
       loadData();
     } catch(err) {
       console.error(err);
@@ -217,7 +207,7 @@ export default function IzinCutiManager() {
                         <div style={{ position: 'absolute', right: '30px', top: '10px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 999, width: '160px', overflow: 'hidden' }}>
                           <button onClick={() => { setSelectedEmpId(row.id); setQuotaVal(row.kuota); setShowModal(true); setActiveDropdown(null); }} style={{ width: '100%', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', border: 'none', background: 'white', cursor: 'pointer', fontSize: '13px', color: '#0F172A', textAlign: 'left' }}><Edit3 size={14}/> Edit Kuota</button>
                           <button onClick={() => { alert('Membuka riwayat izin: ' + row.name); setActiveDropdown(null); }} style={{ width: '100%', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', border: 'none', background: 'white', cursor: 'pointer', fontSize: '13px', color: '#0F172A', textAlign: 'left' }}><History size={14}/> Riwayat Izin</button>
-                          <button onClick={() => { handleDeleteEmployee(row.id, row.name); setActiveDropdown(null); }} style={{ width: '100%', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', border: 'none', background: 'white', cursor: 'pointer', fontSize: '13px', color: '#EF4444', textAlign: 'left' }}><Trash2 size={14}/> Hapus Karyawan</button>
+                          <button onClick={() => { handleResetQuota(row.id, row.name); setActiveDropdown(null); }} style={{ width: '100%', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', border: 'none', background: 'white', cursor: 'pointer', fontSize: '13px', color: '#EF4444', textAlign: 'left' }}><Trash2 size={14}/> Reset Kuota Cuti</button>
                         </div>
                       </>
                     )}
