@@ -265,8 +265,8 @@ export default function TimKaryawan() {
         </div>
       </div>
 
-      {/* TABLE */}
-      <div className="tk-table-container">
+      {/* TABLE FOR DESKTOP */}
+      <div className="tk-table-container hide-on-mobile">
         <table className="tk-table">
           <thead>
             <tr>
@@ -336,8 +336,8 @@ export default function TimKaryawan() {
             ))}
           </tbody>
         </table>
-
-        {/* FOOTER */}
+        
+        {/* FOOTER DESKTOP */}
         <div className="tk-footer">
           <div className="footer-left">
             Menampilkan {filteredData.length} data karyawan
@@ -348,9 +348,74 @@ export default function TimKaryawan() {
             <button className="pg-arrow">›</button>
           </div>
         </div>
-
       </div>
 
+      {/* CARD LIST FOR MOBILE */}
+      <div className="tk-card-list show-on-mobile">
+        {filteredData.length === 0 ? (
+          <div style={{textAlign:'center', padding: '32px', color: '#64748B'}}>Tidak ada data karyawan ditemukan.</div>
+        ) : (
+          filteredData.map((row) => (
+            <div key={row.id} className="tk-mob-card">
+              <div className="tkmc-header">
+                <div className="tkmc-user">
+                  <img src={`https://ui-avatars.com/api/?name=${row.name.replace(/ /g, '+')}&background=random`} alt={row.name} className="tkmc-avatar" />
+                  <div className="tkmc-names">
+                    <strong>{row.name}</strong>
+                    <span>{row.role} • {row.div}</span>
+                  </div>
+                </div>
+                <div style={{ position: 'relative' }}>
+                  <button className="btn-action" onClick={(e) => { e.stopPropagation(); toggleMenu(row.id); }}>
+                    <MoreVertical size={18} />
+                  </button>
+                  {activeMenuId === row.id && (
+                    <div className="action-dropdown" onClick={e => e.stopPropagation()} style={{ position: 'absolute', right: '0', top: '30px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', zIndex: 100, display: 'flex', flexDirection: 'column', padding: '8px', minWidth: '150px' }}>
+                      <button className="ad-btn" onClick={() => alert('Detail Karyawan: ' + row.name)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#0F172A', fontSize: '13px' }}>
+                        <Info size={14} /> Lihat Info
+                      </button>
+                      <button className="ad-btn delete" onClick={() => handleDelete(row.id)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#EF4444', fontSize: '13px' }}>
+                        <Trash2 size={14} /> Hapus Data
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="tkmc-body">
+                <div className="tkmc-row">
+                  <span className={`badge-kerja ${row.type === 'Full Time' ? 'full' : 'part'}`}>{row.type}</span>
+                  <div className="status-label">
+                    <span className={`status-dot ${row.status === 'Aktif' ? 'green' : row.status === 'Cuti' ? 'orange' : 'red'}`}></span>
+                    <span className={`status-text ${row.status === 'Aktif' ? 'green' : row.status === 'Cuti' ? 'orange' : 'red'}`}>{row.status}</span>
+                  </div>
+                </div>
+                <div className="tkmc-info-row">
+                  <span>Email:</span> <strong>{row.email}</strong>
+                </div>
+                <div className="tkmc-info-row">
+                  <span>Telepon:</span> <strong>{row.phone}</strong>
+                </div>
+                <div className="tkmc-info-row">
+                  <span>Bergabung:</span> <strong>{row.join}</strong>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+
+        {/* FOOTER MOBILE */}
+        <div className="tk-footer" style={{ border: 'none', background: 'transparent', padding: '16px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="footer-left" style={{ fontSize: '12px', color: '#64748B' }}>
+            Menampilkan {filteredData.length} data karyawan
+          </div>
+          <div className="pagination">
+            <button className="pg-arrow">‹</button>
+            <button className="pg-num active">1</button>
+            <button className="pg-arrow">›</button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

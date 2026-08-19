@@ -356,3 +356,130 @@
   color: #0F172A;
   font-weight: 500;
 }
+
+/* Responsive visibility helper classes */
+.hide-on-mobile {
+  display: block;
+}
+.show-on-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+  .show-on-mobile {
+    display: block !important;
+  }
+
+  /* Card list mobile design */
+  .tk-card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .tk-mob-card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #E2E8F0;
+    padding: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .tkmc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .tkmc-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .tkmc-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+  }
+
+  .tkmc-names {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .tkmc-names strong {
+    font-size: 14px;
+    color: #0F172A;
+  }
+
+  .tkmc-names span {
+    font-size: 12px;
+    color: #64748B;
+  }
+
+  .tkmc-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-top: 1px solid #F1F5F9;
+    padding-top: 12px;
+    width: 100%;
+  }
+
+  .tkmc-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+
+  .tkmc-info-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+  }
+
+  .tkmc-info-row span {
+    color: #64748B;
+  }
+
+  .tkmc-info-row strong {
+    color: #334155;
+    font-weight: 500;
+    word-break: break-all;
+    text-align: right;
+    max-width: 70%;
+  }
+  
+  .tk-filter-row {
+    flex-direction: column !important;
+    gap: 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  .search-wrapper, .filter-dropdown {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 10px 16px !important;
+  }
+  
+  .filter-dropdown select {
+    width: 100% !important;
+  }
+}
