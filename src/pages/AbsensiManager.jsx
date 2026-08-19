@@ -35,6 +35,18 @@ export default function AbsensiManager() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterDivisi, setFilterDivisi] = useState('Semua Divisi');
   
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const now = new Date();
+    const tzoffset = now.getTimezoneOffset() * 60000;
+    return new Date(now.getTime() - tzoffset).toISOString().split('T')[0];
+  });
+
+  const getFormattedDate = (dateStr) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
+  };
+
   const [tableData, setTableData] = useState([]);
   const [activeMenuId, setActiveMenuId] = useState(null);
   
@@ -57,27 +69,55 @@ export default function AbsensiManager() {
       const allEmps = [...localKaryawan, ...dbKaryawan];
       const combined = [...local, ...dbData];
 
-      const mapped = combined.map((r, idx) => {
-        const emp = allEmps.find(e => String(e.id) === String(r.karyawan_id)) || {};
-        return {
-          id: r.id || `local-${idx}`,
-          img: `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name || r.nama || r.user_name || 'Karyawan')}`,
-          name: emp.name || r.nama || r.user_name || 'Karyawan',
-          div: emp.divisi || emp.div || r.divisi || 'Operasional',
-          status: r.status || 'Hadir',
-          jamM: r.waktu_masuk || r.jam_masuk || r.jam || '08:00',
-          statM: r.status === 'Terlambat' ? 'Terlambat' : 'Tepat Waktu',
-          jamP: r.waktu_keluar || r.jam_pulang || '-',
-          dur: '-',
-          loc: r.lokasi ? 'Lokasi Presisi (GPS)' : 'Tanpa Lokasi'
-        };
+      // 1. Dapatkan daftar karyawan unik
+      const uniqueEmps = [];
+      allEmps.forEach(emp => {
+        if (emp.name && !uniqueEmps.some(u => u.name?.toLowerCase() === emp.name?.toLowerCase())) {
+          uniqueEmps.push(emp);
+        }
+      });
+
+      // 2. Filter absensi untuk tanggal terpilih saja
+      const filteredAbs = combined.filter(ab => ab.tanggal === selectedDate);
+
+      // 3. Petakan seluruh karyawan
+      const mapped = uniqueEmps.map((emp, idx) => {
+        const r = filteredAbs.find(ab => String(ab.karyawan_id) === String(emp.id));
+        
+        if (r) {
+          return {
+            id: r.id || `local-${idx}`,
+            img: `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name || 'Karyawan')}`,
+            name: emp.name,
+            div: emp.divisi || emp.div || 'Operasional',
+            status: r.status || 'Hadir',
+            jamM: r.waktu_masuk || '-',
+            statM: r.status === 'Terlambat' ? 'Terlambat' : 'Tepat Waktu',
+            jamP: r.waktu_keluar || '-',
+            dur: '-',
+            loc: r.lokasi ? 'Lokasi Presisi (GPS)' : 'Tanpa Lokasi'
+          };
+        } else {
+          return {
+            id: `unabs-${idx}`,
+            img: `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name || 'Karyawan')}`,
+            name: emp.name,
+            div: emp.divisi || emp.div || 'Operasional',
+            status: 'Tidak Hadir',
+            jamM: '-',
+            statM: '-',
+            jamP: '-',
+            dur: '-',
+            loc: '-'
+          };
+        }
       });
 
       setTableData(mapped);
     };
 
     fetchLiveAbsensi();
-  }, []);
+  }, [selectedDate]);
 
   const handleExportPDF = () => {
     window.print();
@@ -132,9 +172,22 @@ export default function AbsensiManager() {
           <p>Pantau dan kelola kehadiran tim Anda secara real-time.</p>
         </div>
         <div className="am-hr">
-          <div className="am-date-picker">
+          <div className="am-date-picker" style={{ position: 'relative' }}>
             <Calendar size={16} color="#64748B" />
-            <span>14 Mei 2026, Rabu</span>
+            <input 
+              type="date" 
+              value={selectedDate} 
+              onChange={(e) => setSelectedDate(e.target.value)} 
+              style={{
+                position: 'absolute',
+                inset: 0,
+                opacity: 0,
+                cursor: 'pointer',
+                width: '100%',
+                height: '100%'
+              }}
+            />
+            <span>{getFormattedDate(selectedDate)}</span>
             <span className="caret">▼</span>
           </div>
           <button className="btn-export" onClick={handleExportPDF}>
@@ -275,7 +328,7 @@ export default function AbsensiManager() {
       <div className="am-table-card print-section" ref={tableRef}>
         <div className="print-header hide-on-screen">
           <h1>Laporan Kehadiran Karyawan</h1>
-          <p>Periode: 14 Mei 2026</p>
+          <p>Periode: {getFormattedDate(selectedDate)}</p>
         </div>
 
         <div className="am-tc-header hide-on-print">
