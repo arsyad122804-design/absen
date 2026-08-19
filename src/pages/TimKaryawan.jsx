@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Upload, Plus, Bell, Users, UserCheck, Clock, UserMinus, Network, 
-  Search, ChevronDown, Filter, MoreVertical, X, Info, Trash2, UserX, CheckCircle2
+  Search, ChevronDown, Filter, MoreVertical, X, Info, Trash2
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import './TimKaryawan.css';
@@ -365,34 +365,34 @@ export default function TimKaryawan() {
                     <MoreVertical size={18} />
                   </button>
                   {activeMenuId === row.id && (
-                    <div className="action-dropdown" onClick={e => e.stopPropagation()}>
-                      <div className="ad-btn" role="button" onClick={() => alert(`Detail Karyawan:\n===================\nNama: ${row.name}\nJabatan: ${row.role}\nDivisi: ${row.div}\nStatus Kerja: ${row.type}\nStatus Kehadiran: ${row.status}\nEmail: ${row.email}\nTelepon: ${row.phone}\nTanggal Gabung: ${row.join}`)}>
+                    <div className="action-dropdown" onClick={e => e.stopPropagation()} style={{ position: 'absolute', right: '40px', top: '10px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', zIndex: 100, display: 'flex', flexDirection: 'column', padding: '8px', minWidth: '160px' }}>
+                      <button className="ad-btn" onClick={() => alert(`Detail Karyawan:\n===================\nNama: ${row.name}\nJabatan: ${row.role}\nDivisi: ${row.div}\nStatus Kerja: ${row.type}\nStatus Kehadiran: ${row.status}\nEmail: ${row.email}\nTelepon: ${row.phone}\nTanggal Gabung: ${row.join}`)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#0F172A', fontSize: '13px', width: '100%' }}>
                         <Info size={14} /> Lihat Info
-                      </div>
+                      </button>
                       
                       {row.status !== 'Aktif' && (
-                        <div className="ad-btn" role="button" onClick={() => handleUpdateStatus(row.id, row.name, 'Aktif')}>
-                          <CheckCircle2 size={14} /> Set Aktif
-                        </div>
+                        <button className="ad-btn" onClick={() => handleUpdateStatus(row.id, row.name, 'Aktif')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#10B981', fontSize: '13px', width: '100%' }}>
+                          <UserCheck size={14} /> Set Aktif
+                        </button>
                       )}
 
                       {row.status !== 'Cuti' && (
-                        <div className="ad-btn" role="button" onClick={() => handleUpdateStatus(row.id, row.name, 'Cuti')}>
+                        <button className="ad-btn" onClick={() => handleUpdateStatus(row.id, row.name, 'Cuti')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#F59E0B', fontSize: '13px', width: '100%' }}>
                           <Clock size={14} /> Set Cuti
-                        </div>
+                        </button>
                       )}
 
                       {row.status !== 'Non-Aktif' && (
-                        <div className="ad-btn" role="button" onClick={() => handleUpdateStatus(row.id, row.name, 'Non-Aktif')}>
-                          <UserX size={14} /> Set Non-Aktif
-                        </div>
+                        <button className="ad-btn" onClick={() => handleUpdateStatus(row.id, row.name, 'Non-Aktif')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#64748B', fontSize: '13px', width: '100%' }}>
+                          <UserMinus size={14} /> Set Non-Aktif
+                        </button>
                       )}
 
                       <div style={{ height: '1px', background: '#F1F5F9', margin: '4px 0' }}></div>
 
-                      <div className="ad-btn delete" role="button" onClick={() => handleDelete(row.id)}>
+                      <button className="ad-btn delete" onClick={() => handleDelete(row.id)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#EF4444', fontSize: '13px', width: '100%' }}>
                         <Trash2 size={14} /> Hapus Data
-                      </div>
+                      </button>
                     </div>
                   )}
                 </td>
@@ -434,34 +434,34 @@ export default function TimKaryawan() {
                     <MoreVertical size={18} />
                   </button>
                   {activeMenuId === row.id && (
-                    <div className="action-dropdown" onClick={e => e.stopPropagation()}>
-                      <div className="ad-btn" role="button" onClick={() => alert(`Detail Karyawan:\n===================\nNama: ${row.name}\nJabatan: ${row.role}\nDivisi: ${row.div}\nStatus Kerja: ${row.type}\nStatus Kehadiran: ${row.status}\nEmail: ${row.email}\nTelepon: ${row.phone}\nTanggal Gabung: ${row.join}`)}>
+                    <div className="action-dropdown" onClick={e => e.stopPropagation()} style={{ position: 'absolute', right: '0', top: '30px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', zIndex: 100, display: 'flex', flexDirection: 'column', padding: '8px', minWidth: '160px' }}>
+                      <button className="ad-btn" onClick={() => alert(`Detail Karyawan:\n===================\nNama: ${row.name}\nJabatan: ${row.role}\nDivisi: ${row.div}\nStatus Kerja: ${row.type}\nStatus Kehadiran: ${row.status}\nEmail: ${row.email}\nTelepon: ${row.phone}\nTanggal Gabung: ${row.join}`)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#0F172A', fontSize: '13px', width: '100%' }}>
                         <Info size={14} /> Lihat Info
-                      </div>
+                      </button>
 
                       {row.status !== 'Aktif' && (
-                        <div className="ad-btn" role="button" onClick={() => handleUpdateStatus(row.id, row.name, 'Aktif')}>
-                          <CheckCircle2 size={14} /> Set Aktif
-                        </div>
+                        <button className="ad-btn" onClick={() => handleUpdateStatus(row.id, row.name, 'Aktif')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#10B981', fontSize: '13px', width: '100%' }}>
+                          <UserCheck size={14} /> Set Aktif
+                        </button>
                       )}
 
                       {row.status !== 'Cuti' && (
-                        <div className="ad-btn" role="button" onClick={() => handleUpdateStatus(row.id, row.name, 'Cuti')}>
+                        <button className="ad-btn" onClick={() => handleUpdateStatus(row.id, row.name, 'Cuti')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#F59E0B', fontSize: '13px', width: '100%' }}>
                           <Clock size={14} /> Set Cuti
-                        </div>
+                        </button>
                       )}
 
                       {row.status !== 'Non-Aktif' && (
-                        <div className="ad-btn" role="button" onClick={() => handleUpdateStatus(row.id, row.name, 'Non-Aktif')}>
-                          <UserX size={14} /> Set Non-Aktif
-                        </div>
+                        <button className="ad-btn" onClick={() => handleUpdateStatus(row.id, row.name, 'Non-Aktif')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#64748B', fontSize: '13px', width: '100%' }}>
+                          <UserMinus size={14} /> Set Non-Aktif
+                        </button>
                       )}
 
                       <div style={{ height: '1px', background: '#F1F5F9', margin: '4px 0' }}></div>
 
-                      <div className="ad-btn delete" role="button" onClick={() => handleDelete(row.id)}>
+                      <button className="ad-btn delete" onClick={() => handleDelete(row.id)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#EF4444', fontSize: '13px', width: '100%' }}>
                         <Trash2 size={14} /> Hapus Data
-                      </div>
+                      </button>
                     </div>
                   )}
                 </div>
