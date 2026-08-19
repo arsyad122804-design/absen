@@ -204,7 +204,7 @@
   border: 1px solid #F1F5F9;
   border-radius: 16px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.02);
-  overflow: hidden;
+  position: relative;
 }
 .tk-table {
   width: 100%;
