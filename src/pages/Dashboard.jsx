@@ -115,6 +115,16 @@ export default function DashboardManager() {
         }
       });
 
+      console.log("Dashboard fetchStats Debug:", {
+        today,
+        uniqueKaryawan,
+        localAbs,
+        localTodayAbs,
+        dbAbs,
+        combinedAbs,
+        uniqueAbs
+      });
+
       let hadir = 0;
       let terlambat = 0;
       let tidakHadir = totalKaryawan;
