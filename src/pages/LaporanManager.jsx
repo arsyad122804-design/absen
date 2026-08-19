@@ -12,10 +12,19 @@ export default function LaporanManager() {
   const [reportType, setReportType] = useState('Bulanan');
   const [isExporting, setIsExporting] = useState(false);
   const [historyList, setHistoryList] = useState([]);
-  
-  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
-  const [selectedMonth, setSelectedMonth] = useState('Agustus');
-  const [selectedYear, setSelectedYear] = useState(2026);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const now = new Date();
+    const tzoffset = now.getTimezoneOffset() * 60000;
+    return new Date(now.getTime() - tzoffset).toISOString().split('T')[0];
+  });
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    return months[new Date().getMonth()];
+  });
+  const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear());
 
   const getPeriodLabel = () => {
     if (reportType === 'Harian') {
