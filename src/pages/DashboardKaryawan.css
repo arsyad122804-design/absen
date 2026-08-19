@@ -1212,6 +1212,22 @@ input.read-only { color: #64748B; }
     width: 8px !important;
     height: 8px !important;
   }
+
+  .modal-overlay {
+    padding: 16px !important;
+  }
+
+  .modal-content {
+    padding: 20px 20px 24px 20px !important;
+    gap: 16px !important;
+    max-height: 92vh !important;
+    overflow-y: auto !important;
+  }
+
+  .modal-close {
+    top: 14px !important;
+    right: 14px !important;
+  }
 }
 
 @keyframes fadeIn {

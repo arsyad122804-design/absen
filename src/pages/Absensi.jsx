@@ -365,11 +365,11 @@ export default function Absensi() {
 
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ borderRadius: '24px', padding: '32px' }}>
+          <div className="modal-content" style={{ borderRadius: '24px' }}>
             <button className="modal-close" onClick={() => setShowModal(false)}><X size={24} /></button>
-            <h3 className="modal-title" style={{ fontSize: '20px', marginBottom: '24px' }}>Verifikasi Kehadiran</h3>
+            <h3 className="modal-title" style={{ fontSize: '20px', marginBottom: '16px' }}>Verifikasi Kehadiran</h3>
             
-            <div className="modal-camera" style={{ borderRadius: '24px', overflow: 'hidden', backgroundColor: '#0F172A', position: 'relative', height: '260px', boxShadow: 'inset 0 0 40px rgba(0,0,0,0.6)' }}>
+            <div className="modal-camera" style={{ borderRadius: '24px', overflow: 'hidden', backgroundColor: '#0F172A', position: 'relative', height: '200px', boxShadow: 'inset 0 0 40px rgba(0,0,0,0.6)' }}>
               <video 
                 ref={videoRef} 
                 autoPlay 
@@ -406,7 +406,7 @@ export default function Absensi() {
               )}
             </div>
 
-            <div className="modal-info" style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div className="modal-info" style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: locationStatus === 'outside' ? '#FEF2F2' : '#F8FAFC', border: `1px solid ${locationStatus === 'outside' ? '#FCA5A5' : '#E2E8F0'}`, padding: '12px 16px', borderRadius: '14px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '8px', background: locationStatus === 'outside' ? '#FEE2E2' : '#EFF6FF' }}>
                   <MapPin size={18} color={locationStatus === 'outside' ? '#EF4444' : '#2563EB'} />
@@ -438,7 +438,7 @@ export default function Absensi() {
               disabled={locationStatus !== 'inside'}
               style={{ 
                 width: '100%', 
-                marginTop: '24px', 
+                marginTop: '16px', 
                 padding: '16px', 
                 borderRadius: '16px', 
                 fontSize: '16px', 
