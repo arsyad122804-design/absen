@@ -365,9 +365,31 @@ export default function Absensi() {
 
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ borderRadius: '24px' }}>
-            <button className="modal-close" onClick={() => setShowModal(false)}><X size={24} /></button>
-            <h3 className="modal-title" style={{ fontSize: '20px', marginBottom: '16px' }}>Verifikasi Kehadiran</h3>
+          <div className="modal-content" style={{ borderRadius: '24px', padding: '24px' }}>
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0F172A', margin: 0 }}>Verifikasi Kehadiran</h3>
+              <button 
+                onClick={() => setShowModal(false)}
+                style={{ 
+                  background: '#F1F5F9', 
+                  border: 'none', 
+                  color: '#64748B', 
+                  borderRadius: '50%', 
+                  width: '32px', 
+                  height: '32px', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  padding: 0
+                }}
+                onMouseOver={e => e.currentTarget.style.background = '#E2E8F0'}
+                onMouseOut={e => e.currentTarget.style.background = '#F1F5F9'}
+              >
+                <X size={18} />
+              </button>
+            </div>
             
             <div className="modal-camera" style={{ borderRadius: '24px', overflow: 'hidden', backgroundColor: '#0F172A', position: 'relative', height: '200px', boxShadow: 'inset 0 0 40px rgba(0,0,0,0.6)' }}>
               <video 
