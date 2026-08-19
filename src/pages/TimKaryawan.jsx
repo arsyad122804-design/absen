@@ -183,7 +183,6 @@ export default function TimKaryawan() {
             <h2>{totalEmps}</h2>
             <p>Total Karyawan</p>
           </div>
-          {totalEmps > 0 && <div className="tkt-trend up">↑ 8 dari bulan lalu</div>}
         </div>
 
         <div className="tk-tcard">
@@ -194,7 +193,6 @@ export default function TimKaryawan() {
             <h2>{activeEmps}</h2>
             <p>Karyawan Aktif</p>
           </div>
-          {totalEmps > 0 && <div className="tkt-trend up">↑ 6 dari bulan lalu</div>}
         </div>
 
         <div className="tk-tcard">
@@ -205,7 +203,6 @@ export default function TimKaryawan() {
             <h2>{cutiEmps}</h2>
             <p>Cuti / Izin</p>
           </div>
-          {totalEmps > 0 && <div className="tkt-trend down">↓ 2 dari bulan lalu</div>}
         </div>
 
         <div className="tk-tcard">
@@ -216,7 +213,6 @@ export default function TimKaryawan() {
             <h2>{nonActiveEmps}</h2>
             <p>Non-Aktif</p>
           </div>
-          {totalEmps > 0 && <div className="tkt-trend down">↓ 1 dari bulan lalu</div>}
         </div>
 
         <div className="tk-tcard">
@@ -227,7 +223,6 @@ export default function TimKaryawan() {
             <h2>{divSet.size}</h2>
             <p>Total Divisi</p>
           </div>
-          {totalEmps > 0 && <div className="tkt-trend neutral">Tetap</div>}
         </div>
 
       </div>
