@@ -353,7 +353,7 @@ export default function AbsensiManager() {
           </div>
         </div>
 
-        <div className="table-wrapper">
+        <div className="table-wrapper hide-on-mobile">
           <table className="am-table">
             <thead>
               <tr>
@@ -427,6 +427,70 @@ export default function AbsensiManager() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* CARD LIST FOR MOBILE */}
+        <div className="am-card-list show-on-mobile" style={{ padding: '16px', boxSizing: 'border-box' }}>
+          {filteredData.length === 0 ? (
+            <div style={{textAlign:'center', padding: '32px', color: '#64748B'}}>Tidak ada karyawan yang cocok dengan filter.</div>
+          ) : (
+            filteredData.map((row) => (
+              <div key={row.id} className="am-mob-card" style={{ background: 'white', border: '1px solid #F1F5F9', borderRadius: '16px', padding: '16px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
+                <div className="ammc-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div className="ammc-user" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <img src={row.img} alt={row.name} style={{ width: '40px', height: '40px', borderRadius: '50%' }} />
+                    <div className="ammc-names" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      <strong style={{ fontSize: '14px', color: '#0F172A' }}>{row.name}</strong>
+                      <span style={{ fontSize: '12px', color: '#64748B' }}>{row.div}</span>
+                    </div>
+                  </div>
+                  <span className={`badge-status ${row.status.toLowerCase().replace(' ', '-')}`} style={{ margin: 0 }}>
+                    {row.status}
+                  </span>
+                </div>
+                
+                <div className="ammc-body" style={{ borderTop: '1px solid #F1F5F9', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div className="ammc-info-row" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                    <span style={{ color: '#64748B' }}>Jam Masuk:</span>
+                    <strong>{row.jamM} {row.statM && <span className={`time-stat ${row.status === 'Terlambat' ? 'orange' : 'green'}`} style={{ marginLeft: '4px', fontSize: '10px' }}>{row.statM}</span>}</strong>
+                  </div>
+                  <div className="ammc-info-row" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                    <span style={{ color: '#64748B' }}>Jam Pulang:</span>
+                    <strong>{row.jamP}</strong>
+                  </div>
+                  <div className="ammc-info-row" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                    <span style={{ color: '#64748B' }}>Durasi Kerja:</span>
+                    <strong>{row.dur}</strong>
+                  </div>
+                  <div className="ammc-info-row" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                    <span style={{ color: '#64748B' }}>Lokasi:</span>
+                    <strong style={{ maxWidth: '70%', textAlign: 'right', wordBreak: 'break-all' }}>{row.loc !== '-' ? `📍 ${row.loc}` : '-'}</strong>
+                  </div>
+                </div>
+
+                <div className="ammc-actions" style={{ display: 'flex', gap: '8px', borderTop: '1px solid #F1F5F9', paddingTop: '12px', justifyContent: 'flex-end', position: 'relative' }}>
+                  <button onClick={() => alert(`Detail Kehadiran: ${row.name}\nDivisi: ${row.div}\nStatus: ${row.status}`)} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', background: '#F1F5F9', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 600, color: '#334155', cursor: 'pointer' }}>
+                    <Eye size={14}/> Detail
+                  </button>
+                  <div style={{ position: 'relative' }}>
+                    <button onClick={(e) => { e.stopPropagation(); toggleMenu(row.id); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', background: 'transparent', border: '1px solid #E2E8F0', borderRadius: '8px', cursor: 'pointer', color: '#64748B' }}>
+                      <MoreVertical size={14}/>
+                    </button>
+                    {activeMenuId === row.id && (
+                      <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', right: '0', bottom: '34px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', zIndex: 100, display: 'flex', flexDirection: 'column', padding: '8px', minWidth: '150px' }}>
+                        <button onClick={() => alert('Log Aktivitas ' + row.name)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#0F172A', fontSize: '13px', fontWeight: 500 }}>
+                          <Info size={14} /> Log Aktivitas
+                        </button>
+                        <button onClick={() => alert('Beri Surat Peringatan: ' + row.name)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#EF4444', fontSize: '13px', fontWeight: 500 }}>
+                          <AlertTriangle size={14} /> Peringatan
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         <div className="am-tc-footer hide-on-print">

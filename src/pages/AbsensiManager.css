@@ -415,6 +415,13 @@
   .am-table td { border: 1px solid #ddd !important; }
 }
 
+.show-on-mobile {
+  display: none;
+}
+.hide-on-mobile {
+  display: block;
+}
+
 /* Mobile responsive overrides for Manager Panel */
 .mgr-mobile-topbar {
   display: none;
@@ -424,6 +431,94 @@
 }
 
 @media (max-width: 1024px) {
+  .am-page {
+    padding: 16px !important;
+  }
+
+  .am-header-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+    margin-bottom: 24px !important;
+  }
+
+  .am-hr {
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  .am-date-picker, .btn-export {
+    flex: 1 !important;
+    justify-content: center !important;
+    min-width: 0 !important;
+    padding: 10px !important;
+  }
+
+  .am-top-cards {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .am-top-cards > :last-child {
+    grid-column: span 2 !important;
+  }
+
+  .am-mid-cards {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .am-tc-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+    padding: 16px !important;
+  }
+
+  .tc-tabs {
+    width: 100% !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    padding-bottom: 8px !important;
+    border-bottom: 1px solid #F1F5F9 !important;
+  }
+
+  .tc-tab {
+    padding: 8px 0 !important;
+    white-space: nowrap !important;
+    font-size: 13px !important;
+  }
+
+  .tc-tab.active::after {
+    bottom: -9px !important;
+  }
+
+  .tc-filters {
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .search-box, .filter-box {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 10px 16px !important;
+  }
+
+  .filter-box select {
+    width: 100% !important;
+  }
+
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  .show-on-mobile {
+    display: block !important;
+  }
+
   .manager-page {
     flex-direction: column !important;
     overflow: auto !important;
