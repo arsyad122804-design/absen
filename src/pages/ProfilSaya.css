@@ -532,6 +532,10 @@
 @media (max-width: 768px) {
   .profil-page {
     padding: 12px !important;
+    display: block !important;
+    height: auto !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
   .profil-header {
     display: flex !important;
