@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { 
-  Bell, Home, Calendar, Clock, Volume2, User, Settings, HelpCircle, Lock, LogOut
+  Bell, Home, Calendar, Clock, Volume2, User, Settings, HelpCircle, Lock, LogOut, Menu, X
 } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
 import '../pages/DashboardKaryawan.css'
@@ -14,6 +14,7 @@ export default function DashboardLayout() {
   const [showNotif, setShowNotif] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [user, setUser] = useState({});
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -25,6 +26,11 @@ export default function DashboardLayout() {
       console.error(e);
     }
   }, []);
+
+  // Close sidebar on path changes (navigation)
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [location.pathname]);
 
   const [isProfileComplete, setIsProfileComplete] = useState(true);
   
@@ -41,8 +47,24 @@ export default function DashboardLayout() {
   return (
     <div className="dashboard-karyawan">
       
-      <div className="sidebar">
+      {/* Sidebar Backdrop Overlay on Mobile */}
+      {isSidebarOpen && (
+        <div 
+          className="sidebar-backdrop" 
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      <div className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-logo">
+          {/* Close button inside sidebar on mobile */}
+          <button 
+            className="sidebar-close-btn" 
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            <X size={24} />
+          </button>
+          
           <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M50 0L65.4508 15.4508L87.3223 12.6777L90.0954 34.5492L100 50L90.0954 65.4508L87.3223 87.3223L65.4508 90.0954L50 100L34.5492 90.0954L12.6777 87.3223L9.90462 65.4508L0 50L9.90462 34.5492L12.6777 12.6777L34.5492 15.4508L50 0Z" fill="#FBBF24"/>
             <path d="M50 8L62.45 20.45L80.3 18.3L82.45 36.15L90 50L82.45 63.85L80.3 81.7L62.45 79.55L50 92L37.55 79.55L19.7 81.7L17.55 63.85L10 50L17.55 36.15L19.7 18.3L37.55 20.45L50 8Z" fill="#1E40AF"/>
@@ -101,7 +123,21 @@ export default function DashboardLayout() {
       <div className="main-area">
         
         <div className="topbar">
-          <div className="topbar-left">
+          <div className="topbar-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button 
+              className="mobile-menu-toggle" 
+              onClick={() => setIsSidebarOpen(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#1E293B',
+                display: 'none', // Will be shown in mobile CSS media query
+                padding: '4px'
+              }}
+            >
+              <Menu size={24} />
+            </button>
             <h2 className="topbar-title">Absen Guru Hibatullah</h2>
           </div>
           <div className="topbar-right" style={{ position: 'relative' }}>
