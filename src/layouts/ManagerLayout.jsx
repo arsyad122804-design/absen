@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, NavLink } from 'react-router-dom';
+import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { 
   Home, Users, Clock, History, Calendar, FileText, 
-  Umbrella, ClipboardList, Settings, LogOut, ChevronDown 
+  Umbrella, ClipboardList, Settings, LogOut, ChevronDown, Menu, X
 } from 'lucide-react';
 import '../pages/DashboardManager.css';
 
 export default function ManagerLayout() {
   const [user, setUser] = useState({});
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     try {
@@ -20,10 +22,31 @@ export default function ManagerLayout() {
     }
   }, []);
 
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [location.pathname]);
+
   return (
     <div className="manager-page">
+      {/* Mobile Topbar */}
+      <div className="mgr-mobile-topbar">
+        <button className="mgr-hamburger" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+          <Menu size={24} />
+        </button>
+        <h2>AbsensiKu Manager</h2>
+      </div>
+
+      {/* Backdrop */}
+      {isSidebarOpen && (
+        <div className="mgr-sidebar-backdrop" onClick={() => setIsSidebarOpen(false)} />
+      )}
+
       {/* SIDEBAR MANAGER */}
-      <div className="mgr-sidebar-v2">
+      <div className={`mgr-sidebar-v2 ${isSidebarOpen ? 'open' : ''}`}>
+        {/* Close Button inside Sidebar on mobile */}
+        <button className="mgr-sidebar-close" onClick={() => setIsSidebarOpen(false)}>
+          <X size={20} />
+        </button>
         <div className="mgr-v2-logo">
           <div className="mgr-v2-icon">
             <Calendar size={20} color="white" />
