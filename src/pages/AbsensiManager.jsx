@@ -19,6 +19,17 @@ const initialTableData = [
 
 const DONUT_COLORS = ['#10B981', '#F59E0B', '#EF4444'];
 
+const safeJsonParse = (key, fallback = {}) => {
+  try {
+    const item = localStorage.getItem(key);
+    if (!item || item === 'undefined' || item === 'null') return fallback;
+    const parsed = JSON.parse(item);
+    return parsed !== null && parsed !== undefined ? parsed : fallback;
+  } catch (e) {
+    return fallback;
+  }
+};
+
 export default function AbsensiManager() {
   const [activeTab, setActiveTab] = useState('Semua');
   const [searchQuery, setSearchQuery] = useState('');
@@ -31,29 +42,36 @@ export default function AbsensiManager() {
 
   useEffect(() => {
     const fetchLiveAbsensi = async () => {
-      // Hapus seluruh data absensi lama di database lokal
-      localStorage.removeItem('local_absensi');
-      const local = [];
+      const local = safeJsonParse('local_absensi', []);
+      const localKaryawan = safeJsonParse('local_karyawan', []);
       
       let dbData = [];
+      let dbKaryawan = [];
       try {
         const { data } = await supabase.from('absensi').select('*');
         if (data) dbData = data;
+        const { data: kData } = await supabase.from('karyawan').select('*');
+        if (kData) dbKaryawan = kData;
       } catch(e) {}
 
+      const allEmps = [...localKaryawan, ...dbKaryawan];
       const combined = [...local, ...dbData];
-      const mapped = combined.map((r, idx) => ({
-        id: r.id || `local-${idx}`,
-        img: `https://ui-avatars.com/api/?name=${encodeURIComponent(r.nama || r.user_name || 'Karyawan')}`,
-        name: r.nama || r.user_name || 'Karyawan',
-        div: r.divisi || 'Operasional',
-        status: r.status || 'Hadir',
-        jamM: r.jam_masuk || r.jam || '08:00',
-        statM: r.status === 'Terlambat' ? 'Terlambat' : 'Tepat Waktu',
-        jamP: r.jam_pulang || '-',
-        dur: '-',
-        loc: r.lokasi ? 'Lokasi Presisi (GPS)' : 'Tanpa Lokasi'
-      }));
+
+      const mapped = combined.map((r, idx) => {
+        const emp = allEmps.find(e => String(e.id) === String(r.karyawan_id)) || {};
+        return {
+          id: r.id || `local-${idx}`,
+          img: `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name || r.nama || r.user_name || 'Karyawan')}`,
+          name: emp.name || r.nama || r.user_name || 'Karyawan',
+          div: emp.divisi || emp.div || r.divisi || 'Operasional',
+          status: r.status || 'Hadir',
+          jamM: r.waktu_masuk || r.jam_masuk || r.jam || '08:00',
+          statM: r.status === 'Terlambat' ? 'Terlambat' : 'Tepat Waktu',
+          jamP: r.waktu_keluar || r.jam_pulang || '-',
+          dur: '-',
+          loc: r.lokasi ? 'Lokasi Presisi (GPS)' : 'Tanpa Lokasi'
+        };
+      });
 
       setTableData(mapped);
     };

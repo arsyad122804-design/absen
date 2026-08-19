@@ -18,6 +18,17 @@ const mockData = [
 
 import { supabase } from '../lib/supabase';
 
+const safeJsonParse = (key, fallback = {}) => {
+  try {
+    const item = localStorage.getItem(key);
+    if (!item || item === 'undefined' || item === 'null') return fallback;
+    const parsed = JSON.parse(item);
+    return parsed !== null && parsed !== undefined ? parsed : fallback;
+  } catch (e) {
+    return fallback;
+  }
+};
+
 export default function RiwayatAbsensiManager() {
   const [filterStatus, setFilterStatus] = useState('Semua');
   const [selectedRecord, setSelectedRecord] = useState(null);
@@ -25,34 +36,38 @@ export default function RiwayatAbsensiManager() {
 
   useEffect(() => {
     const fetchAllHistory = async () => {
-      // Hapus seluruh data absensi lama di database lokal
-      localStorage.removeItem('local_absensi');
-      const local = [];
+      const local = safeJsonParse('local_absensi', []);
+      const localKaryawan = safeJsonParse('local_karyawan', []);
       
       let dbData = [];
+      let dbKaryawan = [];
       try {
         const { data, error } = await supabase.from('absensi').select('*').order('created_at', { ascending: false });
         if (!error && data) {
           dbData = data;
         }
+        const { data: kData } = await supabase.from('karyawan').select('*');
+        if (kData) dbKaryawan = kData;
       } catch (e) {}
 
+      const allEmps = [...localKaryawan, ...dbKaryawan];
       const combined = [...local, ...dbData];
       
       const mapped = combined.map((r, i) => {
+        const emp = allEmps.find(e => String(e.id) === String(r.karyawan_id)) || {};
         const dateObj = r.tanggal ? new Date(r.tanggal) : new Date();
         const monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
         const formattedDate = `${dateObj.getDate()} ${monthNames[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
         
         return {
           id: r.id || `local-his-${i}`,
-          name: r.nama || r.user_name || 'Karyawan',
-          div: r.divisi || 'Operasional',
+          name: emp.name || r.nama || r.user_name || 'Karyawan',
+          div: emp.divisi || emp.div || r.divisi || 'Operasional',
           date: formattedDate,
           status: r.status || 'Hadir',
-          inTime: r.jam_masuk || r.jam || '08:00',
-          outTime: r.jam_pulang || '-',
-          detail: r.alasan || '',
+          inTime: r.waktu_masuk || r.jam_masuk || r.jam || '08:00',
+          outTime: r.waktu_keluar || r.jam_pulang || '-',
+          detail: r.alasan || r.keterangan || '',
           lat: r.lokasi ? r.lokasi.split(',')[0] : null,
           lng: r.lokasi ? r.lokasi.split(',')[1] : null,
           lokasi: r.lokasi
