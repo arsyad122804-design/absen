@@ -128,11 +128,34 @@ export default function ProfilSaya() {
 
   const handleSave = async () => {
     // 1. Update state lokal & localStorage terlebih dahulu
-    const updatedUser = { ...user, name: editForm.name, divisi: editForm.divisi };
+    const updatedUser = { 
+      ...user, 
+      name: editForm.name, 
+      divisi: editForm.divisi, 
+      phone: editForm.phone, 
+      email: editForm.email 
+    };
     localStorage.setItem('user', JSON.stringify(updatedUser));
     setUser(updatedUser);
     setProfile(editForm);
     setShowEditModal(false);
+
+    // Sinkronkan juga perubahan ke local_karyawan agar manager melihat update
+    const localKaryawan = safeJsonParse('local_karyawan', []);
+    const updatedLocalKaryawan = localKaryawan.map(emp => {
+      if (String(emp.id) === String(user.id)) {
+        return {
+          ...emp,
+          name: editForm.name,
+          div: editForm.divisi,
+          divisi: editForm.divisi,
+          phone: editForm.phone,
+          email: editForm.email
+        };
+      }
+      return emp;
+    });
+    localStorage.setItem('local_karyawan', JSON.stringify(updatedLocalKaryawan));
 
     // 2. Coba update ke Supabase (hanya jika bukan akun demo)
     const isDemo = !user.id || user.id.startsWith('karyawan-') || user.id.startsWith('admin-');
