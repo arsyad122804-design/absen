@@ -528,25 +528,87 @@
 }
 
 @media (max-width: 768px) {
-  .ph-content {
-    flex-direction: column;
-    text-align: center;
-    padding: 32px 20px;
-  }
-  .ph-meta-row {
-    justify-content: center;
+  .profil-page {
+    padding: 12px !important;
   }
   .profil-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 16px !important;
+  }
+  .greeting h1 {
+    font-size: 22px !important;
+  }
+  .greeting p {
+    font-size: 11px !important;
   }
   .profil-header-actions {
-    width: 100%;
+    width: auto !important;
   }
   .btn-primary {
-    flex: 1;
-    justify-content: center;
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2) !important;
+  }
+  .profil-hero-banner {
+    min-height: auto !important;
+    border-radius: 16px !important;
+    margin-bottom: 16px !important;
+  }
+  .ph-content {
+    flex-direction: column !important;
+    text-align: center !important;
+    padding: 24px 16px !important;
+    gap: 16px !important;
+  }
+  .ph-avatar {
+    width: 90px !important;
+    height: 90px !important;
+    border-width: 3px !important;
+  }
+  .ph-avatar-badge {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  .camera-icon {
+    font-size: 13px !important;
+  }
+  .ph-name-row {
+    justify-content: center !important;
+  }
+  .ph-name-row h2 {
+    font-size: 20px !important;
+  }
+  .ph-meta-row {
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+  }
+  .profil-tabs-card {
+    display: flex !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    padding: 6px !important;
+    gap: 6px !important;
+    justify-content: flex-start !important;
+    border-radius: 12px !important;
+    margin-bottom: 16px !important;
+  }
+  .profil-tabs-card::-webkit-scrollbar {
+    display: none !important;
+  }
+  .profil-tab-btn {
+    padding: 8px 16px !important;
+    font-size: 13px !important;
+    border-radius: 8px !important;
+    flex-shrink: 0 !important;
+  }
+  .profil-card {
+    padding: 16px !important;
+    border-radius: 16px !important;
   }
 }
 
