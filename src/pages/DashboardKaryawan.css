@@ -1203,3 +1203,23 @@ input.read-only { color: #64748B; }
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+@keyframes scan {
+  0% { top: 0%; }
+  50% { top: 100%; }
+  100% { top: 0%; }
+}
+
+.scanner-line {
+  animation: scan 2s infinite linear;
+}
+
+@keyframes camera-pulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+  70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+}
+
+.camera-pulse {
+  animation: camera-pulse 1.8s infinite ease-in-out;
+}

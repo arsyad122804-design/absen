@@ -369,37 +369,67 @@ export default function Absensi() {
             <button className="modal-close" onClick={() => setShowModal(false)}><X size={24} /></button>
             <h3 className="modal-title" style={{ fontSize: '20px', marginBottom: '24px' }}>Verifikasi Kehadiran</h3>
             
-            <div className="modal-camera" style={{ borderRadius: '20px', overflow: 'hidden', border: '2px dashed #CBD5E1', backgroundColor: '#000', position: 'relative' }}>
+            <div className="modal-camera" style={{ borderRadius: '24px', overflow: 'hidden', backgroundColor: '#0F172A', position: 'relative', height: '260px', boxShadow: 'inset 0 0 40px rgba(0,0,0,0.6)' }}>
               <video 
                 ref={videoRef} 
                 autoPlay 
                 playsInline 
                 muted 
-                style={{ width: '100%', height: '240px', objectFit: 'cover', transform: 'scaleX(-1)' }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)', position: 'absolute', inset: 0 }}
               />
+              
+              {/* Scanner target frame & markers */}
+              <div style={{ position: 'absolute', inset: '24px', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '16px', pointerEvents: 'none' }}>
+                <div style={{ position: 'absolute', top: '-2px', left: '-2px', width: '20px', height: '20px', borderTop: '4px solid #3B82F6', borderLeft: '4px solid #3B82F6', borderTopLeftRadius: '8px' }} />
+                <div style={{ position: 'absolute', top: '-2px', right: '-2px', width: '20px', height: '20px', borderTop: '4px solid #3B82F6', borderRight: '4px solid #3B82F6', borderTopRightRadius: '8px' }} />
+                <div style={{ position: 'absolute', bottom: '-2px', left: '-2px', width: '20px', height: '20px', borderBottom: '4px solid #3B82F6', borderLeft: '4px solid #3B82F6', borderBottomLeftRadius: '8px' }} />
+                <div style={{ position: 'absolute', bottom: '-2px', right: '-2px', width: '20px', height: '20px', borderBottom: '4px solid #3B82F6', borderRight: '4px solid #3B82F6', borderBottomRightRadius: '8px' }} />
+                
+                {/* Scanner laser line */}
+                <div className="scanner-line" style={{
+                  position: 'absolute',
+                  left: 0,
+                  right: 0,
+                  height: '3px',
+                  background: 'linear-gradient(90deg, transparent, #3B82F6, transparent)',
+                  boxShadow: '0 0 8px #3B82F6'
+                }} />
+              </div>
+
               {!hasStream && (
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '12px', background: '#F8FAFC' }}>
-                  <div style={{ padding: '16px', background: '#EEF2FF', borderRadius: '50%', color: '#4F46E5' }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '12px', background: '#0F172A' }}>
+                  <div className="camera-pulse" style={{ padding: '20px', background: 'rgba(59, 130, 246, 0.1)', border: '2px solid rgba(59, 130, 246, 0.3)', borderRadius: '50%', color: '#3B82F6' }}>
                     <Camera size={36} />
                   </div>
-                  <span style={{ fontWeight: 500, color: '#475569' }}>Mengakses Kamera...</span>
+                  <span style={{ fontWeight: 600, color: '#94A3B8', fontSize: '14px', letterSpacing: '0.5px' }}>Mengakses Kamera...</span>
                 </div>
               )}
             </div>
 
-            <div className="modal-info" style={{ marginTop: '24px', background: '#F1F5F9', padding: '16px', borderRadius: '16px' }}>
-              <div className="modal-info-row">
-                <MapPin size={18} color={locationStatus === 'outside' ? '#EF4444' : '#2563EB'} />
-                <span style={{ fontWeight: 500, color: locationStatus === 'outside' ? '#EF4444' : '#0F172A' }}>
-                  {locationStatus === 'loading' && 'Mendapatkan lokasi...'}
-                  {locationStatus === 'error' && 'Gagal mendapatkan lokasi GPS'}
-                  {locationStatus === 'inside' && `SMA Hibatullah IIBS (Lokasi Valid)`}
-                  {locationStatus === 'outside' && `Di luar area batas sekolah!`}
-                </span>
+            <div className="modal-info" style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: locationStatus === 'outside' ? '#FEF2F2' : '#F8FAFC', border: `1px solid ${locationStatus === 'outside' ? '#FCA5A5' : '#E2E8F0'}`, padding: '12px 16px', borderRadius: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '8px', background: locationStatus === 'outside' ? '#FEE2E2' : '#EFF6FF' }}>
+                  <MapPin size={18} color={locationStatus === 'outside' ? '#EF4444' : '#2563EB'} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Lokasi Anda</span>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: locationStatus === 'outside' ? '#EF4444' : '#0F172A' }}>
+                    {locationStatus === 'loading' && 'Mendapatkan lokasi...'}
+                    {locationStatus === 'error' && 'Gagal mendapatkan lokasi GPS'}
+                    {locationStatus === 'inside' && `SMA Hibatullah IIBS (Lokasi Valid)`}
+                    {locationStatus === 'outside' && `Di luar batas sekolah!`}
+                  </span>
+                </div>
               </div>
-              <div className="modal-info-row" style={{ marginTop: '12px' }}>
-                <Clock size={18} color="#2563EB" />
-                <span style={{ fontWeight: 500, color: '#0F172A' }}>{currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB</span>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '12px 16px', borderRadius: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '8px', background: '#EFF6FF' }}>
+                  <Clock size={18} color="#2563EB" />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Waktu Deteksi</span>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>{currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} WIB</span>
+                </div>
               </div>
             </div>
 
