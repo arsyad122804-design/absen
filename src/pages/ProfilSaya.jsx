@@ -248,33 +248,10 @@ export default function ProfilSaya() {
         </div>
       </div>
 
-      {/* TABS */}
-      <div className="profil-tabs-card">
-        {['Ringkasan', 'Informasi Pribadi', 'Pengaturan'].map(tab => (
-          <button 
-            key={tab} 
-            className={`profil-tab-btn ${activeTab === tab ? 'active' : ''}`}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
       {/* GRID LAYOUT */}
-      <div className={`profil-grid ${activeTab !== 'Ringkasan' ? 'single-focus' : ''}`}>
+      <div className="profil-grid">
         
-        {/* PENGATURAN TAB */}
-        {activeTab === 'Pengaturan' && (
-          <div className="profil-card" style={{ textAlign: 'center', padding: '64px 24px', gridColumn: '1 / -1' }}>
-            <Settings size={48} color="#94A3B8" style={{ marginBottom: '16px' }} />
-            <h2 style={{ color: '#0F172A', marginBottom: '8px' }}>Pengaturan Profil</h2>
-            <p style={{ color: '#64748B' }}>Silakan gunakan menu Pengaturan di navigasi kiri untuk mengelola preferensi, notifikasi, dan keamanan akun Anda.</p>
-          </div>
-        )}
-
         {/* KOLOM KIRI */}
-        {['Ringkasan', 'Informasi Pribadi'].includes(activeTab) && (
         <div className="profil-col-left">
           
           <div className="profil-card">
@@ -330,10 +307,8 @@ export default function ProfilSaya() {
           </div>
 
         </div>
-        )}
 
         {/* KOLOM TENGAH */}
-        {['Ringkasan'].includes(activeTab) && (
         <div className="profil-col-mid">
           
           {/* Stats Row */}
@@ -448,9 +423,6 @@ export default function ProfilSaya() {
           </div>
 
         </div>
-        )}
-
-
 
       </div>
 
