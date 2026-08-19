@@ -150,41 +150,32 @@ export default function RiwayatAbsen() {
       </div>
 
       {/* SUMMARY BANNER */}
-      <div className="ra-summary-banner">
-        <div className="ra-sb-title">Ringkasan Bulan Ini</div>
-        <div className="ra-sb-stats">
-          <div className="ra-sb-stat">
-            <div className="ra-sb-icon-circle green">
-              <Check size={24} strokeWidth={3} />
-            </div>
-            <div className="ra-sb-text">
-              <h2>{stats.hadir}</h2>
-              <p>Hadir</p>
-            </div>
-          </div>
-          <div className="ra-sb-divider"></div>
-          <div className="ra-sb-stat">
-            <div className="ra-sb-icon-circle orange">
-              <Clock size={24} strokeWidth={3} />
-            </div>
-            <div className="ra-sb-text">
-              <h2>{stats.terlambat}</h2>
-              <p>Terlambat</p>
-            </div>
-          </div>
-          <div className="ra-sb-divider"></div>
-          <div className="ra-sb-stat">
-            <div className="ra-sb-icon-circle red">
-              <X size={24} strokeWidth={3} />
-            </div>
-            <div className="ra-sb-text">
-              <h2>{stats.tidakHadir}</h2>
-              <p>Tidak Hadir</p>
-            </div>
-          </div>
+      <div className="ra-summary-banner-v2">
+        <div className="ra-sb-v2-header">
+          <h3>Ringkasan Bulan Ini</h3>
         </div>
-        <div className="ra-sb-bg-icon">
-          <Calendar size={120} />
+        <div className="ra-sb-v2-grid">
+          <div className="ra-sb-v2-item hadir">
+            <div className="ra-sb-v2-icon"><Check size={18} strokeWidth={3} /></div>
+            <div className="ra-sb-v2-data">
+              <span className="ra-sb-v2-num">{stats.hadir}</span>
+              <span className="ra-sb-v2-lbl">Hadir</span>
+            </div>
+          </div>
+          <div className="ra-sb-v2-item terlambat">
+            <div className="ra-sb-v2-icon"><Clock size={18} strokeWidth={3} /></div>
+            <div className="ra-sb-v2-data">
+              <span className="ra-sb-v2-num">{stats.terlambat}</span>
+              <span className="ra-sb-v2-lbl">Terlambat</span>
+            </div>
+          </div>
+          <div className="ra-sb-v2-item tidak-hadir">
+            <div className="ra-sb-v2-icon"><X size={18} strokeWidth={3} /></div>
+            <div className="ra-sb-v2-data">
+              <span className="ra-sb-v2-num">{stats.tidakHadir}</span>
+              <span className="ra-sb-v2-lbl">Tidak Hadir</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -285,6 +276,57 @@ export default function RiwayatAbsen() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* MOBILE LIST VIEW */}
+        <div className="ra-list-wrapper">
+          {filteredRecords.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '32px 16px', color: '#64748B' }}>
+              <Info size={36} style={{ marginBottom: '12px', opacity: 0.4 }} />
+              <p style={{ margin: 0, fontSize: '14px', fontWeight: 600 }}>Belum ada riwayat absensi</p>
+              <p style={{ margin: '4px 0 0 0', fontSize: '12px', opacity: 0.8 }}>Data kehadiran akan muncul setelah Anda melakukan check-in.</p>
+            </div>
+          ) : (
+            <div className="ra-log-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {filteredRecords.map(r => (
+                <div 
+                  key={r.id} 
+                  className="ra-log-card" 
+                  onClick={() => setSelectedRecord(r)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 16px',
+                    background: '#F8FAFC',
+                    borderRadius: '16px',
+                    border: '1px solid #E2E8F0',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <div className="ra-log-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div className="ra-date-box" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '12px', width: '48px', height: '48px' }}>
+                      <span className="ra-db-num" style={{ fontSize: '16px', fontWeight: 700, color: '#1D4ED8', lineHeight: 1.1 }}>{r.dateNum}</span>
+                      <span className="ra-db-mon" style={{ fontSize: '10px', fontWeight: 600, color: '#3B82F6', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{r.dateMon}</span>
+                    </div>
+                    <div className="ra-log-info">
+                      <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#0F172A' }}>{r.day}</h4>
+                      <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#64748B' }}>
+                        Masuk: <strong style={{ color: '#0F172A' }}>{r.in}</strong> • Pulang: <strong style={{ color: '#0F172A' }}>{r.out}</strong>
+                      </p>
+                    </div>
+                  </div>
+                  <div className="ra-log-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className={`ra-status-pill ${r.status.toLowerCase().replace(' ', '-')}`}>
+                      {r.status}
+                    </span>
+                    <ChevronRight size={16} color="#94A3B8" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
