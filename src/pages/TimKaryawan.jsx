@@ -366,7 +366,7 @@ export default function TimKaryawan() {
                     <MoreVertical size={18} />
                   </button>
                   {activeMenuId === row.id && (
-                    <div className="action-dropdown" onClick={e => e.stopPropagation()} style={{ position: 'absolute', right: '40px', top: '10px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', zIndex: 100, display: 'flex', flexDirection: 'column', padding: '8px', minWidth: '160px' }}>
+                    <div className="action-dropdown" onClick={e => e.stopPropagation()} style={{ position: 'absolute', right: '40px', bottom: '0', background: 'white', border: '1px solid #E2E8F0', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', zIndex: 100, display: 'flex', flexDirection: 'column', padding: '8px', minWidth: '160px' }}>
                       <button className="ad-btn" onClick={() => alert(`Detail Karyawan:\n===================\nNama: ${row.name}\nJabatan: ${row.role}\nDivisi: ${row.div}\nStatus Kerja: ${row.type}\nStatus Kehadiran: ${row.status}\nEmail: ${row.email}\nTelepon: ${row.phone}\nTanggal Gabung: ${row.join}`)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#0F172A', fontSize: '13px', width: '100%' }}>
                         <Info size={14} /> Lihat Info
                       </button>
@@ -435,7 +435,7 @@ export default function TimKaryawan() {
                     <MoreVertical size={18} />
                   </button>
                   {activeMenuId === row.id && (
-                    <div className="action-dropdown" onClick={e => e.stopPropagation()} style={{ position: 'absolute', right: '0', top: '30px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', zIndex: 100, display: 'flex', flexDirection: 'column', padding: '8px', minWidth: '160px' }}>
+                    <div className="action-dropdown" onClick={e => e.stopPropagation()} style={{ position: 'absolute', right: '0', bottom: '30px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', zIndex: 100, display: 'flex', flexDirection: 'column', padding: '8px', minWidth: '160px' }}>
                       <button className="ad-btn" onClick={() => alert(`Detail Karyawan:\n===================\nNama: ${row.name}\nJabatan: ${row.role}\nDivisi: ${row.div}\nStatus Kerja: ${row.type}\nStatus Kehadiran: ${row.status}\nEmail: ${row.email}\nTelepon: ${row.phone}\nTanggal Gabung: ${row.join}`)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', color: '#0F172A', fontSize: '13px', width: '100%' }}>
                         <Info size={14} /> Lihat Info
                       </button>

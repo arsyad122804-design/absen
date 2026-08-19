@@ -205,10 +205,12 @@
   border-radius: 16px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.02);
   position: relative;
+  overflow: visible !important;
 }
 .tk-table {
   width: 100%;
   border-collapse: collapse;
+  overflow: visible !important;
 }
 .tk-table th {
   text-align: left;
