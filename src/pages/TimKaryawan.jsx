@@ -366,33 +366,33 @@ export default function TimKaryawan() {
                   </button>
                   {activeMenuId === row.id && (
                     <div className="action-dropdown" onClick={e => e.stopPropagation()}>
-                      <button className="ad-btn" onClick={() => alert(`Detail Karyawan:\n===================\nNama: ${row.name}\nJabatan: ${row.role}\nDivisi: ${row.div}\nStatus Kerja: ${row.type}\nStatus Kehadiran: ${row.status}\nEmail: ${row.email}\nTelepon: ${row.phone}\nTanggal Gabung: ${row.join}`)}>
+                      <div className="ad-btn" role="button" onClick={() => alert(`Detail Karyawan:\n===================\nNama: ${row.name}\nJabatan: ${row.role}\nDivisi: ${row.div}\nStatus Kerja: ${row.type}\nStatus Kehadiran: ${row.status}\nEmail: ${row.email}\nTelepon: ${row.phone}\nTanggal Gabung: ${row.join}`)}>
                         <Info size={14} /> Lihat Info
-                      </button>
+                      </div>
                       
                       {row.status !== 'Aktif' && (
-                        <button className="ad-btn" onClick={() => handleUpdateStatus(row.id, row.name, 'Aktif')}>
+                        <div className="ad-btn" role="button" onClick={() => handleUpdateStatus(row.id, row.name, 'Aktif')}>
                           <CheckCircle2 size={14} /> Set Aktif
-                        </button>
+                        </div>
                       )}
 
                       {row.status !== 'Cuti' && (
-                        <button className="ad-btn" onClick={() => handleUpdateStatus(row.id, row.name, 'Cuti')}>
+                        <div className="ad-btn" role="button" onClick={() => handleUpdateStatus(row.id, row.name, 'Cuti')}>
                           <Clock size={14} /> Set Cuti
-                        </button>
+                        </div>
                       )}
 
                       {row.status !== 'Non-Aktif' && (
-                        <button className="ad-btn" onClick={() => handleUpdateStatus(row.id, row.name, 'Non-Aktif')}>
+                        <div className="ad-btn" role="button" onClick={() => handleUpdateStatus(row.id, row.name, 'Non-Aktif')}>
                           <UserX size={14} /> Set Non-Aktif
-                        </button>
+                        </div>
                       )}
 
                       <div style={{ height: '1px', background: '#F1F5F9', margin: '4px 0' }}></div>
 
-                      <button className="ad-btn delete" onClick={() => handleDelete(row.id)}>
+                      <div className="ad-btn delete" role="button" onClick={() => handleDelete(row.id)}>
                         <Trash2 size={14} /> Hapus Data
-                      </button>
+                      </div>
                     </div>
                   )}
                 </td>
@@ -435,33 +435,33 @@ export default function TimKaryawan() {
                   </button>
                   {activeMenuId === row.id && (
                     <div className="action-dropdown" onClick={e => e.stopPropagation()}>
-                      <button className="ad-btn" onClick={() => alert(`Detail Karyawan:\n===================\nNama: ${row.name}\nJabatan: ${row.role}\nDivisi: ${row.div}\nStatus Kerja: ${row.type}\nStatus Kehadiran: ${row.status}\nEmail: ${row.email}\nTelepon: ${row.phone}\nTanggal Gabung: ${row.join}`)}>
+                      <div className="ad-btn" role="button" onClick={() => alert(`Detail Karyawan:\n===================\nNama: ${row.name}\nJabatan: ${row.role}\nDivisi: ${row.div}\nStatus Kerja: ${row.type}\nStatus Kehadiran: ${row.status}\nEmail: ${row.email}\nTelepon: ${row.phone}\nTanggal Gabung: ${row.join}`)}>
                         <Info size={14} /> Lihat Info
-                      </button>
+                      </div>
 
                       {row.status !== 'Aktif' && (
-                        <button className="ad-btn" onClick={() => handleUpdateStatus(row.id, row.name, 'Aktif')}>
+                        <div className="ad-btn" role="button" onClick={() => handleUpdateStatus(row.id, row.name, 'Aktif')}>
                           <CheckCircle2 size={14} /> Set Aktif
-                        </button>
+                        </div>
                       )}
 
                       {row.status !== 'Cuti' && (
-                        <button className="ad-btn" onClick={() => handleUpdateStatus(row.id, row.name, 'Cuti')}>
+                        <div className="ad-btn" role="button" onClick={() => handleUpdateStatus(row.id, row.name, 'Cuti')}>
                           <Clock size={14} /> Set Cuti
-                        </button>
+                        </div>
                       )}
 
                       {row.status !== 'Non-Aktif' && (
-                        <button className="ad-btn" onClick={() => handleUpdateStatus(row.id, row.name, 'Non-Aktif')}>
+                        <div className="ad-btn" role="button" onClick={() => handleUpdateStatus(row.id, row.name, 'Non-Aktif')}>
                           <UserX size={14} /> Set Non-Aktif
-                        </button>
+                        </div>
                       )}
 
                       <div style={{ height: '1px', background: '#F1F5F9', margin: '4px 0' }}></div>
 
-                      <button className="ad-btn delete" onClick={() => handleDelete(row.id)}>
+                      <div className="ad-btn delete" role="button" onClick={() => handleDelete(row.id)}>
                         <Trash2 size={14} /> Hapus Data
-                      </button>
+                      </div>
                     </div>
                   )}
                 </div>
