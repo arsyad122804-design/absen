@@ -12,19 +12,42 @@ export default function LaporanManager() {
   const [reportType, setReportType] = useState('Bulanan');
   const [isExporting, setIsExporting] = useState(false);
   const [historyList, setHistoryList] = useState([]);
+  
+  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [selectedMonth, setSelectedMonth] = useState('Agustus');
+  const [selectedYear, setSelectedYear] = useState(2026);
+
+  const getPeriodLabel = () => {
+    if (reportType === 'Harian') {
+      const d = new Date(selectedDate);
+      return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+    if (reportType === 'Mingguan') {
+      const d = new Date(selectedDate);
+      // Dapatkan awal minggu
+      const firstDay = new Date(d.setDate(d.getDate() - d.getDay() + 1));
+      const lastDay = new Date(d.setDate(d.getDate() - d.getDay() + 7));
+      return `Minggu (${firstDay.getDate()} ${firstDay.toLocaleDateString('id-ID', { month: 'short' })} - ${lastDay.getDate()} ${lastDay.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' })})`;
+    }
+    if (reportType === 'Bulanan') {
+      return `${selectedMonth} ${selectedYear}`;
+    }
+    return `Tahun ${selectedYear}`;
+  };
 
   const handleExport = (type) => {
     setIsExporting(true);
     setTimeout(() => {
       setIsExporting(false);
+      const periodStr = getPeriodLabel();
       const newReport = {
         id: Date.now(),
-        name: `Laporan ${reportType} (${new Date().toLocaleDateString('id-ID')})`,
+        name: `Laporan ${reportType} - ${periodStr}`,
         date: new Date().toLocaleDateString('id-ID'),
         type
       };
       setHistoryList([newReport, ...historyList]);
-      alert(`Laporan ${reportType} berhasil diekspor sebagai file ${type}!`);
+      alert(`Laporan ${reportType} (${periodStr}) berhasil diekspor sebagai file ${type}!`);
     }, 1200);
   };
 
@@ -95,8 +118,65 @@ export default function LaporanManager() {
               <div className="lm-field-group">
                 <label>Pilih Periode</label>
                 <div className="lm-input-wrapper">
-                  <Calendar size={16} color="#94A3B8" />
-                  <input type="text" value="Mei 2026" readOnly />
+                  <Calendar size={16} color="#94A3B8" style={{ flexShrink: 0 }} />
+                  {reportType === 'Harian' && (
+                    <input 
+                      type="date" 
+                      value={selectedDate} 
+                      onChange={e => setSelectedDate(e.target.value)} 
+                      style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', color: '#334155' }}
+                    />
+                  )}
+                  {reportType === 'Mingguan' && (
+                    <input 
+                      type="date" 
+                      value={selectedDate} 
+                      onChange={e => setSelectedDate(e.target.value)} 
+                      style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', color: '#334155' }}
+                    />
+                  )}
+                  {reportType === 'Bulanan' && (
+                    <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                      <select 
+                        value={selectedMonth} 
+                        onChange={e => setSelectedMonth(e.target.value)}
+                        style={{ border: 'none', background: 'transparent', outline: 'none', color: '#334155', cursor: 'pointer', flex: 1, padding: '10px 0' }}
+                      >
+                        <option value="Januari">Januari</option>
+                        <option value="Februari">Februari</option>
+                        <option value="Maret">Maret</option>
+                        <option value="April">April</option>
+                        <option value="Mei">Mei</option>
+                        <option value="Juni">Juni</option>
+                        <option value="Juli">Juli</option>
+                        <option value="Agustus">Agustus</option>
+                        <option value="September">September</option>
+                        <option value="Oktober">Oktober</option>
+                        <option value="November">November</option>
+                        <option value="Desember">Desember</option>
+                      </select>
+                      <select 
+                        value={selectedYear} 
+                        onChange={e => setSelectedYear(Number(e.target.value))}
+                        style={{ border: 'none', background: 'transparent', outline: 'none', color: '#334155', cursor: 'pointer', width: '80px', padding: '10px 0' }}
+                      >
+                        <option value={2025}>2025</option>
+                        <option value={2026}>2026</option>
+                        <option value={2027}>2027</option>
+                      </select>
+                    </div>
+                  )}
+                  {reportType === 'Tahunan' && (
+                    <select 
+                      value={selectedYear} 
+                      onChange={e => setSelectedYear(Number(e.target.value))}
+                      style={{ border: 'none', background: 'transparent', outline: 'none', color: '#334155', cursor: 'pointer', width: '100%', padding: '10px 0' }}
+                    >
+                      <option value={2025}>2025</option>
+                      <option value={2026}>2026</option>
+                      <option value={2027}>2027</option>
+                    </select>
+                  )}
                 </div>
               </div>
               <div className="lm-field-group">
