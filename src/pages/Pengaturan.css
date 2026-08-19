@@ -339,4 +339,24 @@
     flex-direction: column;
     align-items: flex-start;
   }
+
+  .pg-v2-set-item {
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+  }
+
+  .pg-v2-si-text {
+    min-width: 180px !important;
+    flex: 1 !important;
+  }
+
+  .pg-v2-si-action {
+    width: 100% !important;
+    margin-top: 4px !important;
+  }
+
+  .pg-v2-select {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
 }
