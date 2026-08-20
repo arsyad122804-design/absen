@@ -55,6 +55,7 @@ export default function DashboardManager() {
   const [dateRange, setDateRange] = useState(() => getMonthLabel());
   const [trendFilter, setTrendFilter] = useState('Harian');
   const [divisiData, setDivisiData] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]);
 
   const [stats, setStats] = useState({
     totalKaryawan: 0,
@@ -186,6 +187,46 @@ export default function DashboardManager() {
 
       setDivisiData(computedDivisiData);
 
+      // Fetch 5 latest activities from Supabase
+      let dbRecentAbs = [];
+      try {
+        const { data } = await supabase
+          .from('absensi')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(5);
+        if (data) dbRecentAbs = data;
+      } catch(e) {}
+
+      // Map to aktivitasData structure
+      const mappedActivity = dbRecentAbs.map(r => {
+        const emp = uniqueKaryawan.find(e => String(e.id) === String(r.karyawan_id)) || {};
+        
+        let desc = '';
+        let type = 'green';
+        if (r.status === 'Hadir') {
+          desc = `Melakukan absensi masuk pada jam ${r.waktu_masuk || '-'}`;
+          type = 'green';
+        } else if (r.status === 'Terlambat') {
+          desc = `Melakukan absensi terlambat pada jam ${r.waktu_masuk || '-'}`;
+          type = 'orange';
+        } else {
+          desc = `Mengajukan status ${r.status}: ${r.keterangan || '-'}`;
+          type = 'orange';
+        }
+
+        return {
+          id: r.id,
+          name: emp.name || r.nama || r.user_name || 'Karyawan',
+          img: `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name || r.user_name || 'Karyawan')}`,
+          desc,
+          time: r.tanggal,
+          type
+        };
+      });
+
+      setRecentActivity(mappedActivity);
+
       setStats({
         totalKaryawan,
         hadir,
@@ -220,7 +261,7 @@ export default function DashboardManager() {
 
 
 
-  const aktivitasData = []; // Kosong karena belum ada sistem tracking riwayat asli
+  const aktivitasData = recentActivity;
 
   return (
       <div className="mgr-main">

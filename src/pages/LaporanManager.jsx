@@ -1,17 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FileText, Download, Calendar, Filter, FileSpreadsheet, 
   BarChart2, FileIcon, Search, CheckCircle2 
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { supabase } from '../lib/supabase';
 import './LaporanManager.css';
 
-const chartData = [];
-
 export default function LaporanManager() {
+  const [chartData, setChartData] = useState([]);
   const [reportType, setReportType] = useState('Bulanan');
   const [isExporting, setIsExporting] = useState(false);
   const [historyList, setHistoryList] = useState([]);
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        const { data, error } = await supabase.from('absensi').select('*');
+        if (!error && data) {
+          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+          const counts = months.map(m => ({ name: m, hadir: 0, telat: 0, cuti: 0 }));
+
+          data.forEach(r => {
+            const dateObj = r.tanggal ? new Date(r.tanggal) : null;
+            if (dateObj) {
+              const monthIdx = dateObj.getMonth();
+              if (r.status === 'Hadir') {
+                counts[monthIdx].hadir++;
+              } else if (r.status === 'Terlambat') {
+                counts[monthIdx].telat++;
+              } else if (['Izin', 'Sakit', 'Cuti'].includes(r.status)) {
+                counts[monthIdx].cuti++;
+              }
+            }
+          });
+
+          const currentMonth = new Date().getMonth();
+          const filtered = counts.slice(0, currentMonth + 1);
+          setChartData(filtered);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchAnalytics();
+  }, []);
   const [selectedDate, setSelectedDate] = useState(() => {
     const now = new Date();
     const tzoffset = now.getTimezoneOffset() * 60000;
