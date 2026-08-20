@@ -171,6 +171,7 @@ export default function Absensi() {
       const localRec = {
         id: Date.now(),
         karyawan_id: user.id,
+        nama: user.name,
         tanggal: today,
         waktu_masuk: timeStr,
         waktu_keluar: null,
@@ -237,6 +238,7 @@ export default function Absensi() {
       const localRec = {
         id: Date.now(),
         karyawan_id: user.id,
+        nama: user.name,
         tanggal: today,
         waktu_masuk: timeStr,
         waktu_keluar: null,

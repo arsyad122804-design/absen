@@ -57,14 +57,24 @@ export default function RiwayatAbsensiManager() {
       const combined = [...local, ...dbData];
       
       const mapped = combined.map((r, i) => {
-        const emp = allEmps.find(e => String(e.id) === String(r.karyawan_id)) || {};
+        // Cari karyawan berdasarkan ID (bisa numerik dari Supabase atau KRY-xxxx dari lokal)
+        let emp = allEmps.find(e => String(e.id) === String(r.karyawan_id)) || {};
+        // Jika tidak ketemu, coba cari dari user yang login (tersimpan di localStorage)
+        if (!emp.name) {
+          try {
+            const loggedUser = JSON.parse(localStorage.getItem('user') || '{}');
+            if (loggedUser.id && String(loggedUser.id) === String(r.karyawan_id)) {
+              emp = loggedUser;
+            }
+          } catch(e) {}
+        }
         const dateObj = r.tanggal ? new Date(r.tanggal) : new Date();
         const monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
         const formattedDate = `${dateObj.getDate()} ${monthNames[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
         
         return {
           id: r.id || `local-his-${i}`,
-          name: emp.name || r.nama || r.user_name || 'Karyawan',
+          name: emp.name || r.nama || r.user_name || r.name || 'Tanpa Nama',
           div: emp.divisi || emp.div || r.divisi || 'Operasional',
           date: formattedDate,
           rawDate: r.tanggal,
