@@ -411,3 +411,29 @@
   border-radius: 8px;
   border-left: 3px solid #CBD5E1;
 }
+
+@media (max-width: 1024px) {
+  .rm-page {
+    padding: 16px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .rm-filter-card {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 12px !important;
+  }
+  .rm-filter-tabs {
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    flex: none !important;
+  }
+  .rm-table-container {
+    overflow-x: auto !important;
+  }
+  .rm-modal-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+

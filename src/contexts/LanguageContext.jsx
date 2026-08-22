@@ -5,6 +5,7 @@ const dictionary = {
     // Sidebar
     dashboard: "Dashboard",
     riwayatAbsen: "Riwayat Absen",
+    pengajuanCuti: "Pengajuan Cuti",
     jadwal: "Jadwal",
     pengumuman: "Pengumuman",
     profilSaya: "Profil Saya",
@@ -99,6 +100,7 @@ const dictionary = {
     // Sidebar
     dashboard: "Dashboard",
     riwayatAbsen: "Attendance History",
+    pengajuanCuti: "Leave Request",
     jadwal: "Schedule",
     pengumuman: "Announcements",
     profilSaya: "My Profile",

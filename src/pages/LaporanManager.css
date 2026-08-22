@@ -288,7 +288,32 @@
 }
 
 @media (max-width: 900px) {
+  .mgr-page-content {
+    padding: 16px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .lm-header {
+    margin-bottom: 24px !important;
+  }
+  .lm-card {
+    padding: 16px !important;
+  }
   .lm-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .lm-form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .lm-card-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .lm-legend {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
   }
 }

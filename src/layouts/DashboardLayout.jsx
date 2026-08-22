@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { 
-  Bell, Home, Calendar, Clock, Volume2, User, Settings, HelpCircle, Lock, LogOut, Menu, X
+  Bell, Home, Calendar, Clock, Volume2, User, Settings, HelpCircle, Lock, LogOut, Menu, X, Umbrella
 } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
 import '../pages/DashboardKaryawan.css'
@@ -41,7 +41,11 @@ export default function DashboardLayout() {
   }
   
   const getIndexNavClass = () => {
-    return location.pathname === '/absen' ? 'menu-item active' : 'menu-item'
+    return location.pathname === '/absen' && !location.search.includes('type=izin') ? 'menu-item active' : 'menu-item'
+  }
+
+  const getIzinNavClass = () => {
+    return location.pathname === '/absen' && location.search.includes('type=izin') ? 'menu-item active' : 'menu-item'
   }
 
   return (
@@ -95,6 +99,12 @@ export default function DashboardLayout() {
             className={getNavClass}
           >
             <Calendar size={20} /> {t.riwayatAbsen}
+          </NavLink>
+          <NavLink 
+            to="/absen?type=izin" 
+            className={getIzinNavClass}
+          >
+            <Umbrella size={20} /> {t.pengajuanCuti}
           </NavLink>
           <NavLink 
             to="/absen/profil" 

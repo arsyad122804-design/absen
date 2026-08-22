@@ -265,6 +265,22 @@ export default function DashboardManager() {
 
   return (
       <div className="mgr-main">
+        {/* Mobile Date Picker */}
+        <div className="dm-mobile-date-picker show-on-mobile" onClick={() => setShowDateFilter(!showDateFilter)} style={{ cursor: 'pointer', position: 'relative' }}>
+          <CalendarIcon size={16} color="#64748B" />
+          <span>{dateRange}</span>
+          <ChevronDown size={16} color="#64748B" style={{ marginLeft: 'auto' }} />
+          {showDateFilter && (
+            <>
+              <div style={{ position: 'fixed', inset: 0, zIndex: 999 }} onClick={(e) => { e.stopPropagation(); setShowDateFilter(false); }} />
+              <div className="dm-date-dropdown-mobile" onClick={e => e.stopPropagation()}>
+                <button onClick={() => { setDateRange(getTodayLabel()); setShowDateFilter(false); }}>Hari Ini</button>
+                <button onClick={() => { setDateRange(getWeekLabel()); setShowDateFilter(false); }}>Minggu Ini</button>
+                <button onClick={() => { setDateRange(getMonthLabel()); setShowDateFilter(false); }}>Bulan Ini</button>
+              </div>
+            </>
+          )}
+        </div>
         
         {/* TOP HEADER */}
         <div className="dm-header-row">
@@ -375,11 +391,9 @@ export default function DashboardManager() {
             <div className="dm-sc-bot split">
               <span className="dm-sc-desc">{stats.totalKaryawan > 0 ? Math.round((stats.hadir/stats.totalKaryawan)*100) : 0}% dari total</span>
               <div className="dm-sc-spark">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={sparkHadir}>
-                    <Line type="monotone" dataKey="uv" stroke="#10B981" strokeWidth={2} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
+                <LineChart width={40} height={20} data={sparkHadir}>
+                  <Line type="monotone" dataKey="uv" stroke="#10B981" strokeWidth={2} dot={false} />
+                </LineChart>
               </div>
             </div>
           </div>
@@ -398,11 +412,9 @@ export default function DashboardManager() {
             <div className="dm-sc-bot split">
               <span className="dm-sc-desc">{stats.totalKaryawan > 0 ? Math.round((stats.terlambat/stats.totalKaryawan)*100) : 0}% dari total</span>
               <div className="dm-sc-spark">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={sparkTerlambat}>
-                    <Line type="monotone" dataKey="uv" stroke="#F59E0B" strokeWidth={2} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
+                <LineChart width={40} height={20} data={sparkTerlambat}>
+                  <Line type="monotone" dataKey="uv" stroke="#F59E0B" strokeWidth={2} dot={false} />
+                </LineChart>
               </div>
             </div>
           </div>
@@ -421,11 +433,9 @@ export default function DashboardManager() {
             <div className="dm-sc-bot split">
               <span className="dm-sc-desc">{stats.totalKaryawan > 0 ? Math.round((stats.tidakHadir/stats.totalKaryawan)*100) : 0}% dari total</span>
               <div className="dm-sc-spark">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={sparkAbsen}>
-                    <Line type="monotone" dataKey="uv" stroke="#EF4444" strokeWidth={2} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
+                <LineChart width={40} height={20} data={sparkAbsen}>
+                  <Line type="monotone" dataKey="uv" stroke="#EF4444" strokeWidth={2} dot={false} />
+                </LineChart>
               </div>
             </div>
           </div>
