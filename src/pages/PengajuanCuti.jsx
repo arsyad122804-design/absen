@@ -145,9 +145,9 @@ export default function PengajuanCuti() {
   };
 
   return (
-    <div className="pc-page-container">
-      <div className="pc-header">
-        <button onClick={() => navigate('/absen')} className="pc-back-btn">
+    <div className="pcuti-container">
+      <div className="pcuti-header">
+        <button onClick={() => navigate('/absen')} className="pcuti-back-btn">
           <ChevronLeft size={16} /> Kembali ke Absensi
         </button>
         <h1>Pengajuan Izin & Cuti</h1>
@@ -155,42 +155,42 @@ export default function PengajuanCuti() {
       </div>
 
       {/* Quota Grid */}
-      <div className="pc-quota-grid">
-        <div className="pc-quota-card blue">
-          <div className="pc-qc-icon">
+      <div className="pcuti-quota-grid">
+        <div className="pcuti-quota-card blue">
+          <div className="pcuti-qc-icon">
             <Calendar size={24} />
           </div>
-          <div className="pc-qc-text">
+          <div className="pcuti-qc-text">
             <h3>{stats.kuota} Hari</h3>
             <p>Kuota Tahunan</p>
           </div>
         </div>
-        <div className="pc-quota-card orange">
-          <div className="pc-qc-icon">
+        <div className="pcuti-quota-card orange">
+          <div className="pcuti-qc-icon">
             <Clock size={24} />
           </div>
-          <div className="pc-qc-text">
+          <div className="pcuti-qc-text">
             <h3>{stats.terpakai} Hari</h3>
             <p>Cuti Terpakai</p>
           </div>
         </div>
-        <div className="pc-quota-card green">
-          <div className="pc-qc-icon">
+        <div className="pcuti-quota-card green">
+          <div className="pcuti-qc-icon">
             <CheckCircle2 size={24} />
           </div>
-          <div className="pc-qc-text">
+          <div className="pcuti-qc-text">
             <h3>{stats.sisa} Hari</h3>
             <p>Sisa Kuota Cuti</p>
           </div>
         </div>
       </div>
 
-      <div className="pc-main-grid">
+      <div className="pcuti-main-grid">
         {/* FORM CARD */}
-        <div className="pc-form-card">
+        <div className="pcuti-form-card">
           <h3>Formulir Pengajuan</h3>
           <form onSubmit={handleSubmit}>
-            <div className="pc-field">
+            <div className="pcuti-field">
               <label>Jenis Pengajuan</label>
               <select value={status} onChange={e => setStatus(e.target.value)}>
                 <option value="Izin">Izin (Keperluan Mendesak)</option>
@@ -198,11 +198,11 @@ export default function PengajuanCuti() {
                 <option value="Cuti">Cuti Tahunan</option>
               </select>
             </div>
-            <div className="pc-field">
+            <div className="pcuti-field">
               <label>Tanggal Pengajuan</label>
               <input type="date" value={tanggal} onChange={e => setTanggal(e.target.value)} />
             </div>
-            <div className="pc-field">
+            <div className="pcuti-field">
               <label>Alasan / Keterangan</label>
               <textarea 
                 placeholder="Tuliskan keterangan detail pengajuan Anda..."
@@ -210,30 +210,30 @@ export default function PengajuanCuti() {
                 onChange={e => setKeterangan(e.target.value)}
                 rows={4}
               />
-              <span className="pc-hint">Keterangan minimal 5 karakter.</span>
+              <span className="pcuti-hint">Keterangan minimal 5 karakter.</span>
             </div>
-            <button type="submit" className="pc-btn-submit">
+            <button type="submit" className="pcuti-btn-submit">
               <Send size={16} /> Kirim Pengajuan
             </button>
           </form>
         </div>
 
         {/* HISTORY CARD */}
-        <div className="pc-history-card">
+        <div className="pcuti-history-card">
           <h3>Riwayat Pengajuan Anda</h3>
-          <div className="pc-history-list">
+          <div className="pcuti-history-list">
             {riwayat.length === 0 ? (
-              <div className="pc-history-empty">
+              <div className="pcuti-history-empty">
                 <Info size={32} />
                 <p>Belum ada riwayat pengajuan cuti/izin.</p>
               </div>
             ) : (
               riwayat.map(item => (
-                <div key={item.id} className="pc-history-item">
-                  <div className={`pc-hi-badge ${item.status.toLowerCase()}`}>
+                <div key={item.id} className="pcuti-history-item">
+                  <div className={`pcuti-hi-badge ${item.status.toLowerCase()}`}>
                     {item.status}
                   </div>
-                  <div className="pc-hi-content">
+                  <div className="pcuti-hi-content">
                     <strong>{new Date(item.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
                     <p>{item.keterangan}</p>
                   </div>
