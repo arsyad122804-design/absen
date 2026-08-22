@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { Calendar as Cal, MapPin, Clock, Camera, Check, X, Maximize } from 'lucide-react'
-import { useLocation } from 'react-router-dom'
 import { useLanguage } from '../contexts/LanguageContext'
 import { supabase } from '../lib/supabase'
 
@@ -17,23 +16,12 @@ const safeJsonParse = (key, fallback = {}) => {
 
 export default function Absensi() {
   const { t } = useLanguage()
-  const location = useLocation()
   const [selectedStatus, setSelectedStatus] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
   const [user, setUser] = useState(null)
   const [alasan, setAlasan] = useState('')
   const [hasStream, setHasStream] = useState(false)
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const type = params.get('type');
-    if (type === 'izin' || type === 'sakit') {
-      setSelectedStatus(type);
-    } else {
-      setSelectedStatus(null);
-    }
-  }, [location.search]);
 
   useEffect(() => {
     const userData = safeJsonParse('user', null);

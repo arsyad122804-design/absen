@@ -1,0 +1,244 @@
+.pc-page-container {
+  padding: 32px;
+  box-sizing: border-box;
+  background-color: #F8FAFC;
+  width: 100%;
+  overflow-y: auto;
+  font-family: 'Poppins', sans-serif;
+}
+
+.pc-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: #3B82F6;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 16px;
+  transition: color 0.2s;
+}
+
+.pc-back-btn:hover {
+  color: #2563EB;
+}
+
+.pc-header {
+  margin-bottom: 32px;
+}
+
+.pc-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0 0 6px 0;
+}
+
+.pc-header p {
+  color: #64748B;
+  font-size: 15px;
+  margin: 0;
+}
+
+.pc-quota-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.pc-quota-card {
+  background: white;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.01);
+  border: 1px solid #E2E8F0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pc-qc-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pc-quota-card.blue .pc-qc-icon { background: #EFF6FF; color: #2563EB; }
+.pc-quota-card.orange .pc-qc-icon { background: #FFF7ED; color: #EA580C; }
+.pc-quota-card.green .pc-qc-icon { background: #F0FDF4; color: #16A34A; }
+
+.pc-qc-text h3 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+}
+
+.pc-qc-text p {
+  font-size: 13px;
+  color: #64748B;
+  margin: 2px 0 0 0;
+}
+
+.pc-main-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 32px;
+}
+
+.pc-form-card, .pc-history-card {
+  background: white;
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.01);
+  border: 1px solid #E2E8F0;
+  box-sizing: border-box;
+}
+
+.pc-form-card h3, .pc-history-card h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0 0 24px 0;
+  border-bottom: 1px solid #F1F5F9;
+  padding-bottom: 16px;
+}
+
+.pc-field {
+  margin-bottom: 20px;
+}
+
+.pc-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.pc-field select, .pc-field input, .pc-field textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #CBD5E1;
+  outline: none;
+  font-size: 14px;
+  box-sizing: border-box;
+  background: #F8FAFC;
+  transition: all 0.2s ease;
+}
+
+.pc-field select:focus, .pc-field input:focus, .pc-field textarea:focus {
+  border-color: #3B82F6;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.pc-hint {
+  font-size: 11px;
+  color: #94A3B8;
+  margin-top: 6px;
+  display: block;
+}
+
+.pc-btn-submit {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  color: white;
+  border-radius: 12px;
+  border: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  transition: all 0.2s ease;
+  font-family: 'Poppins', sans-serif;
+}
+
+.pc-btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3);
+}
+
+.pc-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.pc-history-item {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  background: #F8FAFC;
+}
+
+.pc-hi-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 11px;
+  height: fit-content;
+  text-transform: uppercase;
+}
+
+.pc-hi-badge.izin { background: #EFF6FF; color: #2563EB; }
+.pc-hi-badge.sakit { background: #FEF2F2; color: #EF4444; }
+.pc-hi-badge.cuti { background: #F0FDF4; color: #16A34A; }
+
+.pc-hi-content strong {
+  font-size: 14px;
+  color: #0F172A;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.pc-hi-content p {
+  font-size: 12px;
+  color: #64748B;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.pc-history-empty {
+  text-align: center;
+  padding: 48px 16px;
+  color: #94A3B8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+@media (max-width: 1024px) {
+  .pc-page-container {
+    padding: 16px;
+  }
+  
+  .pc-quota-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .pc-main-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}

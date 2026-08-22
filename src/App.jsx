@@ -18,6 +18,7 @@ import LaporanManager from './pages/LaporanManager'
 import IzinCutiManager from './pages/IzinCutiManager'
 import PengajuanManager from './pages/PengajuanManager'
 import PengaturanManager from './pages/PengaturanManager'
+import PengajuanCuti from './pages/PengajuanCuti'
 import { LanguageProvider } from './contexts/LanguageContext'
 import './App.css'
 const safeJsonParse = (key, fallback = {}) => {
@@ -72,6 +73,7 @@ function App() {
         <Route path="/absen" element={<DashboardLayout />}>
           <Route index element={<Absensi />} />
           <Route path="riwayat" element={<RiwayatAbsen />} />
+          <Route path="izin" element={<PengajuanCuti />} />
           <Route path="profil" element={<ProfilSaya />} />
           <Route path="pengaturan" element={<Pengaturan />} />
           <Route path="bantuan" element={<Bantuan />} />
