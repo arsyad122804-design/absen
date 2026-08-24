@@ -33,19 +33,25 @@ const safeJsonParse = (key, fallback = {}) => {
 };
 
 function DashboardRedirect() {
-  const user = safeJsonParse('user', {});
+  const user = safeJsonParse('user', null);
+  if (!user || !user.role) {
+    return <Navigate to="/" replace />;
+  }
   if (user.role?.toLowerCase() === 'manager') {
     return <Navigate to="/manager/dashboard" replace />;
   }
   return <Navigate to="/absen" replace />;
 }
 
-function ManagerRoute() {
-  const user = safeJsonParse('user', {});
-  if (user.role?.toLowerCase() !== 'manager') {
-    return <Navigate to="/absen" replace />;
+function ProtectedRoute({ children, allowedRole }) {
+  const user = safeJsonParse('user', null);
+  if (!user || !user.role) {
+    return <Navigate to="/" replace />;
   }
-  return <ManagerLayout />;
+  if (allowedRole && user.role.toLowerCase() !== allowedRole.toLowerCase()) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
 }
 
 function App() {
@@ -58,7 +64,11 @@ function App() {
         <Route path="/dashboard" element={<DashboardRedirect />} />
         
         {/* Manager Routes (Protected for Manager role only) */}
-        <Route path="/manager" element={<ManagerRoute />}>
+        <Route path="/manager" element={
+          <ProtectedRoute allowedRole="Manager">
+            <ManagerLayout />
+          </ProtectedRoute>
+        }>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="absensi" element={<AbsensiManager />} />
           <Route path="tim" element={<TimKaryawan />} />
@@ -70,7 +80,11 @@ function App() {
         </Route>
         
         {/* Karyawan Routes */}
-        <Route path="/absen" element={<DashboardLayout />}>
+        <Route path="/absen" element={
+          <ProtectedRoute allowedRole="Karyawan">
+            <DashboardLayout />
+          </ProtectedRoute>
+        }>
           <Route index element={<Absensi />} />
           <Route path="riwayat" element={<RiwayatAbsen />} />
           <Route path="izin" element={<PengajuanCuti />} />

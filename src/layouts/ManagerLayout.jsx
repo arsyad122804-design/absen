@@ -52,7 +52,7 @@ export default function ManagerLayout() {
 
   const handleLogout = () => {
     localStorage.removeItem('user');
-    navigate('/login');
+    navigate('/');
   };
 
   const isLainnyaActive = !['/manager/dashboard', '/manager/tim', '/manager/absensi', '/manager/riwayat'].includes(location.pathname);

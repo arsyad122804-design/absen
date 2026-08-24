@@ -182,7 +182,7 @@ export default function DashboardLayout() {
                   <div onClick={() => {navigate('/absen/pengaturan'); setShowProfile(false)}} style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#334155', cursor: 'pointer', borderRadius: '6px' }} onMouseOver={e => e.currentTarget.style.background='#F1F5F9'} onMouseOut={e => e.currentTarget.style.background='transparent'}>
                     <Settings size={16} /> Pengaturan
                   </div>
-                  <div onClick={() => navigate('/')} style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#EF4444', cursor: 'pointer', borderRadius: '6px', marginTop: '4px', borderTop: '1px solid #F1F5F9' }} onMouseOver={e => e.currentTarget.style.background='#FEF2F2'} onMouseOut={e => e.currentTarget.style.background='transparent'}>
+                  <div onClick={() => { localStorage.removeItem('user'); navigate('/'); }} style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#EF4444', cursor: 'pointer', borderRadius: '6px', marginTop: '4px', borderTop: '1px solid #F1F5F9' }} onMouseOver={e => e.currentTarget.style.background='#FEF2F2'} onMouseOut={e => e.currentTarget.style.background='transparent'}>
                     <LogOut size={16} /> Keluar (Log Out)
                   </div>
                 </div>
