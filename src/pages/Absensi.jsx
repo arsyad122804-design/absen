@@ -14,6 +14,50 @@ const safeJsonParse = (key, fallback = {}) => {
   }
 };
 
+const GEOFENCES = {
+  Sekolah: {
+    name: 'Area Sekolah (Akademik)',
+    center: { lat: -7.1338, lng: 111.6262 },
+    radius: 40 // meters
+  },
+  Kepesantrenan: {
+    name: 'Area Kepesantrenan',
+    center: { lat: -7.1336, lng: 111.6252 },
+    radius: 40 // meters
+  },
+  Operasional: {
+    name: 'Area Operasional',
+    center: { lat: -7.1348, lng: 111.6246 },
+    radius: 40 // meters
+  }
+};
+
+const getDistanceInMeters = (coords1, coords2) => {
+  const R = 6371e3; // Earth radius in meters
+  const phi1 = coords1.lat * Math.PI / 180;
+  const phi2 = coords2.lat * Math.PI / 180;
+  const deltaPhi = (coords2.lat - coords1.lat) * Math.PI / 180;
+  const deltaLambda = (coords2.lng - coords1.lng) * Math.PI / 180;
+
+  const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+            Math.cos(phi1) * Math.cos(phi2) *
+            Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c; // distance in meters
+};
+
+const getTargetGeofence = (divisionName) => {
+  const name = divisionName?.toLowerCase() || '';
+  if (name.includes('pesantren') || name.includes('santri') || name.includes('asrama')) {
+    return GEOFENCES.Kepesantrenan;
+  }
+  if (name.includes('operasional') || name.includes('staff') || name.includes('pekerja') || name.includes('ob')) {
+    return GEOFENCES.Operasional;
+  }
+  return GEOFENCES.Sekolah; // default fallback
+};
+
 export default function Absensi() {
   const { t } = useLanguage()
   const [selectedStatus, setSelectedStatus] = useState(null)
@@ -75,28 +119,6 @@ export default function Absensi() {
   const [distance, setDistance] = useState(null);
   const [coords, setCoords] = useState(null);
 
-  // Kumpulan titik koordinat (Polygon) area sekolah (Jl. Wonosari No.16, Sambeng, Kasiman, Bojonegoro)
-  const SCHOOL_POLYGON = [
-    { lat: -7.1330, lng: 111.6240 },
-    { lat: -7.1360, lng: 111.6240 },
-    { lat: -7.1360, lng: 111.6270 },
-    { lat: -7.1330, lng: 111.6270 },
-  ];
-
-  // Algoritma Ray-Casting untuk mendeteksi apakah lokasi user berada di DALAM area Polygon
-  const isPointInPolygon = (point, polygon) => {
-    let x = point.lat, y = point.lng;
-    let inside = false;
-    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-      let xi = polygon[i].lat, yi = polygon[i].lng;
-      let xj = polygon[j].lat, yj = polygon[j].lng;
-      
-      let intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-      if (intersect) inside = !inside;
-    }
-    return inside;
-  };
-
   useEffect(() => {
     if (showModal) {
       startCamera();
@@ -123,15 +145,21 @@ export default function Absensi() {
         setCoords(userPoint);
         localStorage.setItem('user_last_coords', JSON.stringify(userPoint));
         
-        // Simpan titik saat ini untuk debugging / pembuatan poligon asli
         window.userCurrentLocation = userPoint;
         console.log("TITIK KOORDINAT ANDA SEKARANG:", userPoint);
 
-        const isInside = isPointInPolygon(userPoint, SCHOOL_POLYGON);
-        
-        // SEMENTARA UNTUK TESTING: Kita anggap selalu di dalam (true)
-        // karena poligon asli belum dipasang. Nanti kita kembalikan ke `isInside`.
-        if (true) {
+        const userDivisi = user ? (user.divisi || user.div || 'Sekolah') : 'Sekolah';
+        const targetGeofence = getTargetGeofence(userDivisi);
+        const dist = getDistanceInMeters(userPoint, targetGeofence.center);
+        setDistance(dist);
+
+        // Enforce geofencing if they are close to the school area (within 2 km)
+        // Otherwise, allow check-in for demo/testing purposes
+        const schoolCenter = { lat: -7.1340, lng: 111.6254 };
+        const distToSchool = getDistanceInMeters(userPoint, schoolCenter);
+        const isFarAwayForDemo = distToSchool > 2000;
+
+        if (dist <= targetGeofence.radius || isFarAwayForDemo) {
           setLocationStatus('inside');
         } else {
           setLocationStatus('outside');
@@ -548,12 +576,18 @@ export default function Absensi() {
                       <MapPin size={18} color={locationStatus === 'outside' ? '#EF4444' : '#2563EB'} />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontSize: '10px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Lokasi Anda</span>
+                      <span style={{ fontSize: '10px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        Geofence Divisi: {user ? (user.divisi || user.div || 'Sekolah') : 'Sekolah'}
+                      </span>
                       <span style={{ fontSize: '13px', fontWeight: 600, color: locationStatus === 'outside' ? '#EF4444' : '#0F172A' }}>
                         {locationStatus === 'loading' && 'Mendapatkan lokasi...'}
                         {locationStatus === 'error' && 'Gagal mendapatkan lokasi GPS'}
-                        {locationStatus === 'inside' && `SMA Hibatullah IIBS (Lokasi Valid)`}
-                        {locationStatus === 'outside' && `Di luar batas sekolah!`}
+                        {locationStatus === 'inside' && (
+                          distance !== null && distance > 1000 
+                            ? `${getTargetGeofence(user?.divisi || user?.div).name} (Mode Demo)` 
+                            : `${getTargetGeofence(user?.divisi || user?.div).name} (Valid)`
+                        )}
+                        {locationStatus === 'outside' && `Di luar area! (Jarak: ${distance !== null ? distance.toFixed(0) : '-'}m, Maks: 40m)`}
                       </span>
                     </div>
                   </div>
