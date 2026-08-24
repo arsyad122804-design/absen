@@ -44,6 +44,7 @@ export default function Register() {
       const newUser = {
         id: data?.id || `KRY-${String(localUsers.length + 1).padStart(4, '0')}`,
         name,
+        password,
         role,
         div: divisi,
         type: 'Full Time',
