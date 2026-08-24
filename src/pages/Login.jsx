@@ -36,24 +36,11 @@ export default function Login() {
         return;
       }
     } 
-    
-    // 2. Cek Demo Karyawan (123456)
-    if (username === '123456' && password === '123456') {
-      const karyawanData = {
-        id: 'karyawan-1',
-        name: 'Karyawan Demo',
-        role: 'Karyawan',
-        divisi: 'Sekolah'
-      };
-      localStorage.setItem('user', JSON.stringify(karyawanData));
-      navigate('/absen');
-      return;
-    }
-
-    // 3. Cek data terdaftar di local_karyawan (localStorage)
+    // 2. Cek data terdaftar di local_karyawan (localStorage)
     const localUsers = JSON.parse(localStorage.getItem('local_karyawan')) || [];
     const foundLocal = localUsers.find(u => 
-      (u.name?.toLowerCase() === username.trim().toLowerCase() || u.email?.toLowerCase() === username.trim().toLowerCase())
+      (u.name?.toLowerCase() === username.trim().toLowerCase() || u.email?.toLowerCase() === username.trim().toLowerCase()) &&
+      u.password === password
     );
 
     if (foundLocal) {
@@ -72,7 +59,7 @@ export default function Login() {
       return;
     }
 
-    // 4. Cek Supabase
+    // 3. Cek Supabase
     try {
       const { data, error } = await supabase
         .from('karyawan')
@@ -94,22 +81,7 @@ export default function Login() {
       console.error(err);
     }
 
-    // 5. Mendaftarkan & mengizinkan login langsung untuk akun baru
-    const newUser = {
-      id: `KRY-${String(localUsers.length + 1).padStart(4, '0')}`,
-      name: username,
-      role: 'Karyawan',
-      divisi: 'Kepesantrenan',
-      type: 'Full Time',
-      status: 'Aktif',
-      join: new Date().toLocaleDateString('id-ID'),
-      email: `${username.toLowerCase().replace(/\s+/g, '')}@inovasidigital.id`,
-      phone: '+62 812-0000-0000'
-    };
-    localUsers.push(newUser);
-    localStorage.setItem('local_karyawan', JSON.stringify(localUsers));
-    localStorage.setItem('user', JSON.stringify(newUser));
-    navigate('/absen');
+    setErrorMsg('Username atau password salah!');
   }
 
   return (
