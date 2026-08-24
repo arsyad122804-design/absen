@@ -65,21 +65,7 @@ export default function DashboardLayout() {
             <X size={24} />
           </button>
           
-          <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M50 0L65.4508 15.4508L87.3223 12.6777L90.0954 34.5492L100 50L90.0954 65.4508L87.3223 87.3223L65.4508 90.0954L50 100L34.5492 90.0954L12.6777 87.3223L9.90462 65.4508L0 50L9.90462 34.5492L12.6777 12.6777L34.5492 15.4508L50 0Z" fill="#FBBF24"/>
-            <path d="M50 8L62.45 20.45L80.3 18.3L82.45 36.15L90 50L82.45 63.85L80.3 81.7L62.45 79.55L50 92L37.55 79.55L19.7 81.7L17.55 63.85L10 50L17.55 36.15L19.7 18.3L37.55 20.45L50 8Z" fill="#1E40AF"/>
-            <path d="M50 16L58.5 24.5L72 23L73.5 36.5L80 50L73.5 63.5L72 77L58.5 75.5L50 84L41.5 75.5L28 77L26.5 63.5L20 50L26.5 36.5L28 23L41.5 24.5L50 16Z" fill="#60A5FA"/>
-            <rect x="35" y="45" width="8" height="20" fill="white" />
-            <rect x="57" y="45" width="8" height="20" fill="white" />
-            <path d="M50 30L60 40H40L50 30Z" fill="white"/>
-          </svg>
-          <h2>HIBATULLAH</h2>
-          <div className="sidebar-subtitle">
-            <div className="line"></div>
-            <span>IIBS</span>
-            <div className="line"></div>
-          </div>
-          <p>{t.beradabBerkarya}</p>
+          <img src="/logo.png" alt="Hibatullah IIBS" style={{ width: '100%', maxWidth: '200px', height: 'auto', display: 'block', margin: '0 auto' }} />
         </div>
 
         <div className="sidebar-menu">

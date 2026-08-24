@@ -139,14 +139,8 @@ export default function ManagerLayout() {
         <button className="mgr-sidebar-close" onClick={() => setIsSidebarOpen(false)}>
           <X size={20} />
         </button>
-        <div className="mgr-v2-logo">
-          <div className="mgr-v2-icon">
-            <Calendar size={20} color="white" />
-          </div>
-          <div className="mgr-v2-title">
-            <h2>AbsensiKu</h2>
-            <p>Manager Panel</p>
-          </div>
+        <div className="mgr-v2-logo" style={{ background: 'transparent', padding: '16px 24px' }}>
+          <img src="/logo.png" alt="Hibatullah IIBS" style={{ width: '100%', maxWidth: '200px', height: 'auto', display: 'block', margin: '0 auto' }} />
         </div>
 
         <div className="mgr-v2-menu">
