@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { User, Lock, EyeOff, Eye, ShieldCheck, Check } from 'lucide-react'
 import { supabase } from '../lib/supabase'
@@ -9,6 +9,16 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+
+  useEffect(() => {
+    const isCleaned = localStorage.getItem('local_cleanup_done_v2');
+    if (!isCleaned) {
+      localStorage.removeItem('local_karyawan');
+      localStorage.removeItem('local_pengajuan');
+      localStorage.removeItem('local_absensi');
+      localStorage.setItem('local_cleanup_done_v2', 'true');
+    }
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
