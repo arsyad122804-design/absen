@@ -227,6 +227,28 @@
   gap: 12px;
 }
 
+.pcuti-hi-status {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+}
+
+.pcuti-hi-status.pending { background: #FFF7ED; color: #EA580C; }
+.pcuti-hi-status.approved { background: #E8F5E9; color: #2E7D32; }
+.pcuti-hi-status.rejected { background: #FFEBEE; color: #C62828; }
+
+.pcuti-hi-duration {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2563EB;
+  margin-left: 6px;
+  background: #EFF6FF;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
 @media (max-width: 1024px) {
   .pcuti-container {
     padding: 16px;

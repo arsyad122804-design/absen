@@ -24,6 +24,7 @@ export default function PengajuanCuti() {
     const tzoffset = now.getTimezoneOffset() * 60000;
     return new Date(now.getTime() - tzoffset).toISOString().split('T')[0];
   });
+  const [durasi, setDurasi] = useState(1);
   const [keterangan, setKeterangan] = useState('');
   const [riwayat, setRiwayat] = useState([]);
   const [stats, setStats] = useState({
@@ -49,24 +50,60 @@ export default function PengajuanCuti() {
       if (data) dbAbs = data;
     } catch(e) {}
 
-    const combined = [...localAbs.filter(r => r.karyawan_id === currentUser.id), ...dbAbs];
+    const combinedAbs = [...localAbs.filter(r => r.karyawan_id === currentUser.id), ...dbAbs];
+    const uniqueAbs = [];
+    combinedAbs.forEach(item => {
+      if (!uniqueAbs.some(u => u.tanggal === item.tanggal && u.status === item.status)) {
+        uniqueAbs.push(item);
+      }
+    });
+    // Filter only leave records (Izin, Sakit, Cuti)
+    const leavesOnly = uniqueAbs.filter(r => ['Izin', 'Sakit', 'Cuti'].includes(r.status));
+    const terpakai = leavesOnly.length;
+
+    // Fetch riwayat pengajuan cuti (Pending, Approved, Rejected)
+    const localPengajuan = safeJsonParse('local_pengajuan', []);
+    let dbPengajuan = [];
+    try {
+      const { data } = await supabase
+        .from('pengajuan')
+        .select('*')
+        .eq('karyawan_id', currentUser.id);
+      if (data) dbPengajuan = data;
+    } catch(e) {}
+
+    const combinedPengajuan = [...localPengajuan.filter(r => r.karyawan_id === currentUser.id), ...dbPengajuan];
     
-    // Remove duplicates
-    const unique = [];
-    combined.forEach(item => {
-      if (!unique.some(u => u.tanggal === item.tanggal && u.status === item.status)) {
-        unique.push(item);
+    const uniquePengajuan = [];
+    combinedPengajuan.forEach(item => {
+      if (!uniquePengajuan.some(u => u.id === item.id || (u.tanggal_mulai === item.tanggal_mulai && u.jenis === item.jenis && u.alasan === item.alasan))) {
+        uniquePengajuan.push(item);
       }
     });
 
-    // Filter only leave records (Izin, Sakit, Cuti)
-    const leavesOnly = unique.filter(r => ['Izin', 'Sakit', 'Cuti'].includes(r.status));
-    
-    // Sort by date desc
-    leavesOnly.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
-    setRiwayat(leavesOnly);
+    const mapped = uniquePengajuan.map(item => {
+      let duration = item.durasi || item.duration || 1;
+      let cleanReason = item.alasan || item.keterangan || item.reason || '';
+      
+      const match = cleanReason.match(/^\[(\d+)\s*Hari\]/i);
+      if (match) {
+        duration = parseInt(match[1]);
+        cleanReason = cleanReason.replace(/^\[\d+\s*Hari\]\s*/i, '');
+      }
 
-    const terpakai = leavesOnly.length;
+      return {
+        id: item.id,
+        tanggal_mulai: item.tanggal_mulai || item.date || item.tanggal,
+        jenis: item.jenis || item.type || item.status,
+        alasan: cleanReason,
+        durasi: duration,
+        status: item.status || 'Pending'
+      };
+    });
+
+    mapped.sort((a, b) => new Date(b.tanggal_mulai) - new Date(a.tanggal_mulai));
+    setRiwayat(mapped);
+
     setStats({
       kuota: customQuota,
       terpakai,
@@ -100,36 +137,35 @@ export default function PengajuanCuti() {
       const seconds = String(now.getSeconds()).padStart(2, '0');
       const timeStr = `${hours}:${minutes}:${seconds}`;
 
-      // 1. Simpan ke LocalStorage
-      const localRec = {
+      // 1. Simpan ke LocalStorage local_pengajuan
+      const newLocalReq = {
         id: Date.now(),
         karyawan_id: user.id,
-        nama: user.name,
-        tanggal: tanggal,
-        waktu_masuk: timeStr,
-        waktu_keluar: null,
-        status: status,
-        keterangan: keterangan,
-        lokasi: null
+        name: user.name,
+        type: status,
+        date: tanggal,
+        duration: durasi,
+        reason: keterangan,
+        status: 'Pending',
+        created_at: new Date().toISOString()
       };
 
-      const local = safeJsonParse('local_absensi', []);
-      local.unshift(localRec);
-      localStorage.setItem('local_absensi', JSON.stringify(local));
+      const local = safeJsonParse('local_pengajuan', []);
+      local.unshift(newLocalReq);
+      localStorage.setItem('local_pengajuan', JSON.stringify(local));
 
-      // 2. Simpan ke Supabase
-      const isDemo = !user.id || user.id.startsWith('karyawan-') || user.id.startsWith('admin-');
+      // 2. Simpan ke Supabase pengajuan
+      const isDemo = !user.id || user.id.toString().startsWith('karyawan-') || user.id.toString().startsWith('admin-');
       if (!isDemo) {
         const { error } = await supabase
-          .from('absensi')
+          .from('pengajuan')
           .insert([
             {
               karyawan_id: user.id,
-              tanggal: tanggal,
-              waktu_masuk: timeStr,
-              status: status,
-              keterangan: keterangan,
-              lokasi: null
+              jenis: status,
+              tanggal_mulai: tanggal,
+              alasan: `[${durasi} Hari] ${keterangan}`,
+              status: 'Pending'
             }
           ]);
         if (error) console.error("Error submitting leave to Supabase:", error);
@@ -137,6 +173,7 @@ export default function PengajuanCuti() {
 
       alert("Pengajuan Cuti/Izin Berhasil Dikirim!");
       setKeterangan('');
+      setDurasi(1);
       loadUserAndHistory(user);
     } catch (err) {
       console.error(err);
@@ -203,6 +240,16 @@ export default function PengajuanCuti() {
               <input type="date" value={tanggal} onChange={e => setTanggal(e.target.value)} />
             </div>
             <div className="pcuti-field">
+              <label>Durasi Pengajuan (Hari)</label>
+              <input 
+                type="number" 
+                min="1" 
+                max="30"
+                value={durasi} 
+                onChange={e => setDurasi(parseInt(e.target.value) || 1)} 
+              />
+            </div>
+            <div className="pcuti-field">
               <label>Alasan / Keterangan</label>
               <textarea 
                 placeholder="Tuliskan keterangan detail pengajuan Anda..."
@@ -229,13 +276,21 @@ export default function PengajuanCuti() {
               </div>
             ) : (
               riwayat.map(item => (
-                <div key={item.id} className="pcuti-history-item">
-                  <div className={`pcuti-hi-badge ${item.status.toLowerCase()}`}>
-                    {item.status}
+                <div key={item.id} className="pcuti-history-item" style={{ flexDirection: 'column', gap: '8px' }}>
+                  <div className="pcuti-hi-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                    <span className={`pcuti-hi-badge ${item.jenis.toLowerCase()}`}>
+                      {item.jenis}
+                    </span>
+                    <span className={`pcuti-hi-status ${item.status.toLowerCase()}`}>
+                      {item.status}
+                    </span>
                   </div>
                   <div className="pcuti-hi-content">
-                    <strong>{new Date(item.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
-                    <p>{item.keterangan}</p>
+                    <strong>
+                      {new Date(item.tanggal_mulai).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      <span className="pcuti-hi-duration"> ({item.durasi} Hari)</span>
+                    </strong>
+                    <p>{item.alasan}</p>
                   </div>
                 </div>
               ))
