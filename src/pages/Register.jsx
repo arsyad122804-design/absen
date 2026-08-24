@@ -53,10 +53,9 @@ export default function Register() {
         email: `${name.toLowerCase().replace(/\s+/g, '')}@inovasidigital.id`,
         phone: '+62 812-0000-0000'
       };
-      if (!localUsers.some(u => u.name?.toLowerCase() === name.toLowerCase())) {
-        localUsers.push(newUser);
-        localStorage.setItem('local_karyawan', JSON.stringify(localUsers));
-      }
+      const filteredUsers = localUsers.filter(u => u.name?.toLowerCase() !== name.toLowerCase());
+      filteredUsers.push(newUser);
+      localStorage.setItem('local_karyawan', JSON.stringify(filteredUsers));
 
       setSuccessMsg('Pendaftaran berhasil! Mengalihkan ke halaman Login...');
       setTimeout(() => {
