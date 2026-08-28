@@ -38,7 +38,7 @@ export default function RiwayatAbsen() {
 
       // Ambil data dari Supabase jika bukan akun demo
       let userDb = [];
-      const isDemo = !userData.id || userData.id.startsWith('karyawan-') || userData.id.startsWith('admin-');
+      const isDemo = !userData.id || userData.id.toString().startsWith('karyawan-') || userData.id.toString().startsWith('admin-');
       if (!isDemo) {
         try {
           const { data, error } = await supabase

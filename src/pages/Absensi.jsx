@@ -249,7 +249,7 @@ export default function Absensi() {
       localStorage.setItem('local_absensi', JSON.stringify(local));
 
       // 2. Coba simpan ke Supabase jika bukan akun demo
-      const isDemo = !user.id || user.id.startsWith('karyawan-') || user.id.startsWith('admin-');
+      const isDemo = !user.id || user.id.toString().startsWith('karyawan-') || user.id.toString().startsWith('admin-');
       if (!isDemo) {
         const { error } = await supabase
           .from('absensi')
@@ -317,7 +317,7 @@ export default function Absensi() {
       localStorage.setItem('local_absensi', JSON.stringify(local));
 
       // 2. Coba simpan ke Supabase jika bukan akun demo
-      const isDemo = !user.id || user.id.startsWith('karyawan-') || user.id.startsWith('admin-');
+      const isDemo = !user.id || user.id.toString().startsWith('karyawan-') || user.id.toString().startsWith('admin-');
       if (!isDemo) {
         const { error } = await supabase
           .from('absensi')

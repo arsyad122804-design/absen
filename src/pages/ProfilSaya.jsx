@@ -158,7 +158,7 @@ export default function ProfilSaya() {
     localStorage.setItem('local_karyawan', JSON.stringify(updatedLocalKaryawan));
 
     // 2. Coba update ke Supabase (hanya jika bukan akun demo)
-    const isDemo = !user.id || user.id.startsWith('karyawan-') || user.id.startsWith('admin-');
+    const isDemo = !user.id || user.id.toString().startsWith('karyawan-') || user.id.toString().startsWith('admin-');
     if (!isDemo) {
       try {
         const { error } = await supabase
