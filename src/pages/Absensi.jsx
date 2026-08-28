@@ -18,17 +18,17 @@ const GEOFENCES = {
   Sekolah: {
     name: 'Area Sekolah (Akademik)',
     center: { lat: -7.1338, lng: 111.6262 },
-    radius: 100 // meters (increased from 40 for better accuracy tolerance)
+    radius: 30 // meters (strict 30m limit)
   },
   Kepesantrenan: {
     name: 'Area Kepesantrenan',
     center: { lat: -7.1336, lng: 111.6252 },
-    radius: 100 // meters (increased from 40 for better accuracy tolerance)
+    radius: 30 // meters (strict 30m limit)
   },
   Operasional: {
     name: 'Area Operasional',
     center: { lat: -7.1348, lng: 111.6246 },
-    radius: 100 // meters (increased from 40 for better accuracy tolerance)
+    radius: 30 // meters (strict 30m limit)
   }
 };
 
