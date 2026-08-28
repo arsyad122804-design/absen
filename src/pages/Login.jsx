@@ -11,13 +11,13 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
 
   useEffect(() => {
-    const isCleaned = localStorage.getItem('local_cleanup_done_v3');
+    const isCleaned = localStorage.getItem('local_cleanup_done_v4');
     if (!isCleaned) {
       localStorage.removeItem('local_karyawan');
       localStorage.removeItem('local_pengajuan');
       localStorage.removeItem('local_absensi');
       localStorage.removeItem('user');
-      localStorage.setItem('local_cleanup_done_v3', 'true');
+      localStorage.setItem('local_cleanup_done_v4', 'true');
     }
   }, []);
 
