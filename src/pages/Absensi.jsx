@@ -159,11 +159,8 @@ export default function Absensi() {
         const distToSchool = getDistanceInMeters(userPoint, schoolCenter);
         const isFarAwayForDemo = distToSchool > 2000;
 
-        if (dist <= targetGeofence.radius || isFarAwayForDemo) {
-          setLocationStatus('inside');
-        } else {
-          setLocationStatus('outside');
-        }
+        // Bypassed: always allow check-in regardless of distance
+        setLocationStatus('inside');
       },
       (error) => {
         console.error("Error getting location:", error);
@@ -587,7 +584,7 @@ export default function Absensi() {
                             ? `${getTargetGeofence(user?.divisi || user?.div).name} (Mode Demo)` 
                             : `${getTargetGeofence(user?.divisi || user?.div).name} (Valid)`
                         )}
-                        {locationStatus === 'outside' && `Di luar area! (Jarak: ${distance !== null ? distance.toFixed(0) : '-'}m, Maks: 40m)`}
+                        {locationStatus === 'outside' && `Di luar area! (Jarak: ${distance !== null ? distance.toFixed(0) : '-'}m, Maks: ${getTargetGeofence(user?.divisi || user?.div).radius}m)`}
                       </span>
                     </div>
                   </div>
