@@ -54,8 +54,14 @@ export default function RiwayatAbsen() {
         }
       }
 
-      // Gabungkan data (DB + Lokal)
-      const mergedDb = [...userLocal, ...userDb];
+      // Gabungkan data (DB + Lokal) secara cerdas menghindari duplikasi
+      const mergedDb = [...userDb];
+      userLocal.forEach(localRec => {
+        const alreadyInDb = userDb.some(dbRec => dbRec.tanggal === localRec.tanggal);
+        if (!alreadyInDb) {
+          mergedDb.push(localRec);
+        }
+      });
       
       // Map ke format UI
       const mapped = mergedDb.map(r => {

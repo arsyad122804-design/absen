@@ -54,7 +54,18 @@ export default function RiwayatAbsensiManager() {
       } catch (e) {}
 
       const allEmps = [...localKaryawan, ...dbKaryawan];
-      const combined = [...local, ...dbData];
+      
+      // Gabungkan data (DB + Lokal) secara cerdas menghindari duplikasi
+      const combined = [...dbData];
+      local.forEach(localRec => {
+        const alreadyInDb = dbData.some(dbRec => 
+          String(dbRec.karyawan_id) === String(localRec.karyawan_id) && 
+          dbRec.tanggal === localRec.tanggal
+        );
+        if (!alreadyInDb) {
+          combined.push(localRec);
+        }
+      });
       
       const mapped = combined.map((r, i) => {
         // Cari karyawan berdasarkan ID (bisa numerik dari Supabase atau KRY-xxxx dari lokal)
