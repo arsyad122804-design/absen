@@ -4,6 +4,7 @@ import {
   Download, Search, Filter, Eye, MoreVertical, Clock, Info, AlertTriangle
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { supabase } from '../lib/supabase';
 import './AbsensiManager.css';
 
 // --- MOCK DATA ---
@@ -82,20 +83,32 @@ export default function AbsensiManager() {
 
       // 3. Petakan seluruh karyawan
       const mapped = uniqueEmps.map((emp, idx) => {
-        const r = filteredAbs.find(ab => String(ab.karyawan_id) === String(emp.id));
+        const userAbs = filteredAbs.filter(ab => String(ab.karyawan_id) === String(emp.id));
         
-        if (r) {
+        if (userAbs.length > 0) {
+          // Urutkan biar Sesi 1 duluan
+          userAbs.sort((a, b) => (a.waktu_masuk || '').localeCompare(b.waktu_masuk || ''));
+          const r = userAbs[0];
+          
+          // Gabungkan status
+          const hasLate = userAbs.some(ab => ab.status === 'Terlambat');
+          const finalStatus = hasLate ? 'Terlambat' : r.status;
+          
+          const jamMasukStr = userAbs.map(ab => ab.waktu_masuk ? ab.waktu_masuk.substring(0, 8) : '-').join(' | ');
+          const jamPulangStr = userAbs.map(ab => ab.waktu_keluar ? ab.waktu_keluar.substring(0, 8) : '-').join(' | ');
+
           return {
             id: r.id || `local-${idx}`,
             img: `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name || 'Karyawan')}`,
             name: emp.name,
             div: emp.divisi || emp.div || 'Operasional',
-            status: r.status || 'Hadir',
-            jamM: r.waktu_masuk || '-',
-            statM: r.status === 'Terlambat' ? 'Terlambat' : 'Tepat Waktu',
-            jamP: r.waktu_keluar || '-',
+            status: finalStatus || 'Hadir',
+            jamM: jamMasukStr,
+            statM: finalStatus === 'Terlambat' ? 'Terlambat' : 'Tepat Waktu',
+            jamP: jamPulangStr,
             dur: '-',
-            loc: r.lokasi ? 'Lokasi Presisi (GPS)' : 'Tanpa Lokasi'
+            loc: r.lokasi ? 'Lokasi Presisi (GPS)' : 'Tanpa Lokasi',
+            sessions: userAbs
           };
         } else {
           return {
