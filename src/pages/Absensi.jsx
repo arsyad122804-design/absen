@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Calendar as Cal, MapPin, Clock, Camera, Check, X, Maximize } from 'lucide-react'
+import { Calendar as Cal, MapPin, Clock, Camera, Check, X, Maximize, Upload, Image as ImageIcon } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
 import { supabase } from '../lib/supabase'
 
@@ -66,6 +66,7 @@ export default function Absensi() {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [user, setUser] = useState(null)
   const [alasan, setAlasan] = useState('')
+  const [buktiSakit, setBuktiSakit] = useState('')
   const [hasStream, setHasStream] = useState(false)
 
   const checkTodayAttendance = async (currentUser) => {
@@ -277,7 +278,13 @@ export default function Absensi() {
       alert("Sesi login tidak valid. Silakan login ulang.");
       return;
     }
-    if (alasan.trim().length < 5) {
+    
+    if (selectedStatus === 'sakit' && !buktiSakit) {
+      alert("Silakan unggah foto bukti sakit atau surat sakit terlebih dahulu!");
+      return;
+    }
+    
+    if (selectedStatus === 'izin' && alasan.trim().length < 5) {
       alert("Alasan terlalu singkat!");
       return;
     }
@@ -295,6 +302,7 @@ export default function Absensi() {
       const timeStr = `${hours}:${minutes}:${seconds}`;
 
       const status = selectedStatus === 'izin' ? 'Izin' : 'Sakit';
+      const keteranganVal = selectedStatus === 'izin' ? alasan : buktiSakit;
       const lokasiStr = null; // Tidak mencatat lokasi GPS untuk Izin / Sakit
 
       // 1. Simpan ke LocalStorage agar langsung muncul di riwayat (offline/demo fallback)
@@ -306,7 +314,7 @@ export default function Absensi() {
         waktu_masuk: timeStr,
         waktu_keluar: null,
         status: status,
-        keterangan: alasan,
+        keterangan: keteranganVal,
         lokasi: lokasiStr
       };
       const local = JSON.parse(localStorage.getItem('local_absensi')) || [];
@@ -324,7 +332,7 @@ export default function Absensi() {
               tanggal: today,
               waktu_masuk: timeStr,
               status: status,
-              keterangan: alasan,
+              keterangan: keteranganVal,
               lokasi: lokasiStr
             }
           ]);
@@ -333,6 +341,7 @@ export default function Absensi() {
 
       setSelectedStatus(null);
       setAlasan('');
+      setBuktiSakit('');
       alert('Pengajuan berhasil dicatat!');
       checkTodayAttendance(user);
     } catch (err) {
@@ -482,10 +491,10 @@ export default function Absensi() {
             </div>
           </div>
 
-          {(selectedStatus === 'izin' || selectedStatus === 'sakit') && (
+          {selectedStatus === 'izin' && (
             <div className="alasan-box slide-down">
               <h4>{t.keterangan} / Alasan</h4>
-              <p>Tuliskan alasan {selectedStatus === 'izin' ? 'izin' : 'sakit'} Anda agar dapat diverifikasi oleh admin.</p>
+              <p>Tuliskan alasan izin Anda agar dapat diverifikasi oleh admin.</p>
               <textarea 
                 placeholder={t.tulisAlasan}
                 value={alasan}
@@ -498,6 +507,157 @@ export default function Absensi() {
                 onClick={submitIzinSakit}
               >
                 {t.kirimAlasan}
+              </button>
+            </div>
+          )}
+
+          {selectedStatus === 'sakit' && (
+            <div className="alasan-box slide-down">
+              <h4>Bukti Sakit / Surat Sakit</h4>
+              <p>Unggah foto bukti sakit atau surat keterangan dokter agar dapat diverifikasi oleh admin.</p>
+              
+              {!buktiSakit ? (
+                <div 
+                  className="upload-dropzone"
+                  style={{
+                    border: '2px dashed #CBD5E1',
+                    borderRadius: '16px',
+                    padding: '32px 20px',
+                    textAlign: 'center',
+                    backgroundColor: '#F8FAFC',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    marginTop: '12px'
+                  }}
+                  onClick={() => document.getElementById('bukti-sakit-input').click()}
+                  onMouseOver={e => {
+                    e.currentTarget.style.borderColor = '#3B82F6';
+                    e.currentTarget.style.backgroundColor = '#EFF6FF';
+                  }}
+                  onMouseOut={e => {
+                    e.currentTarget.style.borderColor = '#CBD5E1';
+                    e.currentTarget.style.backgroundColor = '#F8FAFC';
+                  }}
+                >
+                  <Upload size={36} color="#64748B" style={{ marginBottom: '12px' }} />
+                  <p style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: 600, color: '#475569' }}>
+                    Klik untuk ambil foto atau pilih berkas
+                  </p>
+                  <p style={{ margin: 0, fontSize: '12px', color: '#94A3B8' }}>
+                    Format file: JPG, JPEG, PNG (Maks 5MB)
+                  </p>
+                  <input 
+                    type="file" 
+                    id="bukti-sakit-input" 
+                    style={{ display: 'none' }} 
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          setBuktiSakit(event.target.result);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                </div>
+              ) : (
+                <div 
+                  className="preview-container"
+                  style={{
+                    position: 'relative',
+                    marginTop: '12px',
+                    borderRadius: '16px',
+                    overflow: 'hidden',
+                    border: '1px solid #E2E8F0',
+                    backgroundColor: '#F1F5F9',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    padding: '12px'
+                  }}
+                >
+                  <img 
+                    src={buktiSakit} 
+                    alt="Pratinjau Bukti Sakit" 
+                    style={{ 
+                      maxWidth: '100%', 
+                      maxHeight: '240px', 
+                      borderRadius: '12px', 
+                      objectFit: 'contain',
+                      boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
+                    }} 
+                  />
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '12px', width: '100%' }}>
+                    <button
+                      className="btn-secondary"
+                      style={{ 
+                        flex: 1, 
+                        padding: '8px', 
+                        borderRadius: '8px', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        gap: '6px',
+                        fontSize: '13px',
+                        border: '1px solid #CBD5E1',
+                        background: '#FFF',
+                        color: '#475569',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => document.getElementById('bukti-sakit-input').click()}
+                    >
+                      Ubah Foto
+                    </button>
+                    <button
+                      className="btn-danger"
+                      style={{ 
+                        flex: 1, 
+                        padding: '8px', 
+                        borderRadius: '8px', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        gap: '6px',
+                        fontSize: '13px',
+                        border: '1px solid #FCA5A5',
+                        background: '#FEF2F2',
+                        color: '#DC2626',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => setBuktiSakit('')}
+                    >
+                      Hapus
+                    </button>
+                  </div>
+                  <input 
+                    type="file" 
+                    id="bukti-sakit-input" 
+                    style={{ display: 'none' }} 
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          setBuktiSakit(event.target.result);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                </div>
+              )}
+
+              <button 
+                className="btn-primary" 
+                style={{ marginTop: '16px', padding: '12px', borderRadius: '12px', width: '100%' }}
+                onClick={submitIzinSakit}
+                disabled={!buktiSakit}
+              >
+                Kirim Bukti Sakit
               </button>
             </div>
           )}

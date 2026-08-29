@@ -211,7 +211,8 @@ export default function DashboardManager() {
           desc = `Melakukan absensi terlambat pada jam ${r.waktu_masuk || '-'}`;
           type = 'orange';
         } else {
-          desc = `Mengajukan status ${r.status}: ${r.keterangan || '-'}`;
+          const isBase64Img = r.keterangan && r.keterangan.startsWith('data:image/');
+          desc = `Mengajukan status ${r.status}: ${isBase64Img ? '(Bukti Foto Terlampir)' : (r.keterangan || '-')}`;
           type = 'orange';
         }
 

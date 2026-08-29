@@ -168,9 +168,22 @@ export default function RiwayatAbsensiManager() {
       );
     } else if (row.status === 'Sakit') {
       return (
-        <div className="rm-detail-text red">
-          <AlertCircle size={16} />
-          <span><strong>Keterangan Sakit:</strong> {row.detail}</span>
+        <div className="rm-detail-text red" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <AlertCircle size={16} style={{ flexShrink: 0 }} />
+          {row.detail && row.detail.startsWith('data:image/') ? (
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <strong>Keterangan Sakit:</strong> 
+              <img 
+                src={row.detail} 
+                alt="Bukti Sakit" 
+                style={{ width: '40px', height: '40px', borderRadius: '6px', objectFit: 'cover', border: '1px solid #FECACA', cursor: 'pointer' }}
+                onClick={() => setSelectedRecord(row)}
+              />
+              <span style={{ fontSize: '11px', color: '#EF4444', textDecoration: 'underline', cursor: 'pointer' }} onClick={() => setSelectedRecord(row)}>(Lihat Bukti)</span>
+            </span>
+          ) : (
+            <span><strong>Keterangan Sakit:</strong> {row.detail}</span>
+          )}
         </div>
       );
     } else {
@@ -360,22 +373,44 @@ export default function RiwayatAbsensiManager() {
               {(selectedRecord.status === 'Izin' || selectedRecord.status === 'Sakit') && (
                 <div className="rm-modal-attachment">
                   <h4><ImageIcon size={16} /> Bukti Lampiran</h4>
-                  <div className="attachment-box">
-                    <div className="doc-icon"><FileText size={32} color="#3B82F6" /></div>
-                    <div className="doc-info">
-                      <strong>{selectedRecord.status === 'Sakit' ? 'Surat_Dokter.pdf' : 'Bukti_Izin.jpg'}</strong>
-                      <span>Diserahkan pada {selectedRecord.date}</span>
+                  {selectedRecord.status === 'Sakit' && selectedRecord.detail && selectedRecord.detail.startsWith('data:image/') ? (
+                    <div style={{ marginTop: '8px', textAlign: 'center' }}>
+                      <img 
+                        src={selectedRecord.detail} 
+                        alt="Bukti Sakit" 
+                        style={{ maxWidth: '100%', maxHeight: '300px', borderRadius: '12px', border: '1px solid #E2E8F0', objectFit: 'contain' }} 
+                      />
+                      <div style={{ marginTop: '12px' }}>
+                        <a 
+                          href={selectedRecord.detail} 
+                          download={`Bukti_Sakit_${selectedRecord.name.replace(/\s+/g, '_')}_${selectedRecord.date.replace(/\s+/g, '_')}.png`}
+                          className="btn-download-sm"
+                          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', background: '#3B82F6', color: '#FFF', padding: '8px 16px', borderRadius: '8px', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
+                        >
+                          Unduh Bukti Sakit
+                        </a>
+                      </div>
                     </div>
-                    <button 
-                      className="btn-download-sm" 
-                      onClick={() => handleDownload(selectedRecord.status === 'Sakit' ? 'Surat_Dokter.pdf' : 'Bukti_Izin.jpg')}
-                    >
-                      Unduh
-                    </button>
-                  </div>
-                  <div className="reason-text">
-                    <strong>Catatan:</strong> {selectedRecord.detail}
-                  </div>
+                  ) : (
+                    <>
+                      <div className="attachment-box">
+                        <div className="doc-icon"><FileText size={32} color="#3B82F6" /></div>
+                        <div className="doc-info">
+                          <strong>{selectedRecord.status === 'Sakit' ? 'Surat_Dokter.pdf' : 'Bukti_Izin.jpg'}</strong>
+                          <span>Diserahkan pada {selectedRecord.date}</span>
+                        </div>
+                        <button 
+                          className="btn-download-sm" 
+                          onClick={() => handleDownload(selectedRecord.status === 'Sakit' ? 'Surat_Dokter.pdf' : 'Bukti_Izin.jpg')}
+                        >
+                          Unduh
+                        </button>
+                      </div>
+                      <div className="reason-text">
+                        <strong>Catatan:</strong> {selectedRecord.detail}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 

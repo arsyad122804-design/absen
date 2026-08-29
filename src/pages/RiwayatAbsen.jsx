@@ -373,9 +373,19 @@ export default function RiwayatAbsen() {
                   <div className="ra-md-label"><Smartphone size={18} color="#3B82F6" /> Perangkat</div>
                   <div className="ra-md-val">Web Browser</div>
                 </div>
-                <div className="ra-md-row borderless">
-                  <div className="ra-md-label"><FileText size={18} color="#3B82F6" /> Keterangan</div>
-                  <div className="ra-md-val">{selectedRecord.keterangan || '-'}</div>
+                <div className="ra-md-row borderless" style={{ flexDirection: selectedRecord.keterangan && selectedRecord.keterangan.startsWith('data:image/') ? 'column' : 'row', alignItems: selectedRecord.keterangan && selectedRecord.keterangan.startsWith('data:image/') ? 'flex-start' : 'center', gap: '8px' }}>
+                  <div className="ra-md-label"><FileText size={18} color="#3B82F6" /> {selectedRecord.status === 'Sakit' ? 'Bukti Sakit' : 'Keterangan'}</div>
+                  {selectedRecord.keterangan && selectedRecord.keterangan.startsWith('data:image/') ? (
+                    <div style={{ width: '100%', marginTop: '6px', textAlign: 'center' }}>
+                      <img 
+                        src={selectedRecord.keterangan} 
+                        alt="Bukti Sakit" 
+                        style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '12px', border: '1px solid #E2E8F0', objectFit: 'contain' }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="ra-md-val">{selectedRecord.keterangan || '-'}</div>
+                  )}
                 </div>
               </div>
 
