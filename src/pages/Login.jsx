@@ -75,7 +75,7 @@ export default function Login() {
       const { data, error } = await supabase
         .from('karyawan')
         .select('*')
-        .or(`email.eq.${username},name.eq.${username}`)
+        .ilike('name', username.trim())
         .eq('password', password)
         .maybeSingle();
 
