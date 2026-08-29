@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Check, Clock, X, LayoutGrid, ChevronDown, ChevronRight, LogOut, Clock4, MapPin, Smartphone, FileText, Info, Trash2 } from 'lucide-react';
+import { Calendar, Check, Clock, X, LayoutGrid, ChevronDown, ChevronRight, LogOut, Clock4, MapPin, Smartphone, FileText, Info } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../lib/supabase';
 import './RiwayatAbsen.css';
@@ -107,12 +107,7 @@ export default function RiwayatAbsen() {
     fetchRecords();
   }, []);
 
-  const handleClearHistory = () => {
-    if (window.confirm("Apakah Anda yakin ingin menghapus seluruh riwayat absensi dari database?")) {
-      localStorage.removeItem('local_absensi');
-      setRecords([]);
-    }
-  };
+
 
   const filteredRecords = records.filter(r => {
     const matchesStatus = filter === 'Semua' || r.status === filter;
@@ -134,25 +129,6 @@ export default function RiwayatAbsen() {
           <h1>Riwayat Absen</h1>
           <p>Kelola dan lihat riwayat kehadiran Anda</p>
         </div>
-        <button 
-          onClick={handleClearHistory}
-          style={{
-            padding: '8px 16px',
-            background: '#FEE2E2',
-            color: '#DC2626',
-            border: '1px solid #FECACA',
-            borderRadius: '10px',
-            fontSize: '13px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          <Trash2 size={15} /> Hapus Riwayat
-        </button>
       </div>
 
       {/* SUMMARY BANNER */}
