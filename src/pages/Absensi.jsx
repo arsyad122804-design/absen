@@ -238,7 +238,31 @@ export default function Absensi() {
       const seconds = String(now.getSeconds()).padStart(2, '0');
       const timeStr = `${hours}:${minutes}:${seconds}`;
 
-      const isLate = now.getHours() >= 8; // terlambat jika jam >= 8
+      // Ambil konfigurasi jam kerja dari LocalStorage
+      const defaultHours = {
+        Operasional: { masuk: "08:00", pulang: "17:00" },
+        Sekolah: { masuk: "07:00", pulang: "14:00" },
+        Kepesantrenan: { masuk1: "07:30", pulang1: "12:00", masuk2: "13:30", pulang2: "17:00" }
+      };
+      let workHours = defaultHours;
+      try {
+        const saved = localStorage.getItem('app_work_hours');
+        if (saved) workHours = JSON.parse(saved);
+      } catch (e) {}
+
+      const division = user?.divisi || user?.div || 'Operasional';
+      const hoursConfig = workHours[division] || workHours['Operasional'];
+      
+      // Target jam masuk (Sesi 2 untuk Kepesantrenan, atau masuk/masuk1 standar)
+      const targetMasukStr = (isKepesantrenan && flowType === 'checkin_2') 
+        ? hoursConfig.masuk2 
+        : (hoursConfig.masuk1 || hoursConfig.masuk || '08:00');
+      
+      const [targetHour, targetMinute] = targetMasukStr.split(':').map(Number);
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      const isLate = (currentHour > targetHour) || (currentHour === targetHour && currentMinute > targetMinute);
+
       const status = isLate ? 'Terlambat' : 'Hadir';
 
       let activeCoords = coords;
@@ -388,9 +412,33 @@ export default function Absensi() {
       const seconds = String(now.getSeconds()).padStart(2, '0');
       const timeStr = `${hours}:${minutes}:${seconds}`;
 
-      // Cek jika jam pulang kurang dari 16:00
-      if (now.getHours() < 16) {
-        const confirmCheckout = window.confirm("Jam pulang resmi adalah pukul 16:00. Apakah Anda yakin ingin melakukan absen pulang lebih awal?");
+      // Ambil konfigurasi jam kerja dari LocalStorage
+      const defaultHours = {
+        Operasional: { masuk: "08:00", pulang: "17:00" },
+        Sekolah: { masuk: "07:00", pulang: "14:00" },
+        Kepesantrenan: { masuk1: "07:30", pulang1: "12:00", masuk2: "13:30", pulang2: "17:00" }
+      };
+      let workHours = defaultHours;
+      try {
+        const saved = localStorage.getItem('app_work_hours');
+        if (saved) workHours = JSON.parse(saved);
+      } catch (e) {}
+
+      const division = user?.divisi || user?.div || 'Operasional';
+      const hoursConfig = workHours[division] || workHours['Operasional'];
+      
+      // Target jam pulang (Sesi 2 untuk Kepesantrenan, atau pulang/pulang1 standar)
+      const targetPulangStr = (isKepesantrenan && flowType === 'checkout_2') 
+        ? hoursConfig.pulang2 
+        : (hoursConfig.pulang1 || hoursConfig.pulang || '17:00');
+        
+      const [targetPHour, targetPMinute] = targetPulangStr.split(':').map(Number);
+      const currentPHour = now.getHours();
+      const currentPMinute = now.getMinutes();
+      const isEarlyCheckout = (currentPHour < targetPHour) || (currentPHour === targetPHour && currentPMinute < targetPMinute);
+
+      if (isEarlyCheckout) {
+        const confirmCheckout = window.confirm(`Jam pulang resmi adalah pukul ${targetPulangStr}. Apakah Anda yakin ingin melakukan absen pulang lebih awal?`);
         if (!confirmCheckout) {
           setShowModal(false);
           setSelectedStatus(null);
@@ -434,6 +482,23 @@ export default function Absensi() {
   }
 
   const isKepesantrenan = user && (user.divisi === 'Kepesantrenan' || user.div === 'Kepesantrenan');
+
+  const defaultHours = {
+    Operasional: { masuk: "08:00", pulang: "17:00" },
+    Sekolah: { masuk: "07:00", pulang: "14:00" },
+    Kepesantrenan: { masuk1: "07:30", pulang1: "12:00", masuk2: "13:30", pulang2: "17:00" }
+  };
+  let workHours = defaultHours;
+  try {
+    const saved = localStorage.getItem('app_work_hours');
+    if (saved) workHours = JSON.parse(saved);
+  } catch (e) {}
+
+  const division = user?.divisi || user?.div || 'Operasional';
+  const hoursConfig = workHours[division] || workHours['Operasional'];
+  
+  const targetPulang1 = hoursConfig.pulang1 || hoursConfig.pulang || '17:00';
+  const targetPulang2 = hoursConfig.pulang2 || '17:00';
   
   isAllDone = false;
   currentActiveRecord = null;
@@ -643,7 +708,7 @@ export default function Absensi() {
           <div>
             <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#0F172A', margin: '0 0 8px 0' }}>Absen Pulang {isKepesantrenan ? 'Sesi 1' : '(Check Out)'}</h2>
             <p style={{ color: '#64748B', fontSize: '14px', margin: 0 }}>
-              Anda sudah melakukan absen masuk hari ini. Silakan catatkan absen pulang Anda {isKepesantrenan ? 'Sesi 1' : 'setelah jam pulang sekolah dimulai (Jam 16:00)'}.
+              Anda sudah melakukan absen masuk hari ini. Silakan catatkan absen pulang Anda {isKepesantrenan ? `Sesi 1 (Jam ${targetPulang1})` : `setelah jam pulang dimulai (Jam ${targetPulang1})`}.
             </p>
           </div>
           
@@ -809,7 +874,7 @@ export default function Absensi() {
           <div>
             <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#0F172A', margin: '0 0 8px 0' }}>Absen Pulang Sore (Sesi 2)</h2>
             <p style={{ color: '#64748B', fontSize: '14px', margin: 0 }}>
-              Anda sudah melakukan absen masuk Sesi 2. Silakan catatkan absen pulang sore Anda (Mulai Jam 16:00).
+              Anda sudah melakukan absen masuk Sesi 2. Silakan catatkan absen pulang sore Anda (Mulai Jam {targetPulang2}).
             </p>
           </div>
           
