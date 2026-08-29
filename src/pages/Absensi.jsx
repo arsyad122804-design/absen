@@ -350,12 +350,71 @@ export default function Absensi() {
     }
   }
 
+  const submitPulang = async () => {
+    if (!user) {
+      alert("Sesi login tidak valid. Silakan login ulang.");
+      return;
+    }
+
+    try {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const today = `${year}-${month}-${day}`;
+
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const timeStr = `${hours}:${minutes}:${seconds}`;
+
+      // Cek jika jam pulang kurang dari 16:00
+      if (now.getHours() < 16) {
+        const confirmCheckout = window.confirm("Jam pulang resmi adalah pukul 16:00. Apakah Anda yakin ingin melakukan absen pulang lebih awal?");
+        if (!confirmCheckout) {
+          setShowModal(false);
+          setSelectedStatus(null);
+          return;
+        }
+      }
+
+      // 1. Update di LocalStorage
+      const local = safeJsonParse('local_absensi', []);
+      const updatedLocal = local.map(r => {
+        if (String(r.karyawan_id) === String(user.id) && r.tanggal === today) {
+          return { ...r, waktu_keluar: timeStr };
+        }
+        return r;
+      });
+      localStorage.setItem('local_absensi', JSON.stringify(updatedLocal));
+
+      // 2. Update di Supabase jika bukan akun demo
+      const isDemo = !user.id || user.id.toString().startsWith('karyawan-') || user.id.toString().startsWith('admin-');
+      if (!isDemo) {
+        const { error } = await supabase
+          .from('absensi')
+          .update({ waktu_keluar: timeStr })
+          .eq('karyawan_id', user.id)
+          .eq('tanggal', today);
+        if (error) console.error("Error updating checkout to Supabase:", error);
+      }
+
+      setShowModal(false);
+      setSelectedStatus(null);
+      alert('Absen pulang berhasil dicatat!');
+      checkTodayAttendance(user);
+    } catch (err) {
+      console.error(err);
+      alert('Terjadi kesalahan sistem.');
+    }
+  }
+
   return (
     <div className="content-container">
       <div className="page-header">
         <div className="greeting">
           <h1>{t.halo}, {user ? user.name : 'Karyawan'}!</h1>
-          <p>{alreadyCheckedIn ? 'Anda telah melakukan absensi hari ini.' : t.pilihKondisi}</p>
+          <p>{alreadyCheckedIn ? ((alreadyCheckedIn.status === 'Izin' || alreadyCheckedIn.status === 'Sakit' || (alreadyCheckedIn.waktu_keluar && alreadyCheckedIn.waktu_keluar !== '-')) ? 'Anda telah melakukan absensi hari ini.' : 'Silakan melakukan absen pulang.') : t.pilihKondisi}</p>
         </div>
         <div className="date-badge">
           <Cal size={18} />
@@ -364,76 +423,172 @@ export default function Absensi() {
       </div>
 
       {alreadyCheckedIn ? (
-        <div className="checked-in-container" style={{
-          background: 'white',
-          borderRadius: '24px',
-          padding: '40px 32px',
-          textAlign: 'center',
-          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.02)',
-          border: '1px solid #E2E8F0',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '24px',
-          maxWidth: '500px',
-          margin: '40px auto 0 auto',
-          boxSizing: 'border-box'
-        }}>
-          <div style={{
-            background: '#F0FDF4',
-            color: '#16A34A',
-            width: '80px',
-            height: '80px',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 8px 20px rgba(22, 163, 74, 0.12)'
-          }}>
-            <Check size={40} />
-          </div>
-          <div>
-            <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#0F172A', margin: '0 0 8px 0' }}>Absensi Hari Ini Selesai</h2>
-            <p style={{ color: '#64748B', fontSize: '14px', margin: 0 }}>
-              Anda sudah mencatatkan kehadiran atau izin Anda untuk hari ini. Sampai jumpa besok!
-            </p>
-          </div>
-          
-          <div style={{
-            width: '100%',
-            background: '#F8FAFC',
-            borderRadius: '16px',
-            padding: '20px',
-            boxSizing: 'border-box',
+        (alreadyCheckedIn.status === 'Izin' || alreadyCheckedIn.status === 'Sakit' || (alreadyCheckedIn.waktu_keluar && alreadyCheckedIn.waktu_keluar !== '-')) ? (
+          <div className="checked-in-container" style={{
+            background: 'white',
+            borderRadius: '24px',
+            padding: '40px 32px',
+            textAlign: 'center',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.02)',
+            border: '1px solid #E2E8F0',
             display: 'flex',
             flexDirection: 'column',
-            gap: '12px',
-            border: '1px solid #E2E8F0',
-            textAlign: 'left'
+            alignItems: 'center',
+            gap: '24px',
+            maxWidth: '500px',
+            margin: '40px auto 0 auto',
+            boxSizing: 'border-box'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#64748B', fontSize: '13px' }}>Status Kehadiran</span>
-              <strong style={{ 
-                color: alreadyCheckedIn.status === 'Hadir' || alreadyCheckedIn.status === 'Terlambat' ? '#16A34A' : '#2563EB',
-                fontSize: '14px' 
-              }}>{alreadyCheckedIn.status}</strong>
+            <div style={{
+              background: '#F0FDF4',
+              color: '#16A34A',
+              width: '80px',
+              height: '80px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 8px 20px rgba(22, 163, 74, 0.12)'
+            }}>
+              <Check size={40} />
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#64748B', fontSize: '13px' }}>Waktu Absen</span>
-              <strong style={{ color: '#0F172A', fontSize: '14px' }}>
-                {alreadyCheckedIn.waktu_masuk || alreadyCheckedIn.waktu || '-'}
-              </strong>
+            <div>
+              <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#0F172A', margin: '0 0 8px 0' }}>Absensi Hari Ini Selesai</h2>
+              <p style={{ color: '#64748B', fontSize: '14px', margin: 0 }}>
+                Anda sudah mencatatkan kehadiran atau izin Anda untuk hari ini. Sampai jumpa besok!
+              </p>
             </div>
-            {alreadyCheckedIn.keterangan && alreadyCheckedIn.keterangan !== '-' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', borderTop: '1px solid #E2E8F0', paddingTop: '10px' }}>
-                <span style={{ color: '#64748B', fontSize: '13px' }}>Keterangan</span>
-                <span style={{ color: '#334155', fontSize: '13px', lineHeight: 1.4 }}>
-                  {alreadyCheckedIn.keterangan}
-                </span>
+            
+            <div style={{
+              width: '100%',
+              background: '#F8FAFC',
+              borderRadius: '16px',
+              padding: '20px',
+              boxSizing: 'border-box',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              border: '1px solid #E2E8F0',
+              textAlign: 'left'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#64748B', fontSize: '13px' }}>Status Kehadiran</span>
+                <strong style={{ 
+                  color: alreadyCheckedIn.status === 'Hadir' || alreadyCheckedIn.status === 'Terlambat' ? '#16A34A' : '#2563EB',
+                  fontSize: '14px' 
+                }}>{alreadyCheckedIn.status}</strong>
               </div>
-            )}
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#64748B', fontSize: '13px' }}>Waktu Absen Masuk</span>
+                <strong style={{ color: '#0F172A', fontSize: '14px' }}>
+                  {alreadyCheckedIn.waktu_masuk || alreadyCheckedIn.waktu || '-'}
+                </strong>
+              </div>
+              {alreadyCheckedIn.waktu_keluar && alreadyCheckedIn.waktu_keluar !== '-' && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #E2E8F0', paddingTop: '10px' }}>
+                  <span style={{ color: '#64748B', fontSize: '13px' }}>Waktu Absen Pulang</span>
+                  <strong style={{ color: '#0F172A', fontSize: '14px' }}>
+                    {alreadyCheckedIn.waktu_keluar}
+                  </strong>
+                </div>
+              )}
+              {alreadyCheckedIn.keterangan && alreadyCheckedIn.keterangan !== '-' && !alreadyCheckedIn.keterangan.startsWith('data:image/') && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', borderTop: '1px solid #E2E8F0', paddingTop: '10px' }}>
+                  <span style={{ color: '#64748B', fontSize: '13px' }}>Keterangan</span>
+                  <span style={{ color: '#334155', fontSize: '13px', lineHeight: 1.4 }}>
+                    {alreadyCheckedIn.keterangan}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="checked-in-container" style={{
+            background: 'white',
+            borderRadius: '24px',
+            padding: '40px 32px',
+            textAlign: 'center',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.02)',
+            border: '1px solid #E2E8F0',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '24px',
+            maxWidth: '500px',
+            margin: '40px auto 0 auto',
+            boxSizing: 'border-box'
+          }}>
+            <div style={{
+              background: '#EFF6FF',
+              color: '#2563EB',
+              width: '80px',
+              height: '80px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 8px 20px rgba(37, 99, 235, 0.12)'
+            }}>
+              <Clock size={40} />
+            </div>
+            <div>
+              <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#0F172A', margin: '0 0 8px 0' }}>Absen Pulang (Check Out)</h2>
+              <p style={{ color: '#64748B', fontSize: '14px', margin: 0 }}>
+                Anda sudah melakukan absen masuk hari ini. Silakan catatkan absen pulang Anda setelah jam pulang sekolah dimulai (Jam 16:00).
+              </p>
+            </div>
+            
+            <div style={{
+              width: '100%',
+              background: '#F8FAFC',
+              borderRadius: '16px',
+              padding: '20px',
+              boxSizing: 'border-box',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              border: '1px solid #E2E8F0',
+              textAlign: 'left'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#64748B', fontSize: '13px' }}>Status Masuk</span>
+                <strong style={{ color: '#16A34A', fontSize: '14px' }}>{alreadyCheckedIn.status}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#64748B', fontSize: '13px' }}>Jam Masuk</span>
+                <strong style={{ color: '#0F172A', fontSize: '14px' }}>
+                  {alreadyCheckedIn.waktu_masuk || alreadyCheckedIn.waktu || '-'}
+                </strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#64748B', fontSize: '13px' }}>Jam Pulang</span>
+                <strong style={{ color: '#94A3B8', fontSize: '14px' }}>Belum Absen</strong>
+              </div>
+            </div>
+
+            <button
+              className="btn-primary"
+              style={{
+                width: '100%',
+                padding: '16px',
+                borderRadius: '16px',
+                fontSize: '16px',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                boxShadow: '0 10px 20px -5px rgba(37,99,235,0.2)'
+              }}
+              onClick={() => {
+                setSelectedStatus('pulang');
+                setShowModal(true);
+              }}
+            >
+              Rekam Absen Pulang
+            </button>
+          </div>
+        )
       ) : (
         <>
           <div className="premium-cards-container">
@@ -774,9 +929,9 @@ export default function Absensi() {
                     cursor: locationStatus !== 'inside' ? 'not-allowed' : 'pointer',
                     background: locationStatus === 'outside' ? '#EF4444' : ''
                   }} 
-                  onClick={submitHadir}
+                  onClick={selectedStatus === 'pulang' ? submitPulang : submitHadir}
                 >
-                  {locationStatus === 'outside' ? 'Di Luar Jangkauan' : t.rekamHadir}
+                  {locationStatus === 'outside' ? 'Di Luar Jangkauan' : (selectedStatus === 'pulang' ? 'Rekam Absen Pulang' : t.rekamHadir)}
                 </button>
               </div>
             </div>
