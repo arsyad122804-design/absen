@@ -203,16 +203,19 @@ export default function Pengaturan() {
 
               <div className="pg-v2-set-divider"></div>
 
-              <div className="pg-v2-set-item">
+              <div className="pg-v2-set-item" style={{ opacity: 0.85 }}>
                 <div className="pg-v2-si-icon" style={{ background: '#F5F3FF', color: '#7C3AED' }}>
                   <Fingerprint size={20} />
                 </div>
                 <div className="pg-v2-si-text">
-                  <h4>Login Biometrik</h4>
+                  <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    Login Biometrik 
+                    <span style={{ fontSize: '10px', fontWeight: 600, color: '#3B82F6', background: '#EFF6FF', border: '1px solid #BFDBFE', padding: '2px 6px', borderRadius: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Coming Soon</span>
+                  </h4>
                   <p>Gunakan sidik jari atau Face ID untuk masuk ke akun Anda.</p>
                 </div>
-                <div className={`pg-v2-toggle ${toggles.biometrik ? 'active' : ''}`} onClick={() => handleToggle('biometrik', 'Login Biometrik')}>
-                  <div className="pg-v2-toggle-circle"></div>
+                <div className="pg-v2-toggle" style={{ cursor: 'not-allowed', background: '#E2E8F0' }} onClick={() => alert('Fitur Login Biometrik (Sidik Jari/Face ID) segera hadir!')}>
+                  <div className="pg-v2-toggle-circle" style={{ left: '2px' }}></div>
                 </div>
               </div>
 
