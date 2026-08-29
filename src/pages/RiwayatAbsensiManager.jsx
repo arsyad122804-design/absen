@@ -67,10 +67,23 @@ export default function RiwayatAbsensiManager() {
         }
       });
       
-      const mapped = combined.map((r, i) => {
-        // Cari karyawan berdasarkan ID (bisa numerik dari Supabase atau KRY-xxxx dari lokal)
+      // Kelompokkan data absensi berdasarkan karyawan dan tanggal
+      const groupedMap = {};
+      combined.forEach(r => {
+        const key = `${r.karyawan_id}_${r.tanggal}`;
+        if (!groupedMap[key]) {
+          groupedMap[key] = [];
+        }
+        groupedMap[key].push(r);
+      });
+
+      const mapped = Object.keys(groupedMap).map((key, i) => {
+        const records = groupedMap[key];
+        // Urutkan berdasarkan waktu_masuk
+        records.sort((a, b) => (a.waktu_masuk || '').localeCompare(b.waktu_masuk || ''));
+        
+        const r = records[0];
         let emp = allEmps.find(e => String(e.id) === String(r.karyawan_id)) || {};
-        // Jika tidak ketemu, coba cari dari user yang login (tersimpan di localStorage)
         if (!emp.name) {
           try {
             const loggedUser = JSON.parse(localStorage.getItem('user') || '{}');
@@ -79,23 +92,34 @@ export default function RiwayatAbsensiManager() {
             }
           } catch(e) {}
         }
+        
         const dateObj = r.tanggal ? new Date(r.tanggal) : new Date();
         const monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
         const formattedDate = `${dateObj.getDate()} ${monthNames[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
         
+        // Buat detail sesi absensi
+        const sessions = records.map(rec => ({
+          inTime: rec.waktu_masuk || rec.jam_masuk || rec.jam || '08:00',
+          outTime: rec.waktu_keluar || rec.jam_pulang || '-',
+          status: rec.status || 'Hadir',
+          detail: rec.alasan || rec.keterangan || ''
+        }));
+        
         return {
           id: r.id || `local-his-${i}`,
+          karyawan_id: r.karyawan_id,
           name: emp.name || r.nama || r.user_name || r.name || 'Tanpa Nama',
           div: emp.divisi || emp.div || r.divisi || 'Operasional',
           date: formattedDate,
           rawDate: r.tanggal,
           status: r.status || 'Hadir',
-          inTime: r.waktu_masuk || r.jam_masuk || r.jam || '08:00',
-          outTime: r.waktu_keluar || r.jam_pulang || '-',
-          detail: r.alasan || r.keterangan || '',
+          inTime: sessions[0].inTime,
+          outTime: sessions[0].outTime,
+          detail: sessions[0].detail,
           lat: r.lokasi ? r.lokasi.split(',')[0] : null,
           lng: r.lokasi ? r.lokasi.split(',')[1] : null,
-          lokasi: r.lokasi
+          lokasi: r.lokasi,
+          sessions: sessions
         };
       });
 
@@ -151,6 +175,43 @@ export default function RiwayatAbsensiManager() {
 
   const renderDetail = (row) => {
     if (row.status === 'Hadir' || row.status === 'Terlambat') {
+      if (row.sessions && row.sessions.length >= 2) {
+        return (
+          <div className="rm-detail-time" style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '4px 0' }}>
+            <div style={{ borderBottom: '1px dashed #E2E8F0', paddingBottom: '6px' }}>
+              <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 600, display: 'block', marginBottom: '2px' }}>Sesi 1 (Pagi)</span>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div className="time-block">
+                  <span className="time-lbl">Masuk:</span>
+                  <strong className={row.sessions[0].status === 'Terlambat' ? 'text-red' : 'text-green'}>
+                    {row.sessions[0].inTime}
+                  </strong>
+                </div>
+                <div className="time-block">
+                  <span className="time-lbl">Pulang:</span>
+                  <strong>{row.sessions[0].outTime}</strong>
+                </div>
+              </div>
+            </div>
+            <div>
+              <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 600, display: 'block', marginBottom: '2px' }}>Sesi 2 (Sore)</span>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div className="time-block">
+                  <span className="time-lbl">Masuk:</span>
+                  <strong className={row.sessions[1].status === 'Terlambat' ? 'text-red' : 'text-green'}>
+                    {row.sessions[1].inTime}
+                  </strong>
+                </div>
+                <div className="time-block">
+                  <span className="time-lbl">Pulang:</span>
+                  <strong>{row.sessions[1].outTime}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
       return (
         <div className="rm-detail-time">
           <div className="time-block">
@@ -351,16 +412,37 @@ export default function RiwayatAbsensiManager() {
                   <strong className={`stat-${selectedRecord.status.toLowerCase()}`}>{selectedRecord.status}</strong>
                 </div>
                 {(selectedRecord.status === 'Hadir' || selectedRecord.status === 'Terlambat') && (
-                  <>
-                    <div className="rm-info-box">
-                      <span className="lbl">Jam Masuk</span>
-                      <strong>{selectedRecord.inTime}</strong>
-                    </div>
-                    <div className="rm-info-box">
-                      <span className="lbl">Jam Pulang</span>
-                      <strong>{selectedRecord.outTime}</strong>
-                    </div>
-                  </>
+                  selectedRecord.sessions && selectedRecord.sessions.length >= 2 ? (
+                    <>
+                      <div className="rm-info-box">
+                        <span className="lbl">Jam Masuk Sesi 1</span>
+                        <strong>{selectedRecord.sessions[0].inTime}</strong>
+                      </div>
+                      <div className="rm-info-box">
+                        <span className="lbl">Jam Pulang Sesi 1</span>
+                        <strong>{selectedRecord.sessions[0].outTime}</strong>
+                      </div>
+                      <div className="rm-info-box">
+                        <span className="lbl">Jam Masuk Sesi 2</span>
+                        <strong>{selectedRecord.sessions[1].inTime}</strong>
+                      </div>
+                      <div className="rm-info-box">
+                        <span className="lbl">Jam Pulang Sesi 2</span>
+                        <strong>{selectedRecord.sessions[1].outTime}</strong>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="rm-info-box">
+                        <span className="lbl">Jam Masuk</span>
+                        <strong>{selectedRecord.inTime}</strong>
+                      </div>
+                      <div className="rm-info-box">
+                        <span className="lbl">Jam Pulang</span>
+                        <strong>{selectedRecord.outTime}</strong>
+                      </div>
+                    </>
+                  )
                 )}
               </div>
 
