@@ -239,6 +239,14 @@ export default function PengaturanManager() {
                 <p style={{ fontSize: '13px', color: '#64748B', margin: '0' }}>Atur titik koordinat GPS dan radius absensi untuk masing-masing unit/kantor.</p>
               </div>
 
+              <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '12px', padding: '14px 16px', color: '#1E40AF', fontSize: '13px', lineHeight: 1.5 }}>
+                💡 <strong>Tips Format Koordinat & Radius:</strong>
+                <ul style={{ margin: '6px 0 0 18px', padding: 0 }}>
+                  <li>Mendukung format <strong>DMS</strong> (contoh: <code>7°08'02.70"S 111°37'27.78"E</code>) maupun <strong>Desimal</strong> (contoh: <code>-7.1336, 111.6252</code>).</li>
+                  <li><strong>Radius Disarankan:</strong> Minimal <strong>30–50 meter</strong> karena akurasi GPS smartphone umumnya memiliki deviasi toleransi 10–30 meter.</li>
+                </ul>
+              </div>
+
               {/* KANTOR PENGASUH (KEPESANTRENAN) */}
               <div style={{ background: '#F8FAFC', padding: '20px', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
                 <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0F172A', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>

@@ -32,15 +32,49 @@ const defaultGeofences = {
   }
 };
 
-const parseGeofence = (config, fallback) => {
-  if (!config) return fallback;
-  let center = fallback.center;
-  if (config.coords && typeof config.coords === 'string' && config.coords.includes(',')) {
-    const parts = config.coords.split(',').map(s => parseFloat(s.trim()));
-    if (!isNaN(parts[0]) && !isNaN(parts[1])) {
-      center = { lat: parts[0], lng: parts[1] };
+const parseCoordsString = (coordsStr, fallbackCenter) => {
+  if (!coordsStr || typeof coordsStr !== 'string') return fallbackCenter;
+  const str = coordsStr.trim();
+  
+  // 1. Format DMS: 7°08'02.70"S 111°37'27.78"E atau variasi derajat/menit/detik
+  const dmsRegex = /(\d+)[°\s]+(\d+)['\s]+([\d.]+)["]?\s*([NSEWnsew])/g;
+  const matches = [...str.matchAll(dmsRegex)];
+  
+  if (matches.length === 2) {
+    let lat = null;
+    let lng = null;
+    
+    matches.forEach(m => {
+      const deg = parseFloat(m[1]);
+      const min = parseFloat(m[2]);
+      const sec = parseFloat(m[3]);
+      const dir = m[4].toUpperCase();
+      
+      let val = deg + (min / 60) + (sec / 3600);
+      if (dir === 'S' || dir === 'W') val = -val;
+      
+      if (dir === 'N' || dir === 'S') lat = val;
+      if (dir === 'E' || dir === 'W') lng = val;
+    });
+    
+    if (lat !== null && lng !== null) {
+      return { lat, lng };
     }
   }
+
+  // 2. Format Desimal: "-7.1344, 111.6256" atau "-7.1344 111.6256"
+  const clean = str.replace(/,/g, ' ').replace(/[^\d.\s-]/g, '').trim();
+  const parts = clean.split(/\s+/).map(Number);
+  if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+    return { lat: parts[0], lng: parts[1] };
+  }
+
+  return fallbackCenter;
+};
+
+const parseGeofence = (config, fallback) => {
+  if (!config) return fallback;
+  const center = parseCoordsString(config.coords, fallback.center);
   return {
     name: config.name || fallback.name,
     center,
