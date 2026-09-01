@@ -147,15 +147,14 @@ export default function Absensi() {
     const isDemo = !currentUser.id || currentUser.id.toString().startsWith('karyawan-') || currentUser.id.toString().startsWith('admin-');
     if (!isDemo) {
       try {
-        let targetId = currentUser.id;
-        if (currentUser.name) {
+        let targetId = currentUser?.id;
+        if (currentUser?.name) {
           const { data: empData } = await supabase
             .from('karyawan')
             .select('id')
-            .ilike('name', currentUser.name.trim())
-            .maybeSingle();
-          if (empData && empData.id) {
-            targetId = empData.id;
+            .ilike('name', currentUser.name.trim());
+          if (empData && empData.length > 0 && empData[0].id) {
+            targetId = empData[0].id;
             if (String(currentUser.id) !== String(targetId)) {
               const updatedUser = { ...currentUser, id: targetId };
               setUser(updatedUser);

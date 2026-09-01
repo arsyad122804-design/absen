@@ -76,12 +76,12 @@ export default function Login() {
         .from('karyawan')
         .select('*')
         .ilike('name', username.trim())
-        .eq('password', password)
-        .maybeSingle();
+        .eq('password', password);
 
-      if (!error && data) {
-        localStorage.setItem('user', JSON.stringify(data));
-        if (data.role?.toLowerCase() === 'manager') {
+      if (!error && data && data.length > 0) {
+        const userData = data[0];
+        localStorage.setItem('user', JSON.stringify(userData));
+        if (userData.role?.toLowerCase() === 'manager') {
           navigate('/manager/dashboard');
         } else {
           navigate('/absen');
