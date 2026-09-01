@@ -13,9 +13,9 @@ export default function PengaturanManager() {
       } catch (e) {}
     }
     return {
-      Operasional: { masuk: "08:00", pulang: "17:00" },
-      Sekolah: { masuk: "07:00", pulang: "14:00" },
-      Kepesantrenan: { masuk1: "07:30", pulang1: "12:00", masuk2: "13:30", pulang2: "17:00" }
+      Operasional: { masuk: "07:00", pulang: "15:00" },
+      Sekolah: { masuk: "07:00", pulang: "15:00" },
+      Kepesantrenan: { masuk1: "03:30", pulang1: "07:30", masuk2: "15:00", pulang2: "21:00" }
     };
   });
 
