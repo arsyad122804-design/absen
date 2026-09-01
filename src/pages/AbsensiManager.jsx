@@ -98,8 +98,21 @@ export default function AbsensiManager() {
           const hasLate = userAbs.some(ab => ab.status === 'Terlambat');
           const finalStatus = hasLate ? 'Terlambat' : r.status;
           
-          const jamMasukStr = userAbs.map(ab => ab.waktu_masuk ? ab.waktu_masuk.substring(0, 8) : '-').join(' | ');
-          const jamPulangStr = userAbs.map(ab => ab.waktu_keluar ? ab.waktu_keluar.substring(0, 8) : '-').join(' | ');
+          const empDiv = (emp.divisi || emp.div || '').toLowerCase();
+          const isKep = empDiv.includes('pesantren') || empDiv.includes('santri') || empDiv.includes('asrama');
+
+          let jamMasukStr = '';
+          let jamPulangStr = '';
+
+          if (isKep) {
+            const s1 = userAbs[0];
+            const s2 = userAbs[1];
+            jamMasukStr = `S1: ${s1?.waktu_masuk ? s1.waktu_masuk.substring(0, 5) : '-'} | S2: ${s2?.waktu_masuk ? s2.waktu_masuk.substring(0, 5) : 'Belum Absen'}`;
+            jamPulangStr = `S1: ${s1?.waktu_keluar ? s1.waktu_keluar.substring(0, 5) : '-'} | S2: ${s2?.waktu_keluar ? s2.waktu_keluar.substring(0, 5) : 'Belum Absen'}`;
+          } else {
+            jamMasukStr = userAbs.map(ab => ab.waktu_masuk ? ab.waktu_masuk.substring(0, 5) : '-').join(' | ');
+            jamPulangStr = userAbs.map(ab => ab.waktu_keluar ? ab.waktu_keluar.substring(0, 5) : '-').join(' | ');
+          }
 
           return {
             id: r.id || `local-${idx}`,
