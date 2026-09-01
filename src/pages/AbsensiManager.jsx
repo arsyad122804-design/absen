@@ -83,7 +83,11 @@ export default function AbsensiManager() {
 
       // 3. Petakan seluruh karyawan
       const mapped = uniqueEmps.map((emp, idx) => {
-        const userAbs = filteredAbs.filter(ab => String(ab.karyawan_id) === String(emp.id));
+        const userAbs = filteredAbs.filter(ab => 
+          String(ab.karyawan_id) === String(emp.id) || 
+          (ab.nama && emp.name && ab.nama.toLowerCase() === emp.name.toLowerCase()) ||
+          (ab.nama_karyawan && emp.name && ab.nama_karyawan.toLowerCase() === emp.name.toLowerCase())
+        );
         
         if (userAbs.length > 0) {
           // Urutkan biar Sesi 1 duluan
