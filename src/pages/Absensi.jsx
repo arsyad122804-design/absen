@@ -16,19 +16,19 @@ const safeJsonParse = (key, fallback = {}) => {
 
 const defaultGeofences = {
   Sekolah: {
-    name: 'Area Sekolah (Akademik)',
-    center: { lat: -7.1338, lng: 111.6262 },
-    radius: 50 // meters
+    name: 'Kantor Sekolah (Akademik)',
+    center: { lat: -7.13404167, lng: 111.62481944 }, // 7°08'02.55"S 111°37'29.35"E
+    radius: 30
   },
   Kepesantrenan: {
-    name: 'Area Kantor Pengasuh (Kepesantrenan)',
-    center: { lat: -7.1336, lng: 111.6252 },
-    radius: 50 // meters
+    name: 'Kantor Pengasuh (Kepesantrenan)',
+    center: { lat: -7.13408333, lng: 111.62438333 }, // 7°08'02.70"S 111°37'27.78"E
+    radius: 30
   },
   Operasional: {
-    name: 'Area Operasional (Pusat & Staff)',
-    center: { lat: -7.1348, lng: 111.6246 },
-    radius: 50 // meters
+    name: 'Kantor Operasional (Pusat & Staff)',
+    center: { lat: -7.13523889, lng: 111.62408889 }, // 7°08'06.86"S 111°37'26.72"E
+    radius: 30
   }
 };
 

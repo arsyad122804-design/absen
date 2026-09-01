@@ -29,21 +29,21 @@ export default function PengaturanManager() {
     return {
       Kepesantrenan: {
         name: 'Kantor Pengasuh (Kepesantrenan)',
-        coords: '-7.1336, 111.6252',
-        radius: 50,
+        coords: '7°08\'02.70"S 111°37\'27.78"E',
+        radius: 30,
         address: 'Kantor Pengasuhan Santri & Komplek Asrama'
       },
       Sekolah: {
         name: 'Kantor Sekolah (Akademik)',
-        coords: '-7.1338, 111.6262',
-        radius: 50,
+        coords: '7°08\'02.55"S 111°37\'29.35"E',
+        radius: 30,
         address: 'Gedung Sekolah, Ruang Guru & Kelas'
       },
       Operasional: {
-        name: 'Kantor Operasional (Pusat)',
-        coords: '-7.1348, 111.6246',
-        radius: 50,
-        address: 'Jl. Wonosari No.16, Sendang Gedhe, Sambeng, Kasiman, Bojonegoro'
+        name: 'Kantor Operasional (Pusat & Staff)',
+        coords: '7°08\'06.86"S 111°37\'26.72"E',
+        radius: 30,
+        address: 'Jl. Wonosari No. 16, Sendang Gedhe, Sambeng, Kasiman, Bojonegoro'
       }
     };
   });
