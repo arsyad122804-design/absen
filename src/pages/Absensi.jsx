@@ -178,27 +178,21 @@ export default function Absensi() {
       }
     }
 
+    let combined = [];
     if (dbRecords.length > 0) {
-      // Supabase is ground truth! Filter out stale local records for today
+      combined = [...dbRecords];
+      // Supabase is ground truth! Clean up stale local records for today
       const freshLocal = local.filter(r => !(
         (String(r.karyawan_id) === String(currentUser.id) || (r.nama && currentUser.name && r.nama.toLowerCase() === currentUser.name.toLowerCase())) &&
         r.tanggal === todayStr
       ));
       localStorage.setItem('local_absensi', JSON.stringify(freshLocal));
+    } else {
+      const localRecords = local
+        .filter(r => (String(r.karyawan_id) === String(currentUser.id) || (r.nama && currentUser.name && r.nama.toLowerCase() === currentUser.name.toLowerCase())) && r.tanggal === todayStr)
+        .map(r => ({ ...r, isLocal: true }));
+      combined = [...localRecords];
     }
-
-    const localRecords = safeJsonParse('local_absensi', [])
-      .filter(r => String(r.karyawan_id) === String(currentUser.id) && r.tanggal === todayStr)
-      .map(r => ({ ...r, isLocal: true }));
-
-    // Gabungkan secara cerdas agar tidak menduplikasi waktu_masuk yang sama
-    const combined = [...dbRecords];
-    localRecords.forEach(lr => {
-      const exists = dbRecords.some(dr => dr.waktu_masuk === lr.waktu_masuk);
-      if (!exists) {
-        combined.push(lr);
-      }
-    });
 
     // Urutkan berdasarkan waktu masuk secara menaik
     combined.sort((a, b) => (a.waktu_masuk || '').localeCompare(b.waktu_masuk || ''));
@@ -564,7 +558,8 @@ export default function Absensi() {
     }
   }
 
-  const isKepesantrenan = user && (user.divisi === 'Kepesantrenan' || user.div === 'Kepesantrenan');
+  const userDivName = (user?.divisi || user?.div || '').toLowerCase().trim();
+  const isKepesantrenan = userDivName.includes('pesantren') || userDivName.includes('santri') || userDivName.includes('asrama') || userDivName.includes('pengasuh');
 
   const defaultHours = {
     Operasional: { masuk: "07:00", pulang: "15:00" },
