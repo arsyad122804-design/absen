@@ -19,6 +19,35 @@ export default function PengaturanManager() {
     };
   });
 
+  const [locations, setLocations] = useState(() => {
+    const saved = localStorage.getItem('app_office_locations');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return {
+      Kepesantrenan: {
+        name: 'Kantor Pengasuh (Kepesantrenan)',
+        coords: '-7.1336, 111.6252',
+        radius: 50,
+        address: 'Kantor Pengasuhan Santri & Komplek Asrama'
+      },
+      Sekolah: {
+        name: 'Kantor Sekolah (Akademik)',
+        coords: '-7.1338, 111.6262',
+        radius: 50,
+        address: 'Gedung Sekolah, Ruang Guru & Kelas'
+      },
+      Operasional: {
+        name: 'Kantor Operasional (Pusat)',
+        coords: '-7.1348, 111.6246',
+        radius: 50,
+        address: 'Jl. Wonosari No.16, Sendang Gedhe, Sambeng, Kasiman, Bojonegoro'
+      }
+    };
+  });
+
   const handleChange = (div, field, val) => {
     setWorkHours(prev => ({
       ...prev,
@@ -29,9 +58,20 @@ export default function PengaturanManager() {
     }));
   };
 
+  const handleLocationChange = (div, field, val) => {
+    setLocations(prev => ({
+      ...prev,
+      [div]: {
+        ...prev[div],
+        [field]: val
+      }
+    }));
+  };
+
   const handleSave = () => {
     localStorage.setItem('app_work_hours', JSON.stringify(workHours));
-    alert('Pengaturan jam kerja berhasil disimpan!');
+    localStorage.setItem('app_office_locations', JSON.stringify(locations));
+    alert('Pengaturan jam kerja dan lokasi kantor berhasil disimpan!');
   };
 
   return (
@@ -193,17 +233,130 @@ export default function PengaturanManager() {
           )}
 
           {activeTab === 'lokasi' && (
-            <div>
-              <h2 className="pmg-section-title">Pengaturan Lokasi Kantor</h2>
-              <div className="pmg-field">
-                <label>Titik Koordinat Utama (Latitude, Longitude)</label>
-                <input type="text" defaultValue="-7.1344, 111.6256" className="pmg-input" />
-                <p className="pmg-hint">Alamat: Jl. Wonosari No.16, Sendang Gedhe, Sambeng, Kasiman, Bojonegoro</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div>
+                <h2 className="pmg-section-title" style={{ marginBottom: '8px', paddingBottom: '12px' }}>Pengaturan Lokasi Kantor & Geofence</h2>
+                <p style={{ fontSize: '13px', color: '#64748B', margin: '0' }}>Atur titik koordinat GPS dan radius absensi untuk masing-masing unit/kantor.</p>
               </div>
-              <div className="pmg-field">
-                <label>Radius Maksimal Absensi (Meter)</label>
-                <input type="number" defaultValue="500" className="pmg-input" />
-                <p className="pmg-hint">Karyawan tidak dapat check-in jika berada di luar radius ini.</p>
+
+              {/* KANTOR PENGASUH (KEPESANTRENAN) */}
+              <div style={{ background: '#F8FAFC', padding: '20px', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0F172A', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }}></span>
+                  Kantor Pengasuh (Kepesantrenan)
+                </h3>
+                <div className="pmg-form-grid" style={{ gap: '16px', marginBottom: '14px' }}>
+                  <div className="pmg-field">
+                    <label>Titik Koordinat (Latitude, Longitude)</label>
+                    <input 
+                      type="text" 
+                      value={locations.Kepesantrenan?.coords || ''} 
+                      onChange={(e) => handleLocationChange('Kepesantrenan', 'coords', e.target.value)} 
+                      placeholder="-7.1336, 111.6252"
+                      className="pmg-input" 
+                    />
+                  </div>
+                  <div className="pmg-field">
+                    <label>Radius Maksimal Absensi (Meter)</label>
+                    <input 
+                      type="number" 
+                      value={locations.Kepesantrenan?.radius || 50} 
+                      onChange={(e) => handleLocationChange('Kepesantrenan', 'radius', Number(e.target.value))} 
+                      className="pmg-input" 
+                    />
+                  </div>
+                </div>
+                <div className="pmg-field" style={{ margin: 0 }}>
+                  <label>Alamat / Keterangan Area</label>
+                  <input 
+                    type="text" 
+                    value={locations.Kepesantrenan?.address || ''} 
+                    onChange={(e) => handleLocationChange('Kepesantrenan', 'address', e.target.value)} 
+                    placeholder="Kantor Pengasuhan Santri & Komplek Asrama"
+                    className="pmg-input" 
+                  />
+                  <p className="pmg-hint" style={{ marginTop: '6px' }}>Karyawan divisi Kepesantrenan akan divalidasi berdasarkan titik ini.</p>
+                </div>
+              </div>
+
+              {/* KANTOR SEKOLAH (AKADEMIK) */}
+              <div style={{ background: '#F8FAFC', padding: '20px', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0F172A', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3B82F6' }}></span>
+                  Kantor Sekolah (Akademik)
+                </h3>
+                <div className="pmg-form-grid" style={{ gap: '16px', marginBottom: '14px' }}>
+                  <div className="pmg-field">
+                    <label>Titik Koordinat (Latitude, Longitude)</label>
+                    <input 
+                      type="text" 
+                      value={locations.Sekolah?.coords || ''} 
+                      onChange={(e) => handleLocationChange('Sekolah', 'coords', e.target.value)} 
+                      placeholder="-7.1338, 111.6262"
+                      className="pmg-input" 
+                    />
+                  </div>
+                  <div className="pmg-field">
+                    <label>Radius Maksimal Absensi (Meter)</label>
+                    <input 
+                      type="number" 
+                      value={locations.Sekolah?.radius || 50} 
+                      onChange={(e) => handleLocationChange('Sekolah', 'radius', Number(e.target.value))} 
+                      className="pmg-input" 
+                    />
+                  </div>
+                </div>
+                <div className="pmg-field" style={{ margin: 0 }}>
+                  <label>Alamat / Keterangan Area</label>
+                  <input 
+                    type="text" 
+                    value={locations.Sekolah?.address || ''} 
+                    onChange={(e) => handleLocationChange('Sekolah', 'address', e.target.value)} 
+                    placeholder="Gedung Sekolah, Ruang Guru & Kelas"
+                    className="pmg-input" 
+                  />
+                  <p className="pmg-hint" style={{ marginTop: '6px' }}>Guru dan staf akademik akan divalidasi berdasarkan titik ini.</p>
+                </div>
+              </div>
+
+              {/* KANTOR OPERASIONAL (PUSAT) */}
+              <div style={{ background: '#F8FAFC', padding: '20px', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0F172A', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#F59E0B' }}></span>
+                  Kantor Operasional (Pusat & Staff)
+                </h3>
+                <div className="pmg-form-grid" style={{ gap: '16px', marginBottom: '14px' }}>
+                  <div className="pmg-field">
+                    <label>Titik Koordinat (Latitude, Longitude)</label>
+                    <input 
+                      type="text" 
+                      value={locations.Operasional?.coords || ''} 
+                      onChange={(e) => handleLocationChange('Operasional', 'coords', e.target.value)} 
+                      placeholder="-7.1348, 111.6246"
+                      className="pmg-input" 
+                    />
+                  </div>
+                  <div className="pmg-field">
+                    <label>Radius Maksimal Absensi (Meter)</label>
+                    <input 
+                      type="number" 
+                      value={locations.Operasional?.radius || 50} 
+                      onChange={(e) => handleLocationChange('Operasional', 'radius', Number(e.target.value))} 
+                      className="pmg-input" 
+                    />
+                  </div>
+                </div>
+                <div className="pmg-field" style={{ margin: 0 }}>
+                  <label>Alamat / Keterangan Area</label>
+                  <input 
+                    type="text" 
+                    value={locations.Operasional?.address || ''} 
+                    onChange={(e) => handleLocationChange('Operasional', 'address', e.target.value)} 
+                    placeholder="Jl. Wonosari No.16, Sendang Gedhe, Sambeng, Kasiman, Bojonegoro"
+                    className="pmg-input" 
+                  />
+                  <p className="pmg-hint" style={{ marginTop: '6px' }}>Staf operasional dan admin akan divalidasi berdasarkan titik ini.</p>
+                </div>
               </div>
             </div>
           )}

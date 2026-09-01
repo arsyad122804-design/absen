@@ -14,22 +14,38 @@ const safeJsonParse = (key, fallback = {}) => {
   }
 };
 
-const GEOFENCES = {
+const defaultGeofences = {
   Sekolah: {
     name: 'Area Sekolah (Akademik)',
     center: { lat: -7.1338, lng: 111.6262 },
-    radius: 50 // meters (adjusted to exactly 50m)
+    radius: 50 // meters
   },
   Kepesantrenan: {
-    name: 'Area Kepesantrenan',
+    name: 'Area Kantor Pengasuh (Kepesantrenan)',
     center: { lat: -7.1336, lng: 111.6252 },
-    radius: 50 // meters (adjusted to exactly 50m)
+    radius: 50 // meters
   },
   Operasional: {
-    name: 'Area Operasional',
+    name: 'Area Operasional (Pusat & Staff)',
     center: { lat: -7.1348, lng: 111.6246 },
-    radius: 50 // meters (adjusted to exactly 50m)
+    radius: 50 // meters
   }
+};
+
+const parseGeofence = (config, fallback) => {
+  if (!config) return fallback;
+  let center = fallback.center;
+  if (config.coords && typeof config.coords === 'string' && config.coords.includes(',')) {
+    const parts = config.coords.split(',').map(s => parseFloat(s.trim()));
+    if (!isNaN(parts[0]) && !isNaN(parts[1])) {
+      center = { lat: parts[0], lng: parts[1] };
+    }
+  }
+  return {
+    name: config.name || fallback.name,
+    center,
+    radius: Number(config.radius) || fallback.radius || 50
+  };
 };
 
 const getDistanceInMeters = (coords1, coords2) => {
@@ -48,14 +64,20 @@ const getDistanceInMeters = (coords1, coords2) => {
 };
 
 const getTargetGeofence = (divisionName) => {
+  let locations = null;
+  try {
+    const saved = localStorage.getItem('app_office_locations');
+    if (saved) locations = JSON.parse(saved);
+  } catch (e) {}
+
   const name = divisionName?.toLowerCase() || '';
-  if (name.includes('pesantren') || name.includes('santri') || name.includes('asrama')) {
-    return GEOFENCES.Kepesantrenan;
+  if (name.includes('pesantren') || name.includes('santri') || name.includes('asrama') || name.includes('pengasuh')) {
+    return parseGeofence(locations?.Kepesantrenan, defaultGeofences.Kepesantrenan);
   }
-  if (name.includes('operasional') || name.includes('staff') || name.includes('pekerja') || name.includes('ob')) {
-    return GEOFENCES.Operasional;
+  if (name.includes('operasional') || name.includes('staff') || name.includes('pekerja') || name.includes('ob') || name.includes('admin')) {
+    return parseGeofence(locations?.Operasional, defaultGeofences.Operasional);
   }
-  return GEOFENCES.Sekolah; // default fallback
+  return parseGeofence(locations?.Sekolah, defaultGeofences.Sekolah);
 };
 
 export default function Absensi() {
