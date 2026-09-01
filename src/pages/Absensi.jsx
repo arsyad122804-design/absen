@@ -141,19 +141,33 @@ export default function Absensi() {
 
     // Ambil data dari LocalStorage
     const local = safeJsonParse('local_absensi', []);
-    const localRecords = local
-      .filter(r => String(r.karyawan_id) === String(currentUser.id) && r.tanggal === todayStr)
-      .map(r => ({ ...r, isLocal: true }));
 
     // Ambil data dari Supabase jika bukan akun demo
     let dbRecords = [];
     const isDemo = !currentUser.id || currentUser.id.toString().startsWith('karyawan-') || currentUser.id.toString().startsWith('admin-');
     if (!isDemo) {
       try {
+        let targetId = currentUser.id;
+        if (currentUser.name) {
+          const { data: empData } = await supabase
+            .from('karyawan')
+            .select('id')
+            .ilike('name', currentUser.name.trim())
+            .maybeSingle();
+          if (empData && empData.id) {
+            targetId = empData.id;
+            if (String(currentUser.id) !== String(targetId)) {
+              const updatedUser = { ...currentUser, id: targetId };
+              setUser(updatedUser);
+              localStorage.setItem('user', JSON.stringify(updatedUser));
+            }
+          }
+        }
+
         const { data } = await supabase
           .from('absensi')
           .select('*')
-          .eq('karyawan_id', currentUser.id)
+          .eq('karyawan_id', targetId)
           .eq('tanggal', todayStr)
           .order('waktu_masuk', { ascending: true });
         if (data) {
@@ -163,6 +177,19 @@ export default function Absensi() {
         console.error("Gagal memuat absensi hari ini:", e);
       }
     }
+
+    if (dbRecords.length > 0) {
+      // Supabase is ground truth! Filter out stale local records for today
+      const freshLocal = local.filter(r => !(
+        (String(r.karyawan_id) === String(currentUser.id) || (r.nama && currentUser.name && r.nama.toLowerCase() === currentUser.name.toLowerCase())) &&
+        r.tanggal === todayStr
+      ));
+      localStorage.setItem('local_absensi', JSON.stringify(freshLocal));
+    }
+
+    const localRecords = safeJsonParse('local_absensi', [])
+      .filter(r => String(r.karyawan_id) === String(currentUser.id) && r.tanggal === todayStr)
+      .map(r => ({ ...r, isLocal: true }));
 
     // Gabungkan secara cerdas agar tidak menduplikasi waktu_masuk yang sama
     const combined = [...dbRecords];
@@ -1310,21 +1337,19 @@ export default function Absensi() {
 
                 <button 
                   className="btn-primary" 
-                  disabled={locationStatus !== 'inside'}
+                  disabled={locationStatus === 'loading'}
                   style={{ 
                     width: '100%', 
                     marginTop: '16px', 
                     padding: '16px', 
                     borderRadius: '16px', 
                     fontSize: '16px', 
-                    boxShadow: locationStatus === 'inside' ? '0 10px 20px -5px rgba(37,99,235,0.3)' : 'none',
-                    opacity: locationStatus !== 'inside' ? 0.5 : 1,
-                    cursor: locationStatus !== 'inside' ? 'not-allowed' : 'pointer',
-                    background: locationStatus === 'outside' ? '#EF4444' : ''
+                    boxShadow: '0 10px 20px -5px rgba(37,99,235,0.3)',
+                    cursor: locationStatus === 'loading' ? 'not-allowed' : 'pointer'
                   }} 
                   onClick={selectedStatus === 'pulang' ? submitPulang : submitHadir}
                 >
-                  {locationStatus === 'outside' ? 'Di Luar Jangkauan' : (selectedStatus === 'pulang' ? 'Rekam Absen Pulang' : t.rekamHadir)}
+                  {selectedStatus === 'pulang' ? 'Rekam Absen Pulang' : t.rekamHadir}
                 </button>
               </div>
             </div>
