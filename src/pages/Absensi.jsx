@@ -268,16 +268,55 @@ export default function Absensi() {
     );
   };
 
+  const [capturedImage, setCapturedImage] = useState(null);
+
   const startCamera = async () => {
+    setCapturedImage(null);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setHasStream(false);
+        return;
+      }
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } 
+        });
+      } catch (e1) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        } catch (e2) {
+          console.error("Camera access error:", e2);
+          setHasStream(false);
+          return;
+        }
+      }
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.setAttribute('playsinline', 'true');
+        videoRef.current.setAttribute('muted', 'true');
+        videoRef.current.setAttribute('autoplay', 'true');
+        try {
+          await videoRef.current.play();
+        } catch (e) {}
         setHasStream(true);
       }
     } catch (err) {
       console.error("Gagal mengakses kamera:", err);
       setHasStream(false);
+    }
+  };
+
+  const handleCameraFileInput = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setCapturedImage(event.target.result);
+        setHasStream(true);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -1287,15 +1326,50 @@ export default function Absensi() {
                     }} />
                   </div>
 
-                  {!hasStream && (
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '12px', background: '#0F172A' }}>
-                      <div className="camera-pulse" style={{ padding: '20px', background: 'rgba(59, 130, 246, 0.1)', border: '2px solid rgba(59, 130, 246, 0.3)', borderRadius: '50%', color: '#3B82F6' }}>
-                        <Camera size={36} />
+                  {capturedImage && (
+                    <img 
+                      src={capturedImage} 
+                      alt="Bukti Absen" 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, zIndex: 5 }} 
+                    />
+                  )}
+
+                  {!hasStream && !capturedImage && (
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '10px', background: '#0F172A', padding: '16px', zIndex: 10 }}>
+                      <div className="camera-pulse" style={{ padding: '14px', background: 'rgba(59, 130, 246, 0.1)', border: '2px solid rgba(59, 130, 246, 0.3)', borderRadius: '50%', color: '#3B82F6' }}>
+                        <Camera size={32} />
                       </div>
-                      <span style={{ fontWeight: 600, color: '#94A3B8', fontSize: '14px', letterSpacing: '0.5px' }}>Mengakses Kamera...</span>
+                      <span style={{ fontWeight: 600, color: '#94A3B8', fontSize: '13px' }}>Mengakses Kamera...</span>
+                      <button
+                        type="button"
+                        style={{
+                          background: '#2563EB',
+                          color: '#FFF',
+                          border: 'none',
+                          padding: '10px 16px',
+                          borderRadius: '12px',
+                          fontSize: '13px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          marginTop: '4px',
+                          boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)'
+                        }}
+                        onClick={() => document.getElementById('iphone-camera-input')?.click()}
+                      >
+                        📷 Buka Kamera iPhone / Unggah Foto
+                      </button>
                     </div>
                   )}
                 </div>
+
+                <input 
+                  type="file" 
+                  id="iphone-camera-input" 
+                  style={{ display: 'none' }} 
+                  accept="image/*" 
+                  capture="user"
+                  onChange={handleCameraFileInput}
+                />
 
                 <div className="modal-info" style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: locationStatus === 'outside' ? '#FEF2F2' : '#F8FAFC', border: `1px solid ${locationStatus === 'outside' ? '#FCA5A5' : '#E2E8F0'}`, padding: '12px 16px', borderRadius: '14px' }}>
