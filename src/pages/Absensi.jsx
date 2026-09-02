@@ -590,12 +590,22 @@ export default function Absensi() {
 
       // 2. Update di Supabase jika bukan akun demo
       const isDemo = !user.id || user.id.toString().startsWith('karyawan-') || user.id.toString().startsWith('admin-');
-      if (!isDemo && !currentActiveRecord.isLocal) {
-        const { error } = await supabase
-          .from('absensi')
-          .update({ waktu_keluar: timeStr })
-          .eq('id', currentActiveRecord.id);
-        if (error) console.error("Error updating checkout to Supabase:", error);
+      if (!isDemo) {
+        if (currentActiveRecord && currentActiveRecord.id && !currentActiveRecord.isLocal) {
+          const { error } = await supabase
+            .from('absensi')
+            .update({ waktu_keluar: timeStr })
+            .eq('id', currentActiveRecord.id);
+          if (error) console.error("Error updating checkout to Supabase:", error);
+        } else {
+          const { error } = await supabase
+            .from('absensi')
+            .update({ waktu_keluar: timeStr })
+            .eq('karyawan_id', user.id)
+            .eq('tanggal', today)
+            .is('waktu_keluar', null);
+          if (error) console.error("Error updating checkout fallback to Supabase:", error);
+        }
       }
 
       setShowModal(false);
