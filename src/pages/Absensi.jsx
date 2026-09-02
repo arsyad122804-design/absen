@@ -268,6 +268,7 @@ export default function Absensi() {
   };
 
   const [capturedImage, setCapturedImage] = useState(null);
+  const [alasanTerlambat, setAlasanTerlambat] = useState('');
 
   const startCamera = async () => {
     setCapturedImage(null);
@@ -379,6 +380,7 @@ export default function Absensi() {
       const isLate = (currentHour > targetHour) || (currentHour === targetHour && currentMinute > targetMinute);
 
       const status = isLate ? 'Terlambat' : 'Hadir';
+      const keteranganText = isLate ? (alasanTerlambat.trim() || 'Terlambat tanpa keterangan') : (alasanTerlambat.trim() || '-');
 
       let activeCoords = coords;
       if (!activeCoords) {
@@ -398,7 +400,7 @@ export default function Absensi() {
         waktu_masuk: timeStr,
         waktu_keluar: null,
         status: status,
-        keterangan: '-',
+        keterangan: keteranganText,
         lokasi: lokasiStr
       };
       const local = safeJsonParse('local_absensi', []);
@@ -416,6 +418,7 @@ export default function Absensi() {
               tanggal: today,
               waktu_masuk: timeStr,
               status: status,
+              keterangan: keteranganText,
               lokasi: lokasiStr
             }
           ]);
@@ -424,6 +427,7 @@ export default function Absensi() {
 
       setShowModal(false);
       setSelectedStatus(null);
+      setAlasanTerlambat('');
       alert('Kehadiran berhasil dicatat!');
       checkTodayAttendance(user);
     } catch (err) {
@@ -1402,6 +1406,32 @@ export default function Absensi() {
                     </div>
                   </div>
                 </div>
+
+                {selectedStatus !== 'pulang' && (
+                  <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#D97706', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      💬 Alasan Keterlambatan / Keterangan:
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={alasanTerlambat}
+                      onChange={(e) => setAlasanTerlambat(e.target.value)}
+                      placeholder="Tuliskan alasan jika terlambat (misal: ban bocor, macet, urusan keluarga...)"
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        borderRadius: '12px',
+                        border: '1.5px solid #FCD34D',
+                        outline: 'none',
+                        fontSize: '13px',
+                        fontFamily: 'inherit',
+                        background: '#FFFBEB',
+                        color: '#78350F',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                )}
 
                 <button 
                   className="btn-primary" 

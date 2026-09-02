@@ -114,6 +114,9 @@ export default function AbsensiManager() {
             jamPulangStr = userAbs.map(ab => ab.waktu_keluar ? ab.waktu_keluar.substring(0, 5) : '-').join(' | ');
           }
 
+          const allKets = userAbs.map(ab => ab.keterangan).filter(k => k && k !== '-' && k !== 'null').join('; ');
+          const lateKet = allKets || r.keterangan || '-';
+
           return {
             id: r.id || `local-${idx}`,
             img: `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name || 'Karyawan')}`,
@@ -125,6 +128,7 @@ export default function AbsensiManager() {
             jamP: jamPulangStr,
             dur: '-',
             loc: r.lokasi ? 'Lokasi Presisi (GPS)' : 'Tanpa Lokasi',
+            ket: lateKet,
             sessions: userAbs
           };
         } else {
@@ -531,6 +535,11 @@ export default function AbsensiManager() {
                       <div className="td-time">
                         <strong>{row.jamM}</strong>
                         <span className={`time-stat ${row.status === 'Terlambat' ? 'orange' : 'green'}`}>{row.statM}</span>
+                        {row.ket && row.ket !== '-' && (
+                          <div style={{ fontSize: '11px', color: '#D97706', fontStyle: 'italic', marginTop: '2px', fontWeight: 500 }}>
+                            💬 Alasan: "{row.ket}"
+                          </div>
+                        )}
                       </div>
                     ) : '-'}
                   </td>
@@ -605,6 +614,15 @@ export default function AbsensiManager() {
                     <span style={{ color: '#64748B' }}>Lokasi:</span>
                     <strong style={{ maxWidth: '70%', textAlign: 'right', wordBreak: 'break-all' }}>{row.loc !== '-' ? `📍 ${row.loc}` : '-'}</strong>
                   </div>
+
+                  {row.ket && row.ket !== '-' && (
+                    <div style={{ background: '#FFFBEB', border: '1px solid #FCD34D', padding: '8px 12px', borderRadius: '10px', fontSize: '12px', color: '#92400E', display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+                      <span style={{ fontSize: '14px' }}>💬</span>
+                      <div>
+                        <strong>Alasan Keterlambatan:</strong> {row.ket}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="ammc-actions" style={{ display: 'flex', gap: '8px', borderTop: '1px solid #F1F5F9', paddingTop: '12px', justifyContent: 'flex-end', position: 'relative' }}>
