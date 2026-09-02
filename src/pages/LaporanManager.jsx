@@ -79,9 +79,16 @@ export default function LaporanManager() {
 
   const [filterDivisi, setFilterDivisi] = useState('Semua Divisi');
 
-  const handleExport = async (type) => {
+  const handleExport = async (type, overrideItem = null) => {
     setIsExporting(true);
     try {
+      const activeReportType = overrideItem?.reportType || reportType;
+      const activeSelectedDate = overrideItem?.selectedDate || selectedDate;
+      const activeSelectedMonth = overrideItem?.selectedMonth || selectedMonth;
+      const activeSelectedYear = overrideItem?.selectedYear || selectedYear;
+      const activeFilterDivisi = overrideItem?.filterDivisi || filterDivisi;
+      const activePeriodStr = overrideItem?.periodStr || getPeriodLabel();
+
       const { data: emps } = await supabase.from('karyawan').select('*');
       const { data: absData } = await supabase.from('absensi').select('*');
 
@@ -89,38 +96,37 @@ export default function LaporanManager() {
       const allAbs = absData || [];
 
       let filteredEmps = allEmps;
-      if (filterDivisi && filterDivisi !== 'Semua Divisi') {
-        filteredEmps = allEmps.filter(e => (e.divisi || e.div || '').toLowerCase().includes(filterDivisi.toLowerCase()));
+      if (activeFilterDivisi && activeFilterDivisi !== 'Semua Divisi') {
+        filteredEmps = allEmps.filter(e => (e.divisi || e.div || '').toLowerCase().includes(activeFilterDivisi.toLowerCase()));
       }
 
       let filteredAbs = allAbs;
-      if (reportType === 'Harian') {
-        filteredAbs = allAbs.filter(a => a.tanggal === selectedDate);
-      } else if (reportType === 'Bulanan') {
+      if (activeReportType === 'Harian') {
+        filteredAbs = allAbs.filter(a => a.tanggal === activeSelectedDate);
+      } else if (activeReportType === 'Bulanan') {
         const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-        const mIdx = monthNames.indexOf(selectedMonth);
+        const mIdx = monthNames.indexOf(activeSelectedMonth);
         filteredAbs = allAbs.filter(a => {
           if (!a.tanggal) return false;
           const d = new Date(a.tanggal);
-          return d.getMonth() === mIdx && d.getFullYear() === Number(selectedYear);
+          return d.getMonth() === mIdx && d.getFullYear() === Number(activeSelectedYear);
         });
-      } else if (reportType === 'Tahunan') {
+      } else if (activeReportType === 'Tahunan') {
         filteredAbs = allAbs.filter(a => {
           if (!a.tanggal) return false;
-          return new Date(a.tanggal).getFullYear() === Number(selectedYear);
+          return new Date(a.tanggal).getFullYear() === Number(activeSelectedYear);
         });
       }
 
-      const periodStr = getPeriodLabel();
-      const reportName = `Laporan_Kehadiran_${reportType}_${periodStr.replace(/[^a-zA-Z0-9]/g, '_')}`;
+      const reportName = `Laporan_Kehadiran_${activeReportType}_${activePeriodStr.replace(/[^a-zA-Z0-9]/g, '_')}`;
 
       if (type === 'Excel') {
         let csvContent = "\uFEFF";
-        csvContent += `LAPORAN REKAPITULASI KEHADIRAN KARYAWAN\n`;
-        csvContent += `Periode:;${periodStr}\n`;
-        csvContent += `Divisi:;${filterDivisi}\n`;
+        csvContent += `LAPORAN REKAPITULASI KEHADIRAN KARYAWAN - HIBATULLAH IIBS\n`;
+        csvContent += `Periode:;${activePeriodStr}\n`;
+        csvContent += `Divisi:;${activeFilterDivisi}\n`;
         csvContent += `Tanggal Cetak:;${new Date().toLocaleDateString('id-ID')}\n\n`;
-        csvContent += `No;Nama Karyawan;Divisi;Tanggal;Waktu Masuk;Waktu Pulang;Status;Lokasi\n`;
+        csvContent += `No;Nama Karyawan;Divisi;Tanggal;Waktu Masuk;Waktu Pulang;Status Kehadiran;Lokasi Presisi\n`;
 
         let rowCount = 0;
         filteredAbs.forEach((a) => {
@@ -128,7 +134,7 @@ export default function LaporanManager() {
           const empName = emp ? emp.name : (a.nama || a.karyawan_id || 'Karyawan');
           const empDiv = emp ? (emp.divisi || emp.div || 'Operasional') : 'Operasional';
 
-          if (filterDivisi !== 'Semua Divisi' && !empDiv.toLowerCase().includes(filterDivisi.toLowerCase())) return;
+          if (activeFilterDivisi !== 'Semua Divisi' && !empDiv.toLowerCase().includes(activeFilterDivisi.toLowerCase())) return;
 
           rowCount++;
           csvContent += `${rowCount};"${empName}";"${empDiv}";"${a.tanggal || '-'}"`;
@@ -140,7 +146,7 @@ export default function LaporanManager() {
 
         if (rowCount === 0) {
           filteredEmps.forEach((emp, idx) => {
-            csvContent += `${idx + 1};"${emp.name}";"${emp.divisi || 'Operasional'}";"${selectedDate}";"-";"-";"Tidak Hadir";"-"\n`;
+            csvContent += `${idx + 1};"${emp.name}";"${emp.divisi || 'Operasional'}";"${activeSelectedDate}";"-";"-";"Tidak Hadir";"-"\n`;
           });
         }
 
@@ -162,7 +168,7 @@ export default function LaporanManager() {
             const empName = emp ? emp.name : (a.nama || 'Karyawan');
             const empDiv = emp ? (emp.divisi || 'Operasional') : 'Operasional';
 
-            if (filterDivisi !== 'Semua Divisi' && !empDiv.toLowerCase().includes(filterDivisi.toLowerCase())) return;
+            if (activeFilterDivisi !== 'Semua Divisi' && !empDiv.toLowerCase().includes(activeFilterDivisi.toLowerCase())) return;
 
             count++;
             tableRowsHtml += `
@@ -185,7 +191,7 @@ export default function LaporanManager() {
                   <td style="padding:8px;border:1px solid #ddd;text-align:center">${idx + 1}</td>
                   <td style="padding:8px;border:1px solid #ddd;font-weight:bold">${emp.name}</td>
                   <td style="padding:8px;border:1px solid #ddd">${emp.divisi || 'Operasional'}</td>
-                  <td style="padding:8px;border:1px solid #ddd">${selectedDate}</td>
+                  <td style="padding:8px;border:1px solid #ddd">${activeSelectedDate}</td>
                   <td style="padding:8px;border:1px solid #ddd">-</td>
                   <td style="padding:8px;border:1px solid #ddd">-</td>
                   <td style="padding:8px;border:1px solid #ddd;color:#dc2626;font-weight:bold">Tidak Hadir</td>
@@ -197,7 +203,7 @@ export default function LaporanManager() {
           printWindow.document.write(`
             <html>
               <head>
-                <title>Laporan Kehadiran - ${periodStr}</title>
+                <title>Laporan Kehadiran - ${activePeriodStr}</title>
                 <style>
                   body { font-family: Arial, sans-serif; padding: 20px; color: #1e293b; }
                   h1 { color: #0f172a; margin-bottom: 4px; font-size: 20px; }
@@ -210,7 +216,7 @@ export default function LaporanManager() {
               <body>
                 <div class="header-box">
                   <h1>LAPORAN REKAPITULASI KEHADIRAN KARYAWAN</h1>
-                  <p>Hibatullah IIBS • Periode: ${periodStr} • Divisi: ${filterDivisi}</p>
+                  <p>Hibatullah IIBS • Periode: ${activePeriodStr} • Divisi: ${activeFilterDivisi}</p>
                 </div>
                 <table>
                   <thead>
@@ -239,13 +245,21 @@ export default function LaporanManager() {
         }
       }
 
-      const newReport = {
-        id: Date.now(),
-        name: `Laporan ${reportType} - ${periodStr}`,
-        date: new Date().toLocaleDateString('id-ID'),
-        type
-      };
-      setHistoryList([newReport, ...historyList]);
+      if (!overrideItem) {
+        const newReport = {
+          id: Date.now(),
+          name: `Laporan ${reportType} - ${activePeriodStr}`,
+          date: new Date().toLocaleDateString('id-ID'),
+          type,
+          reportType,
+          selectedDate,
+          selectedMonth,
+          selectedYear,
+          filterDivisi,
+          periodStr: activePeriodStr
+        };
+        setHistoryList([newReport, ...historyList]);
+      }
     } catch (e) {
       console.error("Export error:", e);
     } finally {
@@ -253,13 +267,8 @@ export default function LaporanManager() {
     }
   };
 
-  const handleDownloadHistory = (name) => {
-    const link = document.createElement('a');
-    link.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(`Dokumen Laporan: ${name}`);
-    link.download = `${name}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownloadHistory = (item) => {
+    handleExport(item.type || 'Excel', item);
   };
 
   return (
@@ -431,7 +440,7 @@ export default function LaporanManager() {
                       <h4>{item.name}</h4>
                       <p>Ekspor {item.type} • {item.date}</p>
                     </div>
-                    <button onClick={() => handleDownloadHistory(item.name)} className="lm-hi-btn">
+                    <button onClick={() => handleDownloadHistory(item)} className="lm-hi-btn">
                       <Download size={16} />
                     </button>
                   </div>
