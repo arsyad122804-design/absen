@@ -118,7 +118,40 @@ export default function LaporanManager() {
         });
       }
 
+      const formatFullDateId = (dateStr) => {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        const formatted = d.toLocaleDateString('id-ID', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        });
+        return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+      };
+
+      const getSessionLabel = (empDiv, timeStr) => {
+        const isKep = (empDiv || '').toLowerCase().includes('pesantren') || 
+                      (empDiv || '').toLowerCase().includes('santri') || 
+                      (empDiv || '').toLowerCase().includes('asrama');
+        if (!isKep) return 'Reguler';
+        const hour = parseInt((timeStr || '00').split(':')[0], 10);
+        if (hour < 12) return 'Sesi 1 (Pagi)';
+        return 'Sesi 2 (Sore)';
+      };
+
       const reportName = `Laporan_Kehadiran_${activeReportType}_${activePeriodStr.replace(/[^a-zA-Z0-9]/g, '_')}`;
+
+      // Group absensi by date (sorted descending)
+      const absByDate = {};
+      filteredAbs.forEach(a => {
+        const d = a.tanggal || 'Tanpa Tanggal';
+        if (!absByDate[d]) absByDate[d] = [];
+        absByDate[d].push(a);
+      });
+
+      const sortedDates = Object.keys(absByDate).sort((a, b) => b.localeCompare(a));
 
       if (type === 'Excel') {
         let csvContent = "\uFEFF";
@@ -126,27 +159,35 @@ export default function LaporanManager() {
         csvContent += `Periode:;${activePeriodStr}\n`;
         csvContent += `Divisi:;${activeFilterDivisi}\n`;
         csvContent += `Tanggal Cetak:;${new Date().toLocaleDateString('id-ID')}\n\n`;
-        csvContent += `No;Nama Karyawan;Divisi;Tanggal;Waktu Masuk;Waktu Pulang;Status Kehadiran;Lokasi Presisi\n`;
 
-        let rowCount = 0;
-        filteredAbs.forEach((a) => {
-          const emp = filteredEmps.find(e => String(e.id) === String(a.karyawan_id));
-          const empName = emp ? emp.name : (a.nama || a.karyawan_id || 'Karyawan');
-          const empDiv = emp ? (emp.divisi || emp.div || 'Operasional') : 'Operasional';
-
-          if (activeFilterDivisi !== 'Semua Divisi' && !empDiv.toLowerCase().includes(activeFilterDivisi.toLowerCase())) return;
-
-          rowCount++;
-          csvContent += `${rowCount};"${empName}";"${empDiv}";"${a.tanggal || '-'}"`;
-          csvContent += `;"${a.waktu_masuk || '-'}"`;
-          csvContent += `;"${a.waktu_keluar || '-'}"`;
-          csvContent += `;"${a.status || '-'}"`;
-          csvContent += `;"${a.lokasi || '-'}"\n`;
-        });
-
-        if (rowCount === 0) {
+        if (sortedDates.length === 0) {
+          csvContent += `No;Nama Karyawan;Divisi;Sesi / Shift;Tanggal;Waktu Masuk;Waktu Pulang;Status Kehadiran;Lokasi Presisi\n`;
           filteredEmps.forEach((emp, idx) => {
-            csvContent += `${idx + 1};"${emp.name}";"${emp.divisi || 'Operasional'}";"${activeSelectedDate}";"-";"-";"Tidak Hadir";"-"\n`;
+            const sess = getSessionLabel(emp.divisi, '07:00');
+            csvContent += `${idx + 1};"${emp.name}";"${emp.divisi || 'Operasional'}";"${sess}";"${activeSelectedDate}";"-";"-";"Tidak Hadir";"-"\n`;
+          });
+        } else {
+          sortedDates.forEach(dateKey => {
+            const fullDateText = formatFullDateId(dateKey);
+            csvContent += `\n;;;=== ${fullDateText.toUpperCase()} ===;;;;\n`;
+            csvContent += `No;Nama Karyawan;Divisi;Sesi / Shift;Tanggal;Waktu Masuk;Waktu Pulang;Status Kehadiran;Lokasi Presisi\n`;
+
+            let dayCount = 0;
+            absByDate[dateKey].forEach(a => {
+              const emp = filteredEmps.find(e => String(e.id) === String(a.karyawan_id));
+              const empName = emp ? emp.name : (a.nama || a.karyawan_id || 'Karyawan');
+              const empDiv = emp ? (emp.divisi || emp.div || 'Operasional') : 'Operasional';
+
+              if (activeFilterDivisi !== 'Semua Divisi' && !empDiv.toLowerCase().includes(activeFilterDivisi.toLowerCase())) return;
+
+              dayCount++;
+              const sess = getSessionLabel(empDiv, a.waktu_masuk);
+              csvContent += `${dayCount};"${empName}";"${empDiv}";"${sess}";"${a.tanggal || '-'}"`;
+              csvContent += `;"${a.waktu_masuk || '-'}"`;
+              csvContent += `;"${a.waktu_keluar || '-'}"`;
+              csvContent += `;"${a.status || '-'}"`;
+              csvContent += `;"${a.lokasi || '-'}"\n`;
+            });
           });
         }
 
@@ -161,42 +202,97 @@ export default function LaporanManager() {
       } else {
         const printWindow = window.open('', '_blank');
         if (printWindow) {
-          let tableRowsHtml = '';
-          let count = 0;
-          filteredAbs.forEach((a) => {
-            const emp = filteredEmps.find(e => String(e.id) === String(a.karyawan_id));
-            const empName = emp ? emp.name : (a.nama || 'Karyawan');
-            const empDiv = emp ? (emp.divisi || 'Operasional') : 'Operasional';
+          let fullHtmlBody = '';
 
-            if (activeFilterDivisi !== 'Semua Divisi' && !empDiv.toLowerCase().includes(activeFilterDivisi.toLowerCase())) return;
-
-            count++;
-            tableRowsHtml += `
-              <tr>
-                <td style="padding:8px;border:1px solid #ddd;text-align:center">${count}</td>
-                <td style="padding:8px;border:1px solid #ddd;font-weight:bold">${empName}</td>
-                <td style="padding:8px;border:1px solid #ddd">${empDiv}</td>
-                <td style="padding:8px;border:1px solid #ddd">${a.tanggal}</td>
-                <td style="padding:8px;border:1px solid #ddd">${a.waktu_masuk || '-'}</td>
-                <td style="padding:8px;border:1px solid #ddd">${a.waktu_keluar || '-'}</td>
-                <td style="padding:8px;border:1px solid #ddd;color:${a.status==='Terlambat'?'#d97706':'#16a34a'};font-weight:bold">${a.status}</td>
-              </tr>
-            `;
-          });
-
-          if (count === 0) {
+          if (sortedDates.length === 0) {
+            let emptyRows = '';
             filteredEmps.forEach((emp, idx) => {
-              tableRowsHtml += `
+              const sess = getSessionLabel(emp.divisi, '07:00');
+              emptyRows += `
                 <tr>
                   <td style="padding:8px;border:1px solid #ddd;text-align:center">${idx + 1}</td>
                   <td style="padding:8px;border:1px solid #ddd;font-weight:bold">${emp.name}</td>
                   <td style="padding:8px;border:1px solid #ddd">${emp.divisi || 'Operasional'}</td>
+                  <td style="padding:8px;border:1px solid #ddd;font-size:11px;color:#475569">${sess}</td>
                   <td style="padding:8px;border:1px solid #ddd">${activeSelectedDate}</td>
                   <td style="padding:8px;border:1px solid #ddd">-</td>
                   <td style="padding:8px;border:1px solid #ddd">-</td>
                   <td style="padding:8px;border:1px solid #ddd;color:#dc2626;font-weight:bold">Tidak Hadir</td>
                 </tr>
               `;
+            });
+            fullHtmlBody += `
+              <div style="background:#f1f5f9;padding:10px 14px;border-radius:8px;font-weight:bold;color:#0f172a;margin-top:20px;margin-bottom:8px;border-left:4px solid #2563eb;">
+                📅 ${formatFullDateId(activeSelectedDate)}
+              </div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>No</th>
+                    <th>Nama Karyawan</th>
+                    <th>Divisi</th>
+                    <th>Sesi / Shift</th>
+                    <th>Tanggal</th>
+                    <th>Jam Masuk</th>
+                    <th>Jam Pulang</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>${emptyRows}</tbody>
+              </table>
+            `;
+          } else {
+            sortedDates.forEach(dateKey => {
+              let dayRowsHtml = '';
+              let dayCount = 0;
+
+              absByDate[dateKey].forEach(a => {
+                const emp = filteredEmps.find(e => String(e.id) === String(a.karyawan_id));
+                const empName = emp ? emp.name : (a.nama || 'Karyawan');
+                const empDiv = emp ? (emp.divisi || 'Operasional') : 'Operasional';
+
+                if (activeFilterDivisi !== 'Semua Divisi' && !empDiv.toLowerCase().includes(activeFilterDivisi.toLowerCase())) return;
+
+                dayCount++;
+                const sess = getSessionLabel(empDiv, a.waktu_masuk);
+                dayRowsHtml += `
+                  <tr>
+                    <td style="padding:8px;border:1px solid #ddd;text-align:center">${dayCount}</td>
+                    <td style="padding:8px;border:1px solid #ddd;font-weight:bold">${empName}</td>
+                    <td style="padding:8px;border:1px solid #ddd">${empDiv}</td>
+                    <td style="padding:8px;border:1px solid #ddd;font-size:12px;color:#2563eb;font-weight:600">${sess}</td>
+                    <td style="padding:8px;border:1px solid #ddd">${a.tanggal}</td>
+                    <td style="padding:8px;border:1px solid #ddd">${a.waktu_masuk || '-'}</td>
+                    <td style="padding:8px;border:1px solid #ddd">${a.waktu_keluar || '-'}</td>
+                    <td style="padding:8px;border:1px solid #ddd;color:${a.status==='Terlambat'?'#d97706':'#16a34a'};font-weight:bold">${a.status}</td>
+                  </tr>
+                `;
+              });
+
+              if (dayCount > 0) {
+                fullHtmlBody += `
+                  <div style="background:#EFF6FF;padding:12px 16px;border-radius:10px;font-weight:bold;color:#1E40AF;margin-top:24px;margin-bottom:10px;border-left:5px solid #2563EB;font-size:14px;display:flex;align-items:center;gap:8px;">
+                    📅 ${formatFullDateId(dateKey)}
+                  </div>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>No</th>
+                        <th>Nama Karyawan</th>
+                        <th>Divisi</th>
+                        <th>Sesi / Shift</th>
+                        <th>Tanggal</th>
+                        <th>Jam Masuk</th>
+                        <th>Jam Pulang</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${dayRowsHtml}
+                    </tbody>
+                  </table>
+                `;
+              }
             });
           }
 
@@ -205,35 +301,20 @@ export default function LaporanManager() {
               <head>
                 <title>Laporan Kehadiran - ${activePeriodStr}</title>
                 <style>
-                  body { font-family: Arial, sans-serif; padding: 20px; color: #1e293b; }
-                  h1 { color: #0f172a; margin-bottom: 4px; font-size: 20px; }
+                  body { font-family: Arial, sans-serif; padding: 24px; color: #1e293b; line-height: 1.5; }
+                  h1 { color: #0f172a; margin-bottom: 4px; font-size: 22px; font-weight: 800; }
                   p { color: #64748b; font-size: 13px; margin-top: 0; }
-                  table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13px; }
-                  th { background: #f8fafc; padding: 10px; border: 1px solid #cbd5e1; text-align: left; }
-                  .header-box { border-bottom: 2px solid #2563eb; padding-bottom: 12px; margin-bottom: 16px; }
+                  table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 13px; }
+                  th { background: #F8FAFC; padding: 10px 8px; border: 1px solid #CBD5E1; text-align: left; font-size: 12px; color: #334155; text-transform: uppercase; }
+                  .header-box { border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-bottom: 16px; }
                 </style>
               </head>
               <body>
                 <div class="header-box">
                   <h1>LAPORAN REKAPITULASI KEHADIRAN KARYAWAN</h1>
-                  <p>Hibatullah IIBS • Periode: ${activePeriodStr} • Divisi: ${activeFilterDivisi}</p>
+                  <p>Hibatullah International Islamic Boarding School • Periode: ${activePeriodStr} • Divisi: ${activeFilterDivisi}</p>
                 </div>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>No</th>
-                      <th>Nama Karyawan</th>
-                      <th>Divisi</th>
-                      <th>Tanggal</th>
-                      <th>Jam Masuk</th>
-                      <th>Jam Pulang</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${tableRowsHtml}
-                  </tbody>
-                </table>
+                ${fullHtmlBody}
               </body>
             </html>
           `);
