@@ -1343,36 +1343,9 @@ export default function Absensi() {
                         <Camera size={32} />
                       </div>
                       <span style={{ fontWeight: 600, color: '#94A3B8', fontSize: '13px' }}>Mengakses Kamera...</span>
-                      <button
-                        type="button"
-                        style={{
-                          background: '#2563EB',
-                          color: '#FFF',
-                          border: 'none',
-                          padding: '10px 16px',
-                          borderRadius: '12px',
-                          fontSize: '13px',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          marginTop: '4px',
-                          boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)'
-                        }}
-                        onClick={() => document.getElementById('iphone-camera-input')?.click()}
-                      >
-                        📷 Buka Kamera iPhone / Unggah Foto
-                      </button>
                     </div>
                   )}
                 </div>
-
-                <input 
-                  type="file" 
-                  id="iphone-camera-input" 
-                  style={{ display: 'none' }} 
-                  accept="image/*" 
-                  capture="user"
-                  onChange={handleCameraFileInput}
-                />
 
                 <div className="modal-info" style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: locationStatus === 'outside' ? '#FEF2F2' : '#F8FAFC', border: `1px solid ${locationStatus === 'outside' ? '#FCA5A5' : '#E2E8F0'}`, padding: '12px 16px', borderRadius: '14px' }}>
