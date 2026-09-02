@@ -507,3 +507,36 @@
   }
 }
 
+@media print {
+  .mgr-sidebar-v2,
+  .mgr-mobile-topbar,
+  .mgr-sidebar-backdrop,
+  .am-header-row,
+  .am-top-cards,
+  .am-mid-cards,
+  .tc-filters,
+  .tc-tabs,
+  .show-on-mobile,
+  .hide-on-print,
+  .am-tc-footer {
+    display: none !important;
+  }
+
+  body, .am-page, .manager-page {
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  .am-table-card {
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .hide-on-mobile {
+    display: table !important;
+    width: 100% !important;
+  }
+}
+

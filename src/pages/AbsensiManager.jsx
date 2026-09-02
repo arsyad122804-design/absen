@@ -150,7 +150,116 @@ export default function AbsensiManager() {
   }, [selectedDate]);
 
   const handleExportPDF = () => {
-    window.print();
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    let rowsHtml = '';
+    filteredData.forEach((row, idx) => {
+      const statusColor = row.status === 'Hadir' ? '#16a34a' : (row.status === 'Terlambat' ? '#d97706' : '#dc2626');
+      rowsHtml += `
+        <tr>
+          <td style="padding:10px 8px;border:1px solid #cbd5e1;text-align:center;">${idx + 1}</td>
+          <td style="padding:10px 8px;border:1px solid #cbd5e1;font-weight:bold;color:#0f172a;">${row.name}</td>
+          <td style="padding:10px 8px;border:1px solid #cbd5e1;">${row.div}</td>
+          <td style="padding:10px 8px;border:1px solid #cbd5e1;text-align:center;">${row.jamM || '-'}</td>
+          <td style="padding:10px 8px;border:1px solid #cbd5e1;text-align:center;">${row.jamP || '-'}</td>
+          <td style="padding:10px 8px;border:1px solid #cbd5e1;text-align:center;font-size:12px;">${row.dur || '-'}</td>
+          <td style="padding:10px 8px;border:1px solid #cbd5e1;font-weight:bold;color:${statusColor};">${row.status}</td>
+          <td style="padding:10px 8px;border:1px solid #cbd5e1;font-size:12px;color:#475569;">📍 ${row.loc || '-'}</td>
+        </tr>
+      `;
+    });
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Laporan Kehadiran - ${getFormattedDate(selectedDate)}</title>
+          <style>
+            body { font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; color: #1e293b; line-height: 1.4; }
+            .header-box { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #2563eb; padding-bottom: 14px; margin-bottom: 20px; }
+            .header-title h1 { margin: 0; font-size: 22px; color: #0f172a; font-weight: 800; letter-spacing: -0.5px; }
+            .header-title p { margin: 4px 0 0 0; font-size: 13px; color: #64748b; }
+            .header-title .date-tag { margin-top: 6px; font-size: 13px; color: #2563eb; font-weight: 700; display: inline-block; }
+            .badge-doc { background: #eff6ff; color: #1e40af; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; border: 1px solid #bfdbfe; }
+            
+            .summary-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+            .scard { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; text-align: center; }
+            .scard .num { font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 2px; }
+            .scard .lbl { font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 600; }
+            
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+            th { background: #f1f5f9; padding: 10px 8px; border: 1px solid #cbd5e1; text-align: left; font-size: 11px; color: #334155; text-transform: uppercase; letter-spacing: 0.5px; }
+            
+            .footer-sign { margin-top: 40px; display: flex; justify-content: flex-end; }
+            .sign-box { text-align: center; width: 220px; }
+            .sign-space { height: 60px; }
+          </style>
+        </head>
+        <body>
+          <div class="header-box">
+            <div class="header-title">
+              <h1>LAPORAN KEHADIRAN KARYAWAN</h1>
+              <p>Hibatullah International Islamic Boarding School</p>
+              <div class="date-tag">📅 ${getFormattedDate(selectedDate)}</div>
+            </div>
+            <div>
+              <span class="badge-doc">DOKUMEN RESMI MANAGER</span>
+            </div>
+          </div>
+
+          <div class="summary-cards">
+            <div class="scard">
+              <div class="num">${total}</div>
+              <div class="lbl">Total Karyawan</div>
+            </div>
+            <div class="scard" style="border-top:3px solid #10b981;">
+              <div class="num" style="color:#10b981;">${hadir}</div>
+              <div class="lbl">Hadir Tepat Waktu</div>
+            </div>
+            <div class="scard" style="border-top:3px solid #f59e0b;">
+              <div class="num" style="color:#f59e0b;">${terlambat}</div>
+              <div class="lbl">Terlambat</div>
+            </div>
+            <div class="scard" style="border-top:3px solid #ef4444;">
+              <div class="num" style="color:#ef4444;">${tidakHadir}</div>
+              <div class="lbl">Tidak Hadir / Cuti</div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="text-align:center;">No</th>
+                <th>Nama Karyawan</th>
+                <th>Divisi</th>
+                <th style="text-align:center;">Jam Masuk</th>
+                <th style="text-align:center;">Jam Pulang</th>
+                <th style="text-align:center;">Durasi</th>
+                <th>Status</th>
+                <th>Lokasi Presisi</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+
+          <div class="footer-sign">
+            <div class="sign-box">
+              <p style="font-size:12px;color:#475569;margin:0;">Bojonegoro, ${new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}</p>
+              <p style="font-size:12px;font-weight:bold;color:#0f172a;margin:2px 0 0 0;">Manager Operasional & HR</p>
+              <div class="sign-space"></div>
+              <p style="font-size:12px;font-weight:bold;color:#0f172a;margin:0;border-top:1px solid #94a3b8;padding-top:4px;">( Tanda Tangan & Cap )</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
   };
 
   const scrollToTable = () => {
