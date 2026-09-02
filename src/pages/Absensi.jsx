@@ -336,6 +336,32 @@ export default function Absensi() {
     }
   }
 
+  const getIsCurrentLate = () => {
+    if (selectedStatus === 'pulang') return false;
+    const now = currentTime || new Date();
+    const defaultHours = {
+      Operasional: { masuk: "07:00", pulang: "15:00" },
+      Sekolah: { masuk: "07:00", pulang: "15:00" },
+      Kepesantrenan: { masuk1: "03:30", pulang1: "07:30", masuk2: "15:00", pulang2: "21:00" }
+    };
+    let workHours = defaultHours;
+    try {
+      const saved = localStorage.getItem('app_work_hours');
+      if (saved) workHours = JSON.parse(saved);
+    } catch (e) {}
+
+    const division = user?.divisi || user?.div || 'Operasional';
+    const hoursConfig = workHours[division] || workHours['Operasional'];
+    const targetMasukStr = (isKepesantrenan && flowType === 'checkin_2') 
+      ? hoursConfig.masuk2 
+      : (hoursConfig.masuk1 || hoursConfig.masuk || '07:00');
+    
+    const [targetHour, targetMinute] = targetMasukStr.split(':').map(Number);
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    return (currentHour > targetHour) || (currentHour === targetHour && currentMinute > targetMinute);
+  };
+
   const submitHadir = async () => {
     if (!user) {
       alert("Sesi login tidak valid. Silakan login ulang.");
@@ -343,6 +369,13 @@ export default function Absensi() {
     }
 
     try {
+      const isLate = getIsCurrentLate();
+
+      if (isLate && !alasanTerlambat.trim()) {
+        alert("⚠️ Waktu jam masuk telah lewat (Anda Terlambat). Harap tuliskan alasan keterlambatan Anda terlebih dahulu!");
+        return;
+      }
+
       const now = new Date();
       const year = now.getFullYear();
       const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -353,31 +386,6 @@ export default function Absensi() {
       const minutes = String(now.getMinutes()).padStart(2, '0');
       const seconds = String(now.getSeconds()).padStart(2, '0');
       const timeStr = `${hours}:${minutes}:${seconds}`;
-
-      // Ambil konfigurasi jam kerja dari LocalStorage
-      const defaultHours = {
-        Operasional: { masuk: "07:00", pulang: "15:00" },
-        Sekolah: { masuk: "07:00", pulang: "15:00" },
-        Kepesantrenan: { masuk1: "03:30", pulang1: "07:30", masuk2: "15:00", pulang2: "21:00" }
-      };
-      let workHours = defaultHours;
-      try {
-        const saved = localStorage.getItem('app_work_hours');
-        if (saved) workHours = JSON.parse(saved);
-      } catch (e) {}
-
-      const division = user?.divisi || user?.div || 'Operasional';
-      const hoursConfig = workHours[division] || workHours['Operasional'];
-      
-      // Target jam masuk (Sesi 2 untuk Kepesantrenan, atau masuk/masuk1 standar)
-      const targetMasukStr = (isKepesantrenan && flowType === 'checkin_2') 
-        ? hoursConfig.masuk2 
-        : (hoursConfig.masuk1 || hoursConfig.masuk || '08:00');
-      
-      const [targetHour, targetMinute] = targetMasukStr.split(':').map(Number);
-      const currentHour = now.getHours();
-      const currentMinute = now.getMinutes();
-      const isLate = (currentHour > targetHour) || (currentHour === targetHour && currentMinute > targetMinute);
 
       const status = isLate ? 'Terlambat' : 'Hadir';
       const keteranganText = isLate ? (alasanTerlambat.trim() || 'Terlambat tanpa keterangan') : (alasanTerlambat.trim() || '-');
@@ -1380,21 +1388,21 @@ export default function Absensi() {
                   </div>
                 </div>
 
-                {selectedStatus !== 'pulang' && (
+                {selectedStatus !== 'pulang' && getIsCurrentLate() && (
                   <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '12px', fontWeight: 600, color: '#D97706', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      💬 Alasan Keterlambatan / Keterangan:
+                      ⚠️ Jam Masuk Telah Lewat (Terlambat) — Wajib Tuliskan Alasan:
                     </label>
                     <textarea
                       rows={2}
                       value={alasanTerlambat}
                       onChange={(e) => setAlasanTerlambat(e.target.value)}
-                      placeholder="Tuliskan alasan jika terlambat (misal: ban bocor, macet, urusan keluarga...)"
+                      placeholder="Tuliskan alasan keterlambatan Anda (misal: ban bocor, macet, urusan keluarga...)"
                       style={{
                         width: '100%',
                         padding: '10px 14px',
                         borderRadius: '12px',
-                        border: '1.5px solid #FCD34D',
+                        border: '1.5px solid #F59E0B',
                         outline: 'none',
                         fontSize: '13px',
                         fontFamily: 'inherit',
