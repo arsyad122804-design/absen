@@ -77,11 +77,168 @@ export default function LaporanManager() {
     return `Tahun ${selectedYear}`;
   };
 
-  const handleExport = (type) => {
+  const [filterDivisi, setFilterDivisi] = useState('Semua Divisi');
+
+  const handleExport = async (type) => {
     setIsExporting(true);
-    setTimeout(() => {
-      setIsExporting(false);
+    try {
+      const { data: emps } = await supabase.from('karyawan').select('*');
+      const { data: absData } = await supabase.from('absensi').select('*');
+
+      const allEmps = emps || [];
+      const allAbs = absData || [];
+
+      let filteredEmps = allEmps;
+      if (filterDivisi && filterDivisi !== 'Semua Divisi') {
+        filteredEmps = allEmps.filter(e => (e.divisi || e.div || '').toLowerCase().includes(filterDivisi.toLowerCase()));
+      }
+
+      let filteredAbs = allAbs;
+      if (reportType === 'Harian') {
+        filteredAbs = allAbs.filter(a => a.tanggal === selectedDate);
+      } else if (reportType === 'Bulanan') {
+        const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        const mIdx = monthNames.indexOf(selectedMonth);
+        filteredAbs = allAbs.filter(a => {
+          if (!a.tanggal) return false;
+          const d = new Date(a.tanggal);
+          return d.getMonth() === mIdx && d.getFullYear() === Number(selectedYear);
+        });
+      } else if (reportType === 'Tahunan') {
+        filteredAbs = allAbs.filter(a => {
+          if (!a.tanggal) return false;
+          return new Date(a.tanggal).getFullYear() === Number(selectedYear);
+        });
+      }
+
       const periodStr = getPeriodLabel();
+      const reportName = `Laporan_Kehadiran_${reportType}_${periodStr.replace(/[^a-zA-Z0-9]/g, '_')}`;
+
+      if (type === 'Excel') {
+        let csvContent = "\uFEFF";
+        csvContent += `LAPORAN REKAPITULASI KEHADIRAN KARYAWAN\n`;
+        csvContent += `Periode:;${periodStr}\n`;
+        csvContent += `Divisi:;${filterDivisi}\n`;
+        csvContent += `Tanggal Cetak:;${new Date().toLocaleDateString('id-ID')}\n\n`;
+        csvContent += `No;Nama Karyawan;Divisi;Tanggal;Waktu Masuk;Waktu Pulang;Status;Lokasi\n`;
+
+        let rowCount = 0;
+        filteredAbs.forEach((a) => {
+          const emp = filteredEmps.find(e => String(e.id) === String(a.karyawan_id));
+          const empName = emp ? emp.name : (a.nama || a.karyawan_id || 'Karyawan');
+          const empDiv = emp ? (emp.divisi || emp.div || 'Operasional') : 'Operasional';
+
+          if (filterDivisi !== 'Semua Divisi' && !empDiv.toLowerCase().includes(filterDivisi.toLowerCase())) return;
+
+          rowCount++;
+          csvContent += `${rowCount};"${empName}";"${empDiv}";"${a.tanggal || '-'}"`;
+          csvContent += `;"${a.waktu_masuk || '-'}"`;
+          csvContent += `;"${a.waktu_keluar || '-'}"`;
+          csvContent += `;"${a.status || '-'}"`;
+          csvContent += `;"${a.lokasi || '-'}"\n`;
+        });
+
+        if (rowCount === 0) {
+          filteredEmps.forEach((emp, idx) => {
+            csvContent += `${idx + 1};"${emp.name}";"${emp.divisi || 'Operasional'}";"${selectedDate}";"-";"-";"Tidak Hadir";"-"\n`;
+          });
+        }
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `${reportName}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          let tableRowsHtml = '';
+          let count = 0;
+          filteredAbs.forEach((a) => {
+            const emp = filteredEmps.find(e => String(e.id) === String(a.karyawan_id));
+            const empName = emp ? emp.name : (a.nama || 'Karyawan');
+            const empDiv = emp ? (emp.divisi || 'Operasional') : 'Operasional';
+
+            if (filterDivisi !== 'Semua Divisi' && !empDiv.toLowerCase().includes(filterDivisi.toLowerCase())) return;
+
+            count++;
+            tableRowsHtml += `
+              <tr>
+                <td style="padding:8px;border:1px solid #ddd;text-align:center">${count}</td>
+                <td style="padding:8px;border:1px solid #ddd;font-weight:bold">${empName}</td>
+                <td style="padding:8px;border:1px solid #ddd">${empDiv}</td>
+                <td style="padding:8px;border:1px solid #ddd">${a.tanggal}</td>
+                <td style="padding:8px;border:1px solid #ddd">${a.waktu_masuk || '-'}</td>
+                <td style="padding:8px;border:1px solid #ddd">${a.waktu_keluar || '-'}</td>
+                <td style="padding:8px;border:1px solid #ddd;color:${a.status==='Terlambat'?'#d97706':'#16a34a'};font-weight:bold">${a.status}</td>
+              </tr>
+            `;
+          });
+
+          if (count === 0) {
+            filteredEmps.forEach((emp, idx) => {
+              tableRowsHtml += `
+                <tr>
+                  <td style="padding:8px;border:1px solid #ddd;text-align:center">${idx + 1}</td>
+                  <td style="padding:8px;border:1px solid #ddd;font-weight:bold">${emp.name}</td>
+                  <td style="padding:8px;border:1px solid #ddd">${emp.divisi || 'Operasional'}</td>
+                  <td style="padding:8px;border:1px solid #ddd">${selectedDate}</td>
+                  <td style="padding:8px;border:1px solid #ddd">-</td>
+                  <td style="padding:8px;border:1px solid #ddd">-</td>
+                  <td style="padding:8px;border:1px solid #ddd;color:#dc2626;font-weight:bold">Tidak Hadir</td>
+                </tr>
+              `;
+            });
+          }
+
+          printWindow.document.write(`
+            <html>
+              <head>
+                <title>Laporan Kehadiran - ${periodStr}</title>
+                <style>
+                  body { font-family: Arial, sans-serif; padding: 20px; color: #1e293b; }
+                  h1 { color: #0f172a; margin-bottom: 4px; font-size: 20px; }
+                  p { color: #64748b; font-size: 13px; margin-top: 0; }
+                  table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13px; }
+                  th { background: #f8fafc; padding: 10px; border: 1px solid #cbd5e1; text-align: left; }
+                  .header-box { border-bottom: 2px solid #2563eb; padding-bottom: 12px; margin-bottom: 16px; }
+                </style>
+              </head>
+              <body>
+                <div class="header-box">
+                  <h1>LAPORAN REKAPITULASI KEHADIRAN KARYAWAN</h1>
+                  <p>Hibatullah IIBS • Periode: ${periodStr} • Divisi: ${filterDivisi}</p>
+                </div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>No</th>
+                      <th>Nama Karyawan</th>
+                      <th>Divisi</th>
+                      <th>Tanggal</th>
+                      <th>Jam Masuk</th>
+                      <th>Jam Pulang</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${tableRowsHtml}
+                  </tbody>
+                </table>
+              </body>
+            </html>
+          `);
+          printWindow.document.close();
+          printWindow.focus();
+          setTimeout(() => {
+            printWindow.print();
+          }, 500);
+        }
+      }
+
       const newReport = {
         id: Date.now(),
         name: `Laporan ${reportType} - ${periodStr}`,
@@ -89,8 +246,11 @@ export default function LaporanManager() {
         type
       };
       setHistoryList([newReport, ...historyList]);
-      alert(`Laporan ${reportType} (${periodStr}) berhasil diekspor sebagai file ${type}!`);
-    }, 1200);
+    } catch (e) {
+      console.error("Export error:", e);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleDownloadHistory = (name) => {
@@ -225,10 +385,11 @@ export default function LaporanManager() {
                 <label>Filter Divisi</label>
                 <div className="lm-input-wrapper">
                   <Filter size={16} color="#94A3B8" />
-                  <select>
+                  <select value={filterDivisi} onChange={e => setFilterDivisi(e.target.value)}>
                     <option>Semua Divisi</option>
-                    <option>IT Development</option>
-                    <option>Finance</option>
+                    <option>Operasional</option>
+                    <option>Sekolah</option>
+                    <option>Kepesantrenan</option>
                   </select>
                 </div>
               </div>
