@@ -286,7 +286,11 @@ export default function AbsensiManager() {
         }
       });
 
-      setTableData(mapped);
+      if (uniqueEmps.length === 0) {
+        setTableData(initialTableData);
+      } else {
+        setTableData(mapped);
+      }
     };
 
     fetchLiveAbsensi();
@@ -794,15 +798,29 @@ export default function AbsensiManager() {
             <button className="pg-btn active">1</button>
             <button className="pg-btn">›</button>
           </div>
-          <div className="tc-show" style={{position: 'relative', cursor: 'pointer'}}>
-            Tampilkan 
-            <select style={{appearance: 'none', background: 'transparent', border: 'none', outline: 'none', padding: '0 16px 0 4px', fontWeight: 600, color: '#0F172A'}}>
-              <option>10</option>
-              <option>20</option>
-              <option>50</option>
-            </select>
-            <span style={{position: 'absolute', right: '4px', top: '2px', fontSize: '10px'}}>▼</span> 
-            data
+          <div className="tc-show" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>Tampilkan</span>
+            <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+              <select style={{
+                appearance: 'none',
+                WebkitAppearance: 'none',
+                MozAppearance: 'none',
+                background: '#F8FAFC',
+                border: '1px solid #E2E8F0',
+                borderRadius: '6px',
+                padding: '4px 24px 4px 10px',
+                fontWeight: 600,
+                color: '#0F172A',
+                cursor: 'pointer',
+                fontSize: '12px'
+              }}>
+                <option>10</option>
+                <option>20</option>
+                <option>50</option>
+              </select>
+              <span style={{ position: 'absolute', right: '8px', pointerEvents: 'none', fontSize: '10px', color: '#64748B' }}>▼</span>
+            </div>
+            <span>data</span>
           </div>
         </div>
 

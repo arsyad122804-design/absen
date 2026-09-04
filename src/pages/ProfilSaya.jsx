@@ -73,6 +73,8 @@ export default function ProfilSaya() {
         divisi: userData.divisi || 'Kepesantrenan',
         email: `${String(userData.name || 'User').toLowerCase().replace(/\s+/g, '')}@inovasidigital.id`
       }));
+    }
+
     const fetchUserAbsensi = async () => {
       let combined = safeJsonParse('local_absensi', []);
       if (userData.id && !userData.id.toString().startsWith('karyawan-')) {
