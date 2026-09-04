@@ -628,6 +628,16 @@ export default function Absensi() {
     }
   }
 
+  const handleCheckoutBtnClick = async () => {
+    try {
+      setSelectedStatus('pulang');
+      await submitPulang();
+    } catch (e) {
+      console.error("Checkout error:", e);
+      alert("Terjadi kesalahan saat mencatat absen pulang. Silakan coba lagi.");
+    }
+  };
+
   const userDivName = (user?.divisi || user?.div || '').toLowerCase().trim();
   const isKepesantrenan = userDivName.includes('pesantren') || userDivName.includes('santri') || userDivName.includes('asrama') || userDivName.includes('pengasuh');
 
@@ -902,10 +912,7 @@ export default function Absensi() {
               gap: '8px',
               boxShadow: '0 10px 20px -5px rgba(37,99,235,0.2)'
             }}
-            onClick={() => {
-              setSelectedStatus('pulang');
-              setShowModal(true);
-            }}
+            onClick={handleCheckoutBtnClick}
           >
             Rekam Absen Pulang
           </button>
@@ -1066,10 +1073,7 @@ export default function Absensi() {
               gap: '8px',
               boxShadow: '0 10px 20px -5px rgba(37,99,235,0.2)'
             }}
-            onClick={() => {
-              setSelectedStatus('pulang');
-              setShowModal(true);
-            }}
+            onClick={handleCheckoutBtnClick}
           >
             Rekam Absen Pulang Sesi 2
           </button>
