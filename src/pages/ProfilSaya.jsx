@@ -73,9 +73,24 @@ export default function ProfilSaya() {
         divisi: userData.divisi || 'Kepesantrenan',
         email: `${String(userData.name || 'User').toLowerCase().replace(/\s+/g, '')}@inovasidigital.id`
       }));
-    }
-    const local = safeJsonParse('local_absensi', []);
-    setUserHistory(Array.isArray(local) ? local : []);
+    const fetchUserAbsensi = async () => {
+      let combined = safeJsonParse('local_absensi', []);
+      if (userData.id && !userData.id.toString().startsWith('karyawan-')) {
+        try {
+          const { data } = await supabase
+            .from('absensi')
+            .select('*')
+            .eq('karyawan_id', userData.id)
+            .order('tanggal', { ascending: false });
+          if (data && data.length > 0) {
+            combined = data;
+          }
+        } catch (e) {}
+      }
+      setUserHistory(Array.isArray(combined) ? combined : []);
+    };
+
+    fetchUserAbsensi();
   }, []);
 
   // State untuk form edit
@@ -339,32 +354,91 @@ export default function ProfilSaya() {
           </div>
 
           {/* Pencapaian */}
-          <div className="profil-card">
-            <div className="pc-header justify-between">
-              <div className="pc-h-left">
-                <Award size={20} color="#3B82F6" />
-                <h3>Pencapaian</h3>
+          {(() => {
+            const onTimeCount = userHistory.filter(r => r.status === 'Hadir' || r.status === 'Tepat Waktu').length;
+            const totalAbsen = userHistory.length;
+            const hasFirstAbsen = totalAbsen >= 1;
+            const hasKonsisten = onTimeCount >= 5;
+            const hasDisiplinTinggi = onTimeCount >= 20;
+
+            return (
+              <div className="profil-card">
+                <div className="pc-header justify-between">
+                  <div className="pc-h-left">
+                    <Award size={20} color="#3B82F6" />
+                    <h3>Pencapaian</h3>
+                  </div>
+                  <span className="pc-link" style={{ cursor: 'pointer' }} onClick={() => alert("Lakukan presensi rutin untuk membuka seluruh lencana pencapaian!")}>Lihat Semua</span>
+                </div>
+                <div className="pc-body flex-row gap-16" style={{ flexWrap: 'wrap' }}>
+                  
+                  {/* Badge 1: Presensi Perdana */}
+                  <div className={`badge-card ${hasFirstAbsen ? 'unlocked' : 'locked'}`} style={{
+                    opacity: hasFirstAbsen ? 1 : 0.45,
+                    filter: hasFirstAbsen ? 'none' : 'grayscale(1)',
+                    background: hasFirstAbsen ? '#F0FDF4' : '#F8FAFC',
+                    border: `1.5px solid ${hasFirstAbsen ? '#BBF7D0' : '#E2E8F0'}`,
+                    borderRadius: '16px',
+                    padding: '16px',
+                    flex: 1,
+                    minWidth: '130px',
+                    textAlign: 'center'
+                  }}>
+                    <div className={`bc-icon hexagon ${hasFirstAbsen ? 'green' : 'gray'}`}>
+                      <Check size={24} />
+                    </div>
+                    <h4 style={{ margin: '8px 0 4px 0', fontSize: '14px' }}>Presensi Perdana</h4>
+                    <p style={{ fontSize: '11px', color: hasFirstAbsen ? '#16A34A' : '#64748B', margin: 0, fontWeight: 600 }}>
+                      {hasFirstAbsen ? '✓ Terbuka (Presensi Pertama)' : '🔒 Belum Dicapai'}
+                    </p>
+                  </div>
+
+                  {/* Badge 2: Konsisten (5 Hari) */}
+                  <div className={`badge-card ${hasKonsisten ? 'unlocked' : 'locked'}`} style={{
+                    opacity: hasKonsisten ? 1 : 0.45,
+                    filter: hasKonsisten ? 'none' : 'grayscale(1)',
+                    background: hasKonsisten ? '#EFF6FF' : '#F8FAFC',
+                    border: `1.5px solid ${hasKonsisten ? '#BFDBFE' : '#E2E8F0'}`,
+                    borderRadius: '16px',
+                    padding: '16px',
+                    flex: 1,
+                    minWidth: '130px',
+                    textAlign: 'center'
+                  }}>
+                    <div className={`bc-icon hexagon ${hasKonsisten ? 'blue' : 'gray'}`}>
+                      <Calendar size={24} />
+                    </div>
+                    <h4 style={{ margin: '8px 0 4px 0', fontSize: '14px' }}>Konsisten</h4>
+                    <p style={{ fontSize: '11px', color: hasKonsisten ? '#2563EB' : '#64748B', margin: 0, fontWeight: 600 }}>
+                      {hasKonsisten ? '✓ Terbuka (5 Hari Tepat Waktu)' : `🔒 Belum (${onTimeCount}/5 hari)`}
+                    </p>
+                  </div>
+
+                  {/* Badge 3: Disiplin Tinggi (20 Hari) */}
+                  <div className={`badge-card ${hasDisiplinTinggi ? 'unlocked' : 'locked'}`} style={{
+                    opacity: hasDisiplinTinggi ? 1 : 0.45,
+                    filter: hasDisiplinTinggi ? 'none' : 'grayscale(1)',
+                    background: hasDisiplinTinggi ? '#F5F3FF' : '#F8FAFC',
+                    border: `1.5px solid ${hasDisiplinTinggi ? '#DDD6FE' : '#E2E8F0'}`,
+                    borderRadius: '16px',
+                    padding: '16px',
+                    flex: 1,
+                    minWidth: '130px',
+                    textAlign: 'center'
+                  }}>
+                    <div className={`bc-icon hexagon ${hasDisiplinTinggi ? 'purple' : 'gray'}`}>
+                      <Target size={24} />
+                    </div>
+                    <h4 style={{ margin: '8px 0 4px 0', fontSize: '14px' }}>Disiplin Tinggi</h4>
+                    <p style={{ fontSize: '11px', color: hasDisiplinTinggi ? '#7C3AED' : '#64748B', margin: 0, fontWeight: 600 }}>
+                      {hasDisiplinTinggi ? '✓ Terbuka (20 Hari Tepat Waktu)' : `🔒 Belum (${onTimeCount}/20 hari)`}
+                    </p>
+                  </div>
+
+                </div>
               </div>
-              <span className="pc-link" style={{ cursor: 'pointer' }} onClick={() => alert("Seluruh data sudah ditampilkan.")}>Lihat Semua</span>
-            </div>
-            <div className="pc-body flex-row gap-16">
-              <div className="badge-card">
-                <div className="bc-icon hexagon blue"><Target size={24} /></div>
-                <h4>Disiplin Tinggi</h4>
-                <p>Hadir tepat waktu 20 kali</p>
-              </div>
-              <div className="badge-card">
-                <div className="bc-icon hexagon green"><Calendar size={24} /></div>
-                <h4>Konsisten</h4>
-                <p>Hadir 5 hari berturut-turut</p>
-              </div>
-              <div className="badge-card">
-                <div className="bc-icon hexagon purple"><Award size={24} /></div>
-                <h4>Aktif</h4>
-                <p>Menggunakan aplikasi secara aktif</p>
-              </div>
-            </div>
-          </div>
+            );
+          })()}
 
           {/* Aktivitas Terbaru */}
           <div className="profil-card">
