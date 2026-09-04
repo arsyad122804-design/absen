@@ -340,9 +340,9 @@ export default function Absensi() {
     if (selectedStatus === 'pulang') return false;
     const now = currentTime || new Date();
     const defaultHours = {
-      Operasional: { masuk: "07:00", pulang: "15:00" },
-      Sekolah: { masuk: "07:00", pulang: "15:00" },
-      Kepesantrenan: { masuk1: "03:30", pulang1: "07:30", masuk2: "15:00", pulang2: "21:00" }
+      Operasional: { masuk: "07:05", pulang: "15:00" },
+      Sekolah: { masuk: "07:05", pulang: "15:00" },
+      Kepesantrenan: { masuk1: "04:30", pulang1: "07:30", masuk2: "17:00", pulang2: "21:00" }
     };
     let workHours = defaultHours;
     try {
@@ -541,9 +541,9 @@ export default function Absensi() {
 
       // Ambil konfigurasi jam kerja dari LocalStorage
       const defaultHours = {
-        Operasional: { masuk: "07:00", pulang: "15:00" },
-        Sekolah: { masuk: "07:00", pulang: "15:00" },
-        Kepesantrenan: { masuk1: "03:30", pulang1: "07:30", masuk2: "15:00", pulang2: "21:00" }
+        Operasional: { masuk: "07:05", pulang: "15:00" },
+        Sekolah: { masuk: "07:05", pulang: "15:00" },
+        Kepesantrenan: { masuk1: "04:30", pulang1: "07:30", masuk2: "17:00", pulang2: "21:00" }
       };
       let workHours = defaultHours;
       try {
@@ -642,9 +642,9 @@ export default function Absensi() {
   const isKepesantrenan = userDivName.includes('pesantren') || userDivName.includes('santri') || userDivName.includes('asrama') || userDivName.includes('pengasuh');
 
   const defaultHours = {
-    Operasional: { masuk: "07:00", pulang: "15:00" },
-    Sekolah: { masuk: "07:00", pulang: "15:00" },
-    Kepesantrenan: { masuk1: "03:30", pulang1: "07:30", masuk2: "15:00", pulang2: "21:00" }
+    Operasional: { masuk: "07:05", pulang: "15:00" },
+    Sekolah: { masuk: "07:05", pulang: "15:00" },
+    Kepesantrenan: { masuk1: "04:30", pulang1: "07:30", masuk2: "17:00", pulang2: "21:00" }
   };
   let workHours = defaultHours;
   try {
