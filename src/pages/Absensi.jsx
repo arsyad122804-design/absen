@@ -573,15 +573,26 @@ export default function Absensi() {
         }
       }
 
-      if (!currentActiveRecord) {
-        alert("Data absen masuk tidak ditemukan.");
-        return;
+      let targetRecord = currentActiveRecord;
+      const isDemo = !user.id || user.id.toString().startsWith('karyawan-') || user.id.toString().startsWith('admin-');
+
+      if (!targetRecord && !isDemo) {
+        const { data: dbActive } = await supabase
+          .from('absensi')
+          .select('*')
+          .eq('karyawan_id', user.id)
+          .eq('tanggal', today)
+          .is('waktu_keluar', null)
+          .order('waktu_masuk', { ascending: true });
+        if (dbActive && dbActive.length > 0) {
+          targetRecord = dbActive[0];
+        }
       }
 
       // 1. Update di LocalStorage
       const local = safeJsonParse('local_absensi', []);
       const updatedLocal = local.map(r => {
-        if (String(r.id) === String(currentActiveRecord.id)) {
+        if (targetRecord && String(r.id) === String(targetRecord.id)) {
           return { ...r, waktu_keluar: timeStr };
         }
         return r;
@@ -589,13 +600,12 @@ export default function Absensi() {
       localStorage.setItem('local_absensi', JSON.stringify(updatedLocal));
 
       // 2. Update di Supabase jika bukan akun demo
-      const isDemo = !user.id || user.id.toString().startsWith('karyawan-') || user.id.toString().startsWith('admin-');
       if (!isDemo) {
-        if (currentActiveRecord && currentActiveRecord.id && !currentActiveRecord.isLocal) {
+        if (targetRecord && targetRecord.id && !targetRecord.isLocal) {
           const { error } = await supabase
             .from('absensi')
             .update({ waktu_keluar: timeStr })
-            .eq('id', currentActiveRecord.id);
+            .eq('id', targetRecord.id);
           if (error) console.error("Error updating checkout to Supabase:", error);
         } else {
           const { error } = await supabase
@@ -1426,7 +1436,6 @@ export default function Absensi() {
 
                 <button 
                   className="btn-primary" 
-                  disabled={locationStatus === 'loading'}
                   style={{ 
                     width: '100%', 
                     marginTop: '16px', 
@@ -1434,7 +1443,7 @@ export default function Absensi() {
                     borderRadius: '16px', 
                     fontSize: '16px', 
                     boxShadow: '0 10px 20px -5px rgba(37,99,235,0.3)',
-                    cursor: locationStatus === 'loading' ? 'not-allowed' : 'pointer'
+                    cursor: 'pointer'
                   }} 
                   onClick={selectedStatus === 'pulang' ? submitPulang : submitHadir}
                 >
