@@ -1447,7 +1447,7 @@ export default function Absensi() {
                   }} 
                   onClick={selectedStatus === 'pulang' ? submitPulang : submitHadir}
                 >
-                  {selectedStatus === 'pulang' ? 'Rekam Absen Pulang' : t.rekamHadir}
+                  {selectedStatus === 'pulang' ? '✓ Konfirmasi Rekam Absen Pulang' : t.rekamHadir}
                 </button>
               </div>
             </div>
