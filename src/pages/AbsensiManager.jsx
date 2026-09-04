@@ -38,7 +38,9 @@ export default function AbsensiManager() {
   const dateInputRef = useRef(null);
 
   const renderStatusBadge = (statusStr) => {
-    if (statusStr === 'Tepat Waktu' || statusStr === 'Hadir') {
+    const s = (statusStr || '').trim();
+
+    if (s === 'Tepat Waktu' || s === 'Hadir') {
       return (
         <span className="badge-status tepat-waktu" style={{
           background: '#ECFDF5',
@@ -61,9 +63,103 @@ export default function AbsensiManager() {
         </span>
       );
     }
+
+    if (s === 'Tidak Hadir' || s === 'Alpa') {
+      return (
+        <span className="badge-status tidak-hadir" style={{
+          background: '#FEF2F2',
+          color: '#EF4444',
+          border: '1.5px solid #FCA5A5',
+          padding: '4px 12px',
+          borderRadius: '10px',
+          fontSize: '11px',
+          fontWeight: 700,
+          display: 'inline-flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          lineHeight: '1.25',
+          textAlign: 'center',
+          margin: 0
+        }}>
+          <span>Tidak</span>
+          <span>Hadir</span>
+        </span>
+      );
+    }
+
+    if (s === 'Izin') {
+      return (
+        <span className="badge-status izin" style={{
+          background: '#FFFBEB',
+          color: '#D97706',
+          border: '1.5px solid #FCD34D',
+          padding: '4px 12px',
+          borderRadius: '10px',
+          fontSize: '11px',
+          fontWeight: 700,
+          display: 'inline-flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          lineHeight: '1.25',
+          textAlign: 'center',
+          margin: 0
+        }}>
+          <span>Izin</span>
+        </span>
+      );
+    }
+
+    if (s === 'Sakit') {
+      return (
+        <span className="badge-status sakit" style={{
+          background: '#FDF2F8',
+          color: '#DB2777',
+          border: '1.5px solid #FBCFE8',
+          padding: '4px 12px',
+          borderRadius: '10px',
+          fontSize: '11px',
+          fontWeight: 700,
+          display: 'inline-flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          lineHeight: '1.25',
+          textAlign: 'center',
+          margin: 0
+        }}>
+          <span>Sakit</span>
+        </span>
+      );
+    }
+
+    if (s === 'Terlambat') {
+      return (
+        <span className="badge-status terlambat" style={{
+          background: '#FEF3C7',
+          color: '#B45309',
+          border: '1.5px solid #FDE68A',
+          padding: '4px 12px',
+          borderRadius: '10px',
+          fontSize: '11px',
+          fontWeight: 700,
+          display: 'inline-flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          lineHeight: '1.25',
+          textAlign: 'center',
+          margin: 0
+        }}>
+          <span>Terlambat</span>
+        </span>
+      );
+    }
+
     return (
-      <span className={`badge-status ${statusStr.toLowerCase().replace(/\s+/g, '-')}`} style={{ margin: 0 }}>
-        {statusStr}
+      <span className={`badge-status ${s.toLowerCase().replace(/\s+/g, '-')}`} style={{ margin: 0 }}>
+        {s}
       </span>
     );
   };
