@@ -134,7 +134,7 @@ export default function AbsensiManager() {
             img: `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name || 'Karyawan')}`,
             name: emp.name,
             div: emp.divisi || emp.div || 'Operasional',
-            status: finalStatus || 'Hadir',
+            status: finalStatus === 'Hadir' ? 'Tepat Waktu' : (finalStatus || 'Tepat Waktu'),
             jamM: jamMasukStr,
             statM: finalStatus === 'Terlambat' ? 'Terlambat' : 'Tepat Waktu',
             jamP: jamPulangStr,

@@ -810,7 +810,7 @@ export default function Absensi() {
                 <strong style={{ 
                   color: currentActiveRecord?.status === 'Hadir' || currentActiveRecord?.status === 'Terlambat' ? '#16A34A' : '#2563EB',
                   fontSize: '14px' 
-                }}>{currentActiveRecord?.status}</strong>
+                }}>{currentActiveRecord?.status === 'Hadir' ? 'Tepat Waktu' : currentActiveRecord?.status}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: '#64748B', fontSize: '13px' }}>Waktu Absen Masuk</span>
@@ -887,7 +887,7 @@ export default function Absensi() {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: '#64748B', fontSize: '13px' }}>Status Masuk</span>
-              <strong style={{ color: '#16A34A', fontSize: '14px' }}>{currentActiveRecord?.status}</strong>
+              <strong style={{ color: '#16A34A', fontSize: '14px' }}>{currentActiveRecord?.status === 'Hadir' ? 'Tepat Waktu' : currentActiveRecord?.status}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: '#64748B', fontSize: '13px' }}>Jam Masuk</span>
