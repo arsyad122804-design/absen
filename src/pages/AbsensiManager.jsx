@@ -35,6 +35,18 @@ export default function AbsensiManager() {
   const [activeTab, setActiveTab] = useState('Semua');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterDivisi, setFilterDivisi] = useState('Semua Divisi');
+  const dateInputRef = useRef(null);
+
+  const handleDatePickerClick = () => {
+    if (dateInputRef.current) {
+      if (typeof dateInputRef.current.showPicker === 'function') {
+        dateInputRef.current.showPicker();
+      } else {
+        dateInputRef.current.focus();
+        dateInputRef.current.click();
+      }
+    }
+  };
   
   const [selectedDate, setSelectedDate] = useState(() => {
     const now = new Date();
@@ -315,9 +327,10 @@ export default function AbsensiManager() {
           <p>Pantau dan kelola kehadiran tim Anda secara real-time.</p>
         </div>
         <div className="am-hr">
-          <div className="am-date-picker" style={{ position: 'relative' }}>
-            <Calendar size={16} color="#64748B" />
+          <div className="am-date-picker" onClick={handleDatePickerClick} style={{ position: 'relative', cursor: 'pointer' }}>
+            <Calendar size={16} color="#64748B" style={{ pointerEvents: 'none' }} />
             <input 
+              ref={dateInputRef}
               type="date" 
               value={selectedDate} 
               onChange={(e) => setSelectedDate(e.target.value)} 
@@ -327,11 +340,12 @@ export default function AbsensiManager() {
                 opacity: 0,
                 cursor: 'pointer',
                 width: '100%',
-                height: '100%'
+                height: '100%',
+                zIndex: 5
               }}
             />
-            <span>{getFormattedDate(selectedDate)}</span>
-            <span className="caret">▼</span>
+            <span style={{ pointerEvents: 'none' }}>{getFormattedDate(selectedDate)}</span>
+            <span className="caret" style={{ pointerEvents: 'none' }}>▼</span>
           </div>
           <button className="btn-export" onClick={handleExportPDF}>
             <Download size={16} /> Ekspor Laporan
