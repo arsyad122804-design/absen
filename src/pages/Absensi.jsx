@@ -744,8 +744,11 @@ export default function Absensi() {
           </div>
           <div>
             <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#0F172A', margin: '0 0 8px 0' }}>Absensi Hari Ini Selesai</h2>
-            <p style={{ color: '#64748B', fontSize: '14px', margin: 0 }}>
-              Anda sudah mencatatkan kehadiran atau izin Anda untuk hari ini. Sampai jumpa besok!
+            <p style={{ color: '#16A34A', fontSize: '16px', fontWeight: 600, margin: '0 0 6px 0' }}>
+              Selamat beristirahat Ustadz & Ustadzah! 🌸
+            </p>
+            <p style={{ color: '#64748B', fontSize: '13px', margin: 0 }}>
+              Anda telah menyelesaikan seluruh pencatatan absensi hari ini. Terima kasih atas dedikasi Anda!
             </p>
           </div>
           
