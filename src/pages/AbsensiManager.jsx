@@ -428,7 +428,19 @@ export default function AbsensiManager() {
 
   // APPLY FILTERS
   const filteredData = tableData.filter(row => {
-    const matchTab = activeTab === 'Semua' || row.status === activeTab;
+    let matchTab = false;
+    if (activeTab === 'Semua') {
+      matchTab = true;
+    } else if (activeTab === 'Hadir') {
+      matchTab = row.status === 'Hadir' || row.status === 'Tepat Waktu';
+    } else if (activeTab === 'Terlambat') {
+      matchTab = row.status === 'Terlambat';
+    } else if (activeTab === 'Tidak Hadir') {
+      matchTab = row.status === 'Tidak Hadir' || row.status === 'Izin' || row.status === 'Sakit' || row.status === 'Alpa';
+    } else {
+      matchTab = row.status === activeTab;
+    }
+
     const matchSearch = row.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                         row.div.toLowerCase().includes(searchQuery.toLowerCase());
     const matchDivisi = filterDivisi === 'Semua Divisi' || row.div === filterDivisi;
@@ -438,9 +450,13 @@ export default function AbsensiManager() {
 
   // Calculate dynamic stats
   const total = tableData.length;
-  const hadir = tableData.filter(d => d.status === 'Hadir').length;
+  const hadir = tableData.filter(d => d.status === 'Hadir' || d.status === 'Tepat Waktu').length;
   const terlambat = tableData.filter(d => d.status === 'Terlambat').length;
-  const tidakHadir = tableData.filter(d => d.status === 'Tidak Hadir' || d.status === 'Izin' || d.status === 'Sakit').length;
+  const tidakHadir = tableData.filter(d => d.status === 'Tidak Hadir' || d.status === 'Izin' || d.status === 'Sakit' || d.status === 'Alpa').length;
+
+  const checkedInCount = tableData.filter(d => d.status === 'Hadir' || d.status === 'Tepat Waktu' || d.status === 'Terlambat').length;
+  const checkedOutCount = tableData.filter(d => d.jamP && d.jamP !== '-' && !d.jamP.includes('Belum Absen')).length;
+  const workingCount = Math.max(0, checkedInCount - checkedOutCount);
 
   const donutData = [
     { name: 'Hadir', value: hadir },
@@ -582,10 +598,10 @@ export default function AbsensiManager() {
             <span className="badge-live">Live</span>
           </div>
           <div className="am-rt-list">
-            <div className="rt-item"><span><span className="icon">🏠</span> Sedang Check-in</span> <strong className="green">{hadir}</strong></div>
-            <div className="rt-item"><span><span className="icon">👥</span> Sedang Bekerja</span> <strong className="blue">{hadir}</strong></div>
+            <div className="rt-item"><span><span className="icon">🏠</span> Sedang Check-in</span> <strong className="green">{checkedInCount}</strong></div>
+            <div className="rt-item"><span><span className="icon">👥</span> Sedang Bekerja</span> <strong className="blue">{workingCount}</strong></div>
             <div className="rt-item"><span><span className="icon">🕒</span> Sedang Istirahat</span> <strong className="orange">0</strong></div>
-            <div className="rt-item"><span><span className="icon">✅</span> Sudah Check-out</span> <strong className="gray">0</strong></div>
+            <div className="rt-item"><span><span className="icon">✅</span> Sudah Check-out</span> <strong className="gray">{checkedOutCount}</strong></div>
           </div>
         </div>
 
