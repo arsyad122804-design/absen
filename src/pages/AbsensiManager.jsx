@@ -37,6 +37,37 @@ export default function AbsensiManager() {
   const [filterDivisi, setFilterDivisi] = useState('Semua Divisi');
   const dateInputRef = useRef(null);
 
+  const renderStatusBadge = (statusStr) => {
+    if (statusStr === 'Tepat Waktu' || statusStr === 'Hadir') {
+      return (
+        <span className="badge-status tepat-waktu" style={{
+          background: '#ECFDF5',
+          color: '#10B981',
+          border: '1.5px solid #A7F3D0',
+          padding: '4px 12px',
+          borderRadius: '10px',
+          fontSize: '11px',
+          fontWeight: 700,
+          display: 'inline-flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          lineHeight: '1.25',
+          textAlign: 'center',
+          margin: 0
+        }}>
+          <span>Tepat</span>
+          <span>Waktu</span>
+        </span>
+      );
+    }
+    return (
+      <span className={`badge-status ${statusStr.toLowerCase().replace(/\s+/g, '-')}`} style={{ margin: 0 }}>
+        {statusStr}
+      </span>
+    );
+  };
+
   const handleDatePickerClick = () => {
     if (dateInputRef.current) {
       if (typeof dateInputRef.current.showPicker === 'function') {
@@ -540,9 +571,7 @@ export default function AbsensiManager() {
                   </td>
                   <td>{row.div}</td>
                   <td>
-                    <span className={`badge-status ${row.status.toLowerCase().replace(' ', '-')}`}>
-                      {row.status}
-                    </span>
+                    {renderStatusBadge(row.status)}
                   </td>
                   <td>
                     {row.jamM !== '-' ? (
@@ -606,9 +635,7 @@ export default function AbsensiManager() {
                       <span style={{ fontSize: '12px', color: '#64748B' }}>{row.div}</span>
                     </div>
                   </div>
-                  <span className={`badge-status ${row.status.toLowerCase().replace(' ', '-')}`} style={{ margin: 0 }}>
-                    {row.status}
-                  </span>
+                  {renderStatusBadge(row.status)}
                 </div>
                 
                 <div className="ammc-body" style={{ borderTop: '1px solid #F1F5F9', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
