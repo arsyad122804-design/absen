@@ -1382,158 +1382,158 @@ export default function Absensi() {
               </button>
             </div>
           )}
+        </>
+      )}
 
-          {showModal && (
-            <div className="modal-overlay">
-              <div className="modal-content" style={{ borderRadius: '24px', padding: '24px' }}>
-                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0F172A', margin: 0 }}>Verifikasi Kehadiran</h3>
-                  <button 
-                    onClick={() => setShowModal(false)}
-                    style={{ 
-                      background: '#F1F5F9', 
-                      border: 'none', 
-                      color: '#64748B', 
-                      borderRadius: '50%', 
-                      width: '32px', 
-                      height: '32px', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center', 
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      padding: 0
-                    }}
-                    onMouseOver={e => e.currentTarget.style.background = '#E2E8F0'}
-                    onMouseOut={e => e.currentTarget.style.background = '#F1F5F9'}
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ borderRadius: '24px', padding: '24px' }}>
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0F172A', margin: 0 }}>Verifikasi Kehadiran</h3>
+              <button 
+                onClick={() => setShowModal(false)}
+                style={{ 
+                  background: '#F1F5F9', 
+                  border: 'none', 
+                  color: '#64748B', 
+                  borderRadius: '50%', 
+                  width: '32px', 
+                  height: '32px', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  padding: 0
+                }}
+                onMouseOver={e => e.currentTarget.style.background = '#E2E8F0'}
+                onMouseOut={e => e.currentTarget.style.background = '#F1F5F9'}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            
+            <div className="modal-camera" style={{ borderRadius: '24px', overflow: 'hidden', backgroundColor: '#0F172A', position: 'relative', height: '200px', boxShadow: 'inset 0 0 40px rgba(0,0,0,0.6)' }}>
+              <video 
+                ref={videoRef} 
+                autoPlay 
+                playsInline 
+                muted 
+                style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)', position: 'absolute', inset: 0 }}
+              />
+              
+              {/* Scanner target frame & markers */}
+              <div style={{ position: 'absolute', inset: '24px', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '16px', pointerEvents: 'none' }}>
+                <div style={{ position: 'absolute', top: '-2px', left: '-2px', width: '20px', height: '20px', borderTop: '4px solid #3B82F6', borderLeft: '4px solid #3B82F6', borderTopLeftRadius: '8px' }} />
+                <div style={{ position: 'absolute', top: '-2px', right: '-2px', width: '20px', height: '20px', borderTop: '4px solid #3B82F6', borderRight: '4px solid #3B82F6', borderTopRightRadius: '8px' }} />
+                <div style={{ position: 'absolute', bottom: '-2px', left: '-2px', width: '20px', height: '20px', borderBottom: '4px solid #3B82F6', borderLeft: '4px solid #3B82F6', borderBottomLeftRadius: '8px' }} />
+                <div style={{ position: 'absolute', bottom: '-2px', right: '-2px', width: '20px', height: '20px', borderBottom: '4px solid #3B82F6', borderRight: '4px solid #3B82F6', borderBottomRightRadius: '8px' }} />
                 
-                <div className="modal-camera" style={{ borderRadius: '24px', overflow: 'hidden', backgroundColor: '#0F172A', position: 'relative', height: '200px', boxShadow: 'inset 0 0 40px rgba(0,0,0,0.6)' }}>
-                  <video 
-                    ref={videoRef} 
-                    autoPlay 
-                    playsInline 
-                    muted 
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)', position: 'absolute', inset: 0 }}
-                  />
-                  
-                  {/* Scanner target frame & markers */}
-                  <div style={{ position: 'absolute', inset: '24px', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '16px', pointerEvents: 'none' }}>
-                    <div style={{ position: 'absolute', top: '-2px', left: '-2px', width: '20px', height: '20px', borderTop: '4px solid #3B82F6', borderLeft: '4px solid #3B82F6', borderTopLeftRadius: '8px' }} />
-                    <div style={{ position: 'absolute', top: '-2px', right: '-2px', width: '20px', height: '20px', borderTop: '4px solid #3B82F6', borderRight: '4px solid #3B82F6', borderTopRightRadius: '8px' }} />
-                    <div style={{ position: 'absolute', bottom: '-2px', left: '-2px', width: '20px', height: '20px', borderBottom: '4px solid #3B82F6', borderLeft: '4px solid #3B82F6', borderBottomLeftRadius: '8px' }} />
-                    <div style={{ position: 'absolute', bottom: '-2px', right: '-2px', width: '20px', height: '20px', borderBottom: '4px solid #3B82F6', borderRight: '4px solid #3B82F6', borderBottomRightRadius: '8px' }} />
-                    
-                    {/* Scanner laser line */}
-                    <div className="scanner-line" style={{
-                      position: 'absolute',
-                      left: 0,
-                      right: 0,
-                      height: '3px',
-                      background: 'linear-gradient(90deg, transparent, #3B82F6, transparent)',
-                      boxShadow: '0 0 8px #3B82F6'
-                    }} />
+                {/* Scanner laser line */}
+                <div className="scanner-line" style={{
+                  position: 'absolute',
+                  left: 0,
+                  right: 0,
+                  height: '3px',
+                  background: 'linear-gradient(90deg, transparent, #3B82F6, transparent)',
+                  boxShadow: '0 0 8px #3B82F6'
+                }} />
+              </div>
+
+              {capturedImage && (
+                <img 
+                  src={capturedImage} 
+                  alt="Bukti Absen" 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, zIndex: 5 }} 
+                />
+              )}
+
+              {!hasStream && !capturedImage && (
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '10px', background: '#0F172A', padding: '16px', zIndex: 10 }}>
+                  <div className="camera-pulse" style={{ padding: '14px', background: 'rgba(59, 130, 246, 0.1)', border: '2px solid rgba(59, 130, 246, 0.3)', borderRadius: '50%', color: '#3B82F6' }}>
+                    <Camera size={32} />
                   </div>
-
-                  {capturedImage && (
-                    <img 
-                      src={capturedImage} 
-                      alt="Bukti Absen" 
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, zIndex: 5 }} 
-                    />
-                  )}
-
-                  {!hasStream && !capturedImage && (
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '10px', background: '#0F172A', padding: '16px', zIndex: 10 }}>
-                      <div className="camera-pulse" style={{ padding: '14px', background: 'rgba(59, 130, 246, 0.1)', border: '2px solid rgba(59, 130, 246, 0.3)', borderRadius: '50%', color: '#3B82F6' }}>
-                        <Camera size={32} />
-                      </div>
-                      <span style={{ fontWeight: 600, color: '#94A3B8', fontSize: '13px' }}>Mengakses Kamera...</span>
-                    </div>
-                  )}
+                  <span style={{ fontWeight: 600, color: '#94A3B8', fontSize: '13px' }}>Mengakses Kamera...</span>
                 </div>
+              )}
+            </div>
 
-                <div className="modal-info" style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: locationStatus === 'outside' ? '#FEF2F2' : '#F8FAFC', border: `1px solid ${locationStatus === 'outside' ? '#FCA5A5' : '#E2E8F0'}`, padding: '12px 16px', borderRadius: '14px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '8px', background: locationStatus === 'outside' ? '#FEE2E2' : '#EFF6FF' }}>
-                      <MapPin size={18} color={locationStatus === 'outside' ? '#EF4444' : '#2563EB'} />
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontSize: '10px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                        Geofence Divisi: {user ? (user.divisi || user.div || 'Sekolah') : 'Sekolah'}
-                      </span>
-                      <span style={{ fontSize: '13px', fontWeight: 600, color: locationStatus === 'outside' ? '#EF4444' : '#0F172A' }}>
-                        {locationStatus === 'loading' && 'Mendapatkan lokasi...'}
-                        {locationStatus === 'error' && 'Gagal mendapatkan lokasi GPS'}
-                        {locationStatus === 'inside' && (
-                          distance !== null && distance > 1000 
-                            ? `${getTargetGeofence(user?.divisi || user?.div).name} (Mode Demo)` 
-                            : `${getTargetGeofence(user?.divisi || user?.div).name} (Valid)`
-                        )}
-                        {locationStatus === 'outside' && `Di luar area! (Jarak: ${distance !== null ? distance.toFixed(0) : '-'}m, Maks: ${getTargetGeofence(user?.divisi || user?.div).radius}m)`}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '12px 16px', borderRadius: '14px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '8px', background: '#EFF6FF' }}>
-                      <Clock size={18} color="#2563EB" />
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontSize: '10px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Waktu Deteksi</span>
-                      <span style={{ fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>{currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} WIB</span>
-                    </div>
-                  </div>
+            <div className="modal-info" style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: locationStatus === 'outside' ? '#FEF2F2' : '#F8FAFC', border: `1px solid ${locationStatus === 'outside' ? '#FCA5A5' : '#E2E8F0'}`, padding: '12px 16px', borderRadius: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '8px', background: locationStatus === 'outside' ? '#FEE2E2' : '#EFF6FF' }}>
+                  <MapPin size={18} color={locationStatus === 'outside' ? '#EF4444' : '#2563EB'} />
                 </div>
-
-                {selectedStatus !== 'pulang' && getIsCurrentLate() && (
-                  <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#D97706', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      ⚠️ Jam Masuk Telah Lewat (Terlambat) — Wajib Tuliskan Alasan:
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={alasanTerlambat}
-                      onChange={(e) => setAlasanTerlambat(e.target.value)}
-                      placeholder="Tuliskan alasan keterlambatan Anda (misal: ban bocor, macet, urusan keluarga...)"
-                      style={{
-                        width: '100%',
-                        padding: '10px 14px',
-                        borderRadius: '12px',
-                        border: '1.5px solid #F59E0B',
-                        outline: 'none',
-                        fontSize: '13px',
-                        fontFamily: 'inherit',
-                        background: '#FFFBEB',
-                        color: '#78350F',
-                        boxSizing: 'border-box'
-                      }}
-                    />
-                  </div>
-                )}
-
-                <button 
-                  className="btn-primary" 
-                  style={{ 
-                    width: '100%', 
-                    marginTop: '16px', 
-                    padding: '16px', 
-                    borderRadius: '16px', 
-                    fontSize: '16px', 
-                    boxShadow: '0 10px 20px -5px rgba(37,99,235,0.3)',
-                    cursor: 'pointer'
-                  }} 
-                  onClick={selectedStatus === 'pulang' ? submitPulang : submitHadir}
-                >
-                  {selectedStatus === 'pulang' ? '✓ Konfirmasi Rekam Absen Pulang' : t.rekamHadir}
-                </button>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Geofence Divisi: {user ? (user.divisi || user.div || 'Sekolah') : 'Sekolah'}
+                  </span>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: locationStatus === 'outside' ? '#EF4444' : '#0F172A' }}>
+                    {locationStatus === 'loading' && 'Mendapatkan lokasi...'}
+                    {locationStatus === 'error' && 'Gagal mendapatkan lokasi GPS'}
+                    {locationStatus === 'inside' && (
+                      distance !== null && distance > 1000 
+                        ? `${getTargetGeofence(user?.divisi || user?.div).name} (Mode Demo)` 
+                        : `${getTargetGeofence(user?.divisi || user?.div).name} (Valid)`
+                    )}
+                    {locationStatus === 'outside' && `Di luar area! (Jarak: ${distance !== null ? distance.toFixed(0) : '-'}m, Maks: ${getTargetGeofence(user?.divisi || user?.div).radius}m)`}
+                  </span>
+                </div>
+              </div>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '12px 16px', borderRadius: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '8px', background: '#EFF6FF' }}>
+                  <Clock size={18} color="#2563EB" />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Waktu Deteksi</span>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>{currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} WIB</span>
+                </div>
               </div>
             </div>
-          )}
-        </>
+
+            {selectedStatus !== 'pulang' && getIsCurrentLate() && (
+              <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: '#D97706', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  ⚠️ Jam Masuk Telah Lewat (Terlambat) — Wajib Tuliskan Alasan:
+                </label>
+                <textarea
+                  rows={2}
+                  value={alasanTerlambat}
+                  onChange={(e) => setAlasanTerlambat(e.target.value)}
+                  placeholder="Tuliskan alasan keterlambatan Anda (misal: ban bocor, macet, urusan keluarga...)"
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    borderRadius: '12px',
+                    border: '1.5px solid #F59E0B',
+                    outline: 'none',
+                    fontSize: '13px',
+                    fontFamily: 'inherit',
+                    background: '#FFFBEB',
+                    color: '#78350F',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+            )}
+
+            <button 
+              className="btn-primary" 
+              style={{ 
+                width: '100%', 
+                marginTop: '16px', 
+                padding: '16px', 
+                borderRadius: '16px', 
+                fontSize: '16px', 
+                boxShadow: '0 10px 20px -5px rgba(37,99,235,0.3)',
+                cursor: 'pointer'
+              }} 
+              onClick={selectedStatus === 'pulang' ? submitPulang : submitHadir}
+            >
+              {selectedStatus === 'pulang' ? '✓ Konfirmasi Rekam Absen Pulang' : t.rekamHadir}
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )
