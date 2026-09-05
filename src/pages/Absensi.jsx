@@ -142,27 +142,26 @@ export default function Absensi() {
     // Ambil data dari LocalStorage
     const local = safeJsonParse('local_absensi', []);
 
-    // Ambil data dari Supabase jika bukan akun demo
+    // Ambil data dari Supabase
     let dbRecords = [];
-    const isDemo = !currentUser.id || currentUser.id.toString().startsWith('karyawan-') || currentUser.id.toString().startsWith('admin-');
-    if (!isDemo) {
-      try {
-        let targetId = currentUser?.id;
-        if (currentUser?.name) {
-          const { data: empData } = await supabase
-            .from('karyawan')
-            .select('id')
-            .ilike('name', currentUser.name.trim());
-          if (empData && empData.length > 0 && empData[0].id) {
-            targetId = empData[0].id;
-            if (String(currentUser.id) !== String(targetId)) {
-              const updatedUser = { ...currentUser, id: targetId };
-              setUser(updatedUser);
-              localStorage.setItem('user', JSON.stringify(updatedUser));
-            }
+    try {
+      let targetId = currentUser?.id;
+      if (currentUser?.name) {
+        const { data: empData } = await supabase
+          .from('karyawan')
+          .select('id')
+          .ilike('name', currentUser.name.trim());
+        if (empData && empData.length > 0 && empData[0].id) {
+          targetId = empData[0].id;
+          if (String(currentUser.id) !== String(targetId)) {
+            const updatedUser = { ...currentUser, id: targetId };
+            setUser(updatedUser);
+            localStorage.setItem('user', JSON.stringify(updatedUser));
           }
         }
+      }
 
+      if (targetId) {
         const { data } = await supabase
           .from('absensi')
           .select('*')
@@ -172,9 +171,9 @@ export default function Absensi() {
         if (data) {
           dbRecords = data;
         }
-      } catch (e) {
-        console.error("Gagal memuat absensi hari ini:", e);
       }
+    } catch (e) {
+      console.error("Gagal memuat absensi hari ini:", e);
     }
 
     let combined = [];
@@ -415,14 +414,29 @@ export default function Absensi() {
       local.unshift(localRec);
       localStorage.setItem('local_absensi', JSON.stringify(local));
 
-      // 2. Coba simpan ke Supabase jika bukan akun demo
-      const isDemo = !user.id || user.id.toString().startsWith('karyawan-') || user.id.toString().startsWith('admin-');
-      if (!isDemo) {
+      // 2. Simpan ke Supabase
+      let targetId = user.id;
+      if (user.name) {
+        try {
+          const { data: empData } = await supabase
+            .from('karyawan')
+            .select('id')
+            .ilike('name', user.name.trim());
+          if (empData && empData.length > 0 && empData[0].id) {
+            targetId = empData[0].id;
+          }
+        } catch (e) {}
+      }
+      if (targetId && targetId.toString().startsWith('karyawan-')) {
+        targetId = targetId.toString().replace('karyawan-', '');
+      }
+
+      if (targetId) {
         const { error } = await supabase
           .from('absensi')
           .insert([
             {
-              karyawan_id: user.id,
+              karyawan_id: targetId,
               tanggal: today,
               waktu_masuk: timeStr,
               status: status,
@@ -492,14 +506,29 @@ export default function Absensi() {
       local.unshift(localRec);
       localStorage.setItem('local_absensi', JSON.stringify(local));
 
-      // 2. Coba simpan ke Supabase jika bukan akun demo
-      const isDemo = !user.id || user.id.toString().startsWith('karyawan-') || user.id.toString().startsWith('admin-');
-      if (!isDemo) {
+      // 2. Simpan ke Supabase
+      let targetId = user.id;
+      if (user.name) {
+        try {
+          const { data: empData } = await supabase
+            .from('karyawan')
+            .select('id')
+            .ilike('name', user.name.trim());
+          if (empData && empData.length > 0 && empData[0].id) {
+            targetId = empData[0].id;
+          }
+        } catch (e) {}
+      }
+      if (targetId && targetId.toString().startsWith('karyawan-')) {
+        targetId = targetId.toString().replace('karyawan-', '');
+      }
+
+      if (targetId) {
         const { error } = await supabase
           .from('absensi')
           .insert([
             {
-              karyawan_id: user.id,
+              karyawan_id: targetId,
               tanggal: today,
               waktu_masuk: timeStr,
               status: status,
@@ -574,13 +603,27 @@ export default function Absensi() {
       }
 
       let targetRecord = currentActiveRecord;
-      const isDemo = !user.id || user.id.toString().startsWith('karyawan-') || user.id.toString().startsWith('admin-');
+      let targetId = user.id;
+      if (user.name) {
+        try {
+          const { data: empData } = await supabase
+            .from('karyawan')
+            .select('id')
+            .ilike('name', user.name.trim());
+          if (empData && empData.length > 0 && empData[0].id) {
+            targetId = empData[0].id;
+          }
+        } catch (e) {}
+      }
+      if (targetId && targetId.toString().startsWith('karyawan-')) {
+        targetId = targetId.toString().replace('karyawan-', '');
+      }
 
-      if (!targetRecord && !isDemo) {
+      if (!targetRecord && targetId) {
         const { data: dbActive } = await supabase
           .from('absensi')
           .select('*')
-          .eq('karyawan_id', user.id)
+          .eq('karyawan_id', targetId)
           .eq('tanggal', today)
           .is('waktu_keluar', null)
           .order('waktu_masuk', { ascending: true });
@@ -599,23 +642,21 @@ export default function Absensi() {
       });
       localStorage.setItem('local_absensi', JSON.stringify(updatedLocal));
 
-      // 2. Update di Supabase jika bukan akun demo
-      if (!isDemo) {
-        if (targetRecord && targetRecord.id && !targetRecord.isLocal) {
-          const { error } = await supabase
-            .from('absensi')
-            .update({ waktu_keluar: timeStr })
-            .eq('id', targetRecord.id);
-          if (error) console.error("Error updating checkout to Supabase:", error);
-        } else {
-          const { error } = await supabase
-            .from('absensi')
-            .update({ waktu_keluar: timeStr })
-            .eq('karyawan_id', user.id)
-            .eq('tanggal', today)
-            .is('waktu_keluar', null);
-          if (error) console.error("Error updating checkout fallback to Supabase:", error);
-        }
+      // 2. Update di Supabase
+      if (targetRecord && targetRecord.id && !targetRecord.isLocal) {
+        const { error } = await supabase
+          .from('absensi')
+          .update({ waktu_keluar: timeStr })
+          .eq('id', targetRecord.id);
+        if (error) console.error("Error updating checkout to Supabase:", error);
+      } else if (targetId) {
+        const { error } = await supabase
+          .from('absensi')
+          .update({ waktu_keluar: timeStr })
+          .eq('karyawan_id', targetId)
+          .eq('tanggal', today)
+          .is('waktu_keluar', null);
+        if (error) console.error("Error updating checkout fallback to Supabase:", error);
       }
 
       setShowModal(false);
