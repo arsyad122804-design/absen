@@ -351,13 +351,18 @@ export default function Absensi() {
 
     const division = user?.divisi || user?.div || 'Operasional';
     const hoursConfig = workHours[division] || workHours['Operasional'];
-    const targetMasukStr = (isKepesantrenan && flowType === 'checkin_2') 
-      ? hoursConfig.masuk2 
-      : (hoursConfig.masuk1 || hoursConfig.masuk || '07:00');
-    
-    const [targetHour, targetMinute] = targetMasukStr.split(':').map(Number);
+
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
+
+    if (isKepesantrenan && flowType === 'checkin_2') {
+      // Kepesantrenan Sesi 2 shift window is 17:00 to 21:00. Not late until after 21:00
+      const [endHour, endMinute] = (hoursConfig.pulang2 || "21:00").split(':').map(Number);
+      return (currentHour > endHour) || (currentHour === endHour && currentMinute > endMinute);
+    }
+
+    const targetMasukStr = hoursConfig.masuk1 || hoursConfig.masuk || '07:05';
+    const [targetHour, targetMinute] = targetMasukStr.split(':').map(Number);
     return (currentHour > targetHour) || (currentHour === targetHour && currentMinute > targetMinute);
   };
 
@@ -583,10 +588,17 @@ export default function Absensi() {
       const division = user?.divisi || user?.div || 'Operasional';
       const hoursConfig = workHours[division] || workHours['Operasional'];
       
-      // Target jam pulang (Sesi 2 untuk Kepesantrenan, atau pulang/pulang1 standar)
-      const targetPulangStr = (isKepesantrenan && flowType === 'checkout_2') 
-        ? hoursConfig.pulang2 
-        : (hoursConfig.pulang1 || hoursConfig.pulang || '17:00');
+      // Target jam pulang (Sesi 1: 07:30 / 15:00, Sesi 2: 21:00)
+      let targetPulangStr = '15:00';
+      if (isKepesantrenan) {
+        if (flowType === 'checkout_2') {
+          targetPulangStr = hoursConfig.pulang2 || '21:00';
+        } else {
+          targetPulangStr = hoursConfig.pulang1 || '07:30';
+        }
+      } else {
+        targetPulangStr = hoursConfig.pulang || hoursConfig.pulang1 || '15:00';
+      }
         
       const [targetPHour, targetPMinute] = targetPulangStr.split(':').map(Number);
       const currentPHour = now.getHours();
@@ -634,12 +646,31 @@ export default function Absensi() {
 
       // 1. Update di LocalStorage
       const local = safeJsonParse('local_absensi', []);
-      const updatedLocal = local.map(r => {
+      let updatedLocal = local.map(r => {
         if (targetRecord && String(r.id) === String(targetRecord.id)) {
+          return { ...r, waktu_keluar: timeStr };
+        }
+        if (r.tanggal === today && (String(r.karyawan_id) === String(targetId) || String(r.karyawan_id) === String(user.id)) && (!r.waktu_keluar || r.waktu_keluar === '-')) {
           return { ...r, waktu_keluar: timeStr };
         }
         return r;
       });
+
+      // Jika di local belum ada record yang ter-update, tambahkan fallback record
+      const hasUpdatedLocal = updatedLocal.some(r => r.tanggal === today && r.waktu_keluar === timeStr);
+      if (!hasUpdatedLocal) {
+        updatedLocal.unshift({
+          id: Date.now(),
+          karyawan_id: targetId || user.id,
+          nama: user.name,
+          tanggal: today,
+          waktu_masuk: timeStr,
+          waktu_keluar: timeStr,
+          status: 'Hadir',
+          keterangan: '-'
+        });
+      }
+
       localStorage.setItem('local_absensi', JSON.stringify(updatedLocal));
 
       // 2. Update di Supabase
@@ -649,7 +680,9 @@ export default function Absensi() {
           .update({ waktu_keluar: timeStr })
           .eq('id', targetRecord.id);
         if (error) console.error("Error updating checkout to Supabase:", error);
-      } else if (targetId) {
+      }
+      
+      if (targetId) {
         const { error } = await supabase
           .from('absensi')
           .update({ waktu_keluar: timeStr })
