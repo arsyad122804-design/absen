@@ -7,24 +7,53 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recha
 import { supabase } from '../lib/supabase';
 import './LaporanManager.css';
 
+const safeJsonParse = (key, fallback = []) => {
+  try {
+    const item = localStorage.getItem(key);
+    if (!item || item === 'undefined' || item === 'null') return fallback;
+    const parsed = JSON.parse(item);
+    return parsed !== null && parsed !== undefined ? parsed : fallback;
+  } catch (e) {
+    return fallback;
+  }
+};
+
 export default function LaporanManager() {
   const [chartData, setChartData] = useState([]);
   const [reportType, setReportType] = useState('Bulanan');
   const [isExporting, setIsExporting] = useState(false);
-  const [historyList, setHistoryList] = useState([]);
+  const [historyList, setHistoryList] = useState(() => {
+    return safeJsonParse('laporan_history', []);
+  });
 
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        const { data, error } = await supabase.from('absensi').select('*');
-        if (!error && data) {
-          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-          const counts = months.map(m => ({ name: m, hadir: 0, telat: 0, cuti: 0 }));
+        const localAbs = safeJsonParse('local_absensi', []);
+        let dbAbs = [];
+        try {
+          const { data, error } = await supabase.from('absensi').select('*');
+          if (!error && data) {
+            dbAbs = data;
+          }
+        } catch (e) {
+          console.error("Fetch DB error:", e);
+        }
 
-          data.forEach(r => {
-            const dateObj = r.tanggal ? new Date(r.tanggal) : null;
-            if (dateObj) {
-              const monthIdx = dateObj.getMonth();
+        const combined = [...dbAbs];
+        localAbs.forEach(loc => {
+          const exists = dbAbs.some(d => String(d.karyawan_id) === String(loc.karyawan_id) && d.tanggal === loc.tanggal);
+          if (!exists) combined.push(loc);
+        });
+
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        const counts = months.map(m => ({ name: m, hadir: 0, telat: 0, cuti: 0 }));
+
+        combined.forEach(r => {
+          const dateObj = r.tanggal ? new Date(r.tanggal) : null;
+          if (dateObj) {
+            const monthIdx = dateObj.getMonth();
+            if (monthIdx >= 0 && monthIdx < 12) {
               if (r.status === 'Hadir') {
                 counts[monthIdx].hadir++;
               } else if (r.status === 'Terlambat') {
@@ -33,18 +62,19 @@ export default function LaporanManager() {
                 counts[monthIdx].cuti++;
               }
             }
-          });
+          }
+        });
 
-          const currentMonth = new Date().getMonth();
-          const filtered = counts.slice(0, currentMonth + 1);
-          setChartData(filtered);
-        }
+        const currentMonth = new Date().getMonth();
+        const filtered = counts.slice(0, currentMonth + 1);
+        setChartData(filtered);
       } catch (e) {
-        console.error(e);
+        console.error("Analytics error:", e);
       }
     };
     fetchAnalytics();
   }, []);
+
   const [selectedDate, setSelectedDate] = useState(() => {
     const now = new Date();
     const tzoffset = now.getTimezoneOffset() * 60000;
@@ -66,9 +96,11 @@ export default function LaporanManager() {
     }
     if (reportType === 'Mingguan') {
       const d = new Date(selectedDate);
-      // Dapatkan awal minggu
-      const firstDay = new Date(d.setDate(d.getDate() - d.getDay() + 1));
-      const lastDay = new Date(d.setDate(d.getDate() - d.getDay() + 7));
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      const firstDay = new Date(d.setDate(diff));
+      const lastDay = new Date(firstDay);
+      lastDay.setDate(firstDay.getDate() + 6);
       return `Minggu (${firstDay.getDate()} ${firstDay.toLocaleDateString('id-ID', { month: 'short' })} - ${lastDay.getDate()} ${lastDay.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' })})`;
     }
     if (reportType === 'Bulanan') {
@@ -78,6 +110,36 @@ export default function LaporanManager() {
   };
 
   const [filterDivisi, setFilterDivisi] = useState('Semua Divisi');
+
+  const printDocumentIframe = (htmlContent, title) => {
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(htmlContent);
+    doc.close();
+
+    iframe.contentWindow.focus();
+    setTimeout(() => {
+      try {
+        iframe.contentWindow.print();
+      } catch (err) {
+        console.error("Print error:", err);
+      }
+      setTimeout(() => {
+        try {
+          document.body.removeChild(iframe);
+        } catch (e) {}
+      }, 2000);
+    }, 500);
+  };
 
   const handleExport = async (type, overrideItem = null) => {
     setIsExporting(true);
@@ -89,11 +151,33 @@ export default function LaporanManager() {
       const activeFilterDivisi = overrideItem?.filterDivisi || filterDivisi;
       const activePeriodStr = overrideItem?.periodStr || getPeriodLabel();
 
-      const { data: emps } = await supabase.from('karyawan').select('*');
-      const { data: absData } = await supabase.from('absensi').select('*');
+      const localEmps = safeJsonParse('local_karyawan', []);
+      const localAbs = safeJsonParse('local_absensi', []);
 
-      const allEmps = emps || [];
-      const allAbs = absData || [];
+      let dbEmps = [];
+      let dbAbs = [];
+      try {
+        const { data: emps } = await supabase.from('karyawan').select('*');
+        if (emps) dbEmps = emps;
+        const { data: absData } = await supabase.from('absensi').select('*');
+        if (absData) dbAbs = absData;
+      } catch (e) {
+        console.error("Supabase fetch failed:", e);
+      }
+
+      const allEmpsRaw = [...localEmps, ...dbEmps];
+      const allEmps = [];
+      allEmpsRaw.forEach(emp => {
+        if (emp.name && !allEmps.some(u => (u.id && String(u.id) === String(emp.id)) || u.name?.toLowerCase() === emp.name?.toLowerCase())) {
+          allEmps.push(emp);
+        }
+      });
+
+      const allAbs = [...dbAbs];
+      localAbs.forEach(loc => {
+        const exists = dbAbs.some(d => String(d.karyawan_id) === String(loc.karyawan_id) && d.tanggal === loc.tanggal);
+        if (!exists) allAbs.push(loc);
+      });
 
       let filteredEmps = allEmps;
       if (activeFilterDivisi && activeFilterDivisi !== 'Semua Divisi') {
@@ -103,6 +187,21 @@ export default function LaporanManager() {
       let filteredAbs = allAbs;
       if (activeReportType === 'Harian') {
         filteredAbs = allAbs.filter(a => a.tanggal === activeSelectedDate);
+      } else if (activeReportType === 'Mingguan') {
+        const d = new Date(activeSelectedDate);
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+        const monday = new Date(d.setDate(diff));
+        monday.setHours(0, 0, 0, 0);
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        sunday.setHours(23, 59, 59, 999);
+
+        filteredAbs = allAbs.filter(a => {
+          if (!a.tanggal) return false;
+          const aDate = new Date(a.tanggal);
+          return aDate >= monday && aDate <= sunday;
+        });
       } else if (activeReportType === 'Bulanan') {
         const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
         const mIdx = monthNames.indexOf(activeSelectedMonth);
@@ -199,131 +298,135 @@ export default function LaporanManager() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        URL.revokeObjectURL(url);
       } else {
-        const printWindow = window.open('', '_blank');
-        if (printWindow) {
-          let fullHtmlBody = '';
+        let fullHtmlBody = '';
 
-          if (sortedDates.length === 0) {
-            let emptyRows = '';
-            filteredEmps.forEach((emp, idx) => {
-              const sess = getSessionLabel(emp.divisi, '07:00');
-              emptyRows += `
+        if (sortedDates.length === 0) {
+          let emptyRows = '';
+          filteredEmps.forEach((emp, idx) => {
+            const sess = getSessionLabel(emp.divisi, '07:00');
+            emptyRows += `
+              <tr>
+                <td style="padding:8px;border:1px solid #ddd;text-align:center">${idx + 1}</td>
+                <td style="padding:8px;border:1px solid #ddd;font-weight:bold">${emp.name}</td>
+                <td style="padding:8px;border:1px solid #ddd">${emp.divisi || 'Operasional'}</td>
+                <td style="padding:8px;border:1px solid #ddd;font-size:11px;color:#475569">${sess}</td>
+                <td style="padding:8px;border:1px solid #ddd">${activeSelectedDate}</td>
+                <td style="padding:8px;border:1px solid #ddd">-</td>
+                <td style="padding:8px;border:1px solid #ddd">-</td>
+                <td style="padding:8px;border:1px solid #ddd;color:#dc2626;font-weight:bold">Tidak Hadir</td>
+              </tr>
+            `;
+          });
+          fullHtmlBody += `
+            <div style="background:#f1f5f9;padding:10px 14px;border-radius:8px;font-weight:bold;color:#0f172a;margin-top:20px;margin-bottom:8px;border-left:4px solid #2563eb;">
+              📅 ${formatFullDateId(activeSelectedDate)}
+            </div>
+            <table>
+              <thead>
                 <tr>
-                  <td style="padding:8px;border:1px solid #ddd;text-align:center">${idx + 1}</td>
-                  <td style="padding:8px;border:1px solid #ddd;font-weight:bold">${emp.name}</td>
-                  <td style="padding:8px;border:1px solid #ddd">${emp.divisi || 'Operasional'}</td>
-                  <td style="padding:8px;border:1px solid #ddd;font-size:11px;color:#475569">${sess}</td>
-                  <td style="padding:8px;border:1px solid #ddd">${activeSelectedDate}</td>
-                  <td style="padding:8px;border:1px solid #ddd">-</td>
-                  <td style="padding:8px;border:1px solid #ddd">-</td>
-                  <td style="padding:8px;border:1px solid #ddd;color:#dc2626;font-weight:bold">Tidak Hadir</td>
+                  <th>No</th>
+                  <th>Nama Karyawan</th>
+                  <th>Divisi</th>
+                  <th>Sesi / Shift</th>
+                  <th>Tanggal</th>
+                  <th>Jam Masuk</th>
+                  <th>Jam Pulang</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>${emptyRows}</tbody>
+            </table>
+          `;
+        } else {
+          sortedDates.forEach(dateKey => {
+            let dayRowsHtml = '';
+            let dayCount = 0;
+
+            absByDate[dateKey].forEach(a => {
+              const emp = filteredEmps.find(e => String(e.id) === String(a.karyawan_id));
+              const empName = emp ? emp.name : (a.nama || 'Karyawan');
+              const empDiv = emp ? (emp.divisi || 'Operasional') : 'Operasional';
+
+              if (activeFilterDivisi !== 'Semua Divisi' && !empDiv.toLowerCase().includes(activeFilterDivisi.toLowerCase())) return;
+
+              dayCount++;
+              const sess = getSessionLabel(empDiv, a.waktu_masuk);
+              dayRowsHtml += `
+                <tr>
+                  <td style="padding:8px;border:1px solid #ddd;text-align:center">${dayCount}</td>
+                  <td style="padding:8px;border:1px solid #ddd;font-weight:bold">${empName}</td>
+                  <td style="padding:8px;border:1px solid #ddd">${empDiv}</td>
+                  <td style="padding:8px;border:1px solid #ddd;font-size:12px;color:#2563eb;font-weight:600">${sess}</td>
+                  <td style="padding:8px;border:1px solid #ddd">${a.tanggal}</td>
+                  <td style="padding:8px;border:1px solid #ddd">${a.waktu_masuk || '-'}</td>
+                  <td style="padding:8px;border:1px solid #ddd">${a.waktu_keluar || '-'}</td>
+                  <td style="padding:8px;border:1px solid #ddd;color:${a.status==='Terlambat'?'#d97706':'#16a34a'};font-weight:bold">${a.status}</td>
                 </tr>
               `;
             });
-            fullHtmlBody += `
-              <div style="background:#f1f5f9;padding:10px 14px;border-radius:8px;font-weight:bold;color:#0f172a;margin-top:20px;margin-bottom:8px;border-left:4px solid #2563eb;">
-                📅 ${formatFullDateId(activeSelectedDate)}
-              </div>
-              <table>
-                <thead>
-                  <tr>
-                    <th>No</th>
-                    <th>Nama Karyawan</th>
-                    <th>Divisi</th>
-                    <th>Sesi / Shift</th>
-                    <th>Tanggal</th>
-                    <th>Jam Masuk</th>
-                    <th>Jam Pulang</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>${emptyRows}</tbody>
-              </table>
-            `;
-          } else {
-            sortedDates.forEach(dateKey => {
-              let dayRowsHtml = '';
-              let dayCount = 0;
 
-              absByDate[dateKey].forEach(a => {
-                const emp = filteredEmps.find(e => String(e.id) === String(a.karyawan_id));
-                const empName = emp ? emp.name : (a.nama || 'Karyawan');
-                const empDiv = emp ? (emp.divisi || 'Operasional') : 'Operasional';
-
-                if (activeFilterDivisi !== 'Semua Divisi' && !empDiv.toLowerCase().includes(activeFilterDivisi.toLowerCase())) return;
-
-                dayCount++;
-                const sess = getSessionLabel(empDiv, a.waktu_masuk);
-                dayRowsHtml += `
-                  <tr>
-                    <td style="padding:8px;border:1px solid #ddd;text-align:center">${dayCount}</td>
-                    <td style="padding:8px;border:1px solid #ddd;font-weight:bold">${empName}</td>
-                    <td style="padding:8px;border:1px solid #ddd">${empDiv}</td>
-                    <td style="padding:8px;border:1px solid #ddd;font-size:12px;color:#2563eb;font-weight:600">${sess}</td>
-                    <td style="padding:8px;border:1px solid #ddd">${a.tanggal}</td>
-                    <td style="padding:8px;border:1px solid #ddd">${a.waktu_masuk || '-'}</td>
-                    <td style="padding:8px;border:1px solid #ddd">${a.waktu_keluar || '-'}</td>
-                    <td style="padding:8px;border:1px solid #ddd;color:${a.status==='Terlambat'?'#d97706':'#16a34a'};font-weight:bold">${a.status}</td>
-                  </tr>
-                `;
-              });
-
-              if (dayCount > 0) {
-                fullHtmlBody += `
-                  <div style="background:#EFF6FF;padding:12px 16px;border-radius:10px;font-weight:bold;color:#1E40AF;margin-top:24px;margin-bottom:10px;border-left:5px solid #2563EB;font-size:14px;display:flex;align-items:center;gap:8px;">
-                    📅 ${formatFullDateId(dateKey)}
-                  </div>
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>No</th>
-                        <th>Nama Karyawan</th>
-                        <th>Divisi</th>
-                        <th>Sesi / Shift</th>
-                        <th>Tanggal</th>
-                        <th>Jam Masuk</th>
-                        <th>Jam Pulang</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${dayRowsHtml}
-                    </tbody>
-                  </table>
-                `;
-              }
-            });
-          }
-
-          printWindow.document.write(`
-            <html>
-              <head>
-                <title>Laporan Kehadiran - ${activePeriodStr}</title>
-                <style>
-                  body { font-family: Arial, sans-serif; padding: 24px; color: #1e293b; line-height: 1.5; }
-                  h1 { color: #0f172a; margin-bottom: 4px; font-size: 22px; font-weight: 800; }
-                  p { color: #64748b; font-size: 13px; margin-top: 0; }
-                  table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 13px; }
-                  th { background: #F8FAFC; padding: 10px 8px; border: 1px solid #CBD5E1; text-align: left; font-size: 12px; color: #334155; text-transform: uppercase; }
-                  .header-box { border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-bottom: 16px; }
-                </style>
-              </head>
-              <body>
-                <div class="header-box">
-                  <h1>LAPORAN REKAPITULASI KEHADIRAN KARYAWAN</h1>
-                  <p>Hibatullah International Islamic Boarding School • Periode: ${activePeriodStr} • Divisi: ${activeFilterDivisi}</p>
+            if (dayCount > 0) {
+              fullHtmlBody += `
+                <div style="background:#EFF6FF;padding:12px 16px;border-radius:10px;font-weight:bold;color:#1E40AF;margin-top:24px;margin-bottom:10px;border-left:5px solid #2563EB;font-size:14px;display:flex;align-items:center;gap:8px;">
+                  📅 ${formatFullDateId(dateKey)}
                 </div>
-                ${fullHtmlBody}
-              </body>
-            </html>
-          `);
-          printWindow.document.close();
-          printWindow.focus();
-          setTimeout(() => {
-            printWindow.print();
-          }, 500);
+                <table>
+                  <thead>
+                    <tr>
+                      <th>No</th>
+                      <th>Nama Karyawan</th>
+                      <th>Divisi</th>
+                      <th>Sesi / Shift</th>
+                      <th>Tanggal</th>
+                      <th>Jam Masuk</th>
+                      <th>Jam Pulang</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${dayRowsHtml}
+                  </tbody>
+                </table>
+              `;
+            }
+          });
         }
+
+        const htmlContent = `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <title>Laporan Kehadiran - ${activePeriodStr}</title>
+              <style>
+                @page { size: A4; margin: 15mm; }
+                body { font-family: 'Segoe UI', Arial, sans-serif; padding: 24px; color: #1e293b; line-height: 1.5; background: #fff; }
+                h1 { color: #0f172a; margin-bottom: 4px; font-size: 20px; font-weight: 800; }
+                p { color: #64748b; font-size: 13px; margin-top: 0; }
+                table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; }
+                th { background: #F8FAFC; padding: 8px 6px; border: 1px solid #CBD5E1; text-align: left; font-size: 11px; color: #334155; text-transform: uppercase; font-weight: 700; }
+                td { padding: 6px 8px; border: 1px solid #E2E8F0; }
+                .header-box { border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-bottom: 16px; }
+                @media print {
+                  body { padding: 0; }
+                  .header-box { border-bottom: 2px solid #000; }
+                }
+              </style>
+            </head>
+            <body>
+              <div class="header-box">
+                <h1>LAPORAN REKAPITULASI KEHADIRAN KARYAWAN</h1>
+                <p>Hibatullah International Islamic Boarding School • Periode: ${activePeriodStr} • Divisi: ${activeFilterDivisi}</p>
+                <p style="font-size: 11px; color: #94a3b8; margin: 0;">Dicetak pada: ${new Date().toLocaleString('id-ID')}</p>
+              </div>
+              ${fullHtmlBody}
+            </body>
+          </html>
+        `;
+
+        printDocumentIframe(htmlContent, `Laporan Kehadiran - ${activePeriodStr}`);
       }
 
       if (!overrideItem) {
@@ -339,17 +442,22 @@ export default function LaporanManager() {
           filterDivisi,
           periodStr: activePeriodStr
         };
-        setHistoryList([newReport, ...historyList]);
+        const updatedHistory = [newReport, ...historyList.filter(h => h.name !== newReport.name)];
+        setHistoryList(updatedHistory);
+        try {
+          localStorage.setItem('laporan_history', JSON.stringify(updatedHistory));
+        } catch(e) {}
       }
     } catch (e) {
       console.error("Export error:", e);
+      alert("Terjadi kesalahan saat memproses laporan: " + (e.message || e));
     } finally {
       setIsExporting(false);
     }
   };
 
   const handleDownloadHistory = (item) => {
-    handleExport(item.type || 'Excel', item);
+    handleExport(item.type || 'PDF', item);
   };
 
   return (

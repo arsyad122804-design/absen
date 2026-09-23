@@ -297,9 +297,6 @@ export default function AbsensiManager() {
   }, [selectedDate]);
 
   const handleExportPDF = () => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
     let rowsHtml = '';
     filteredData.forEach((row, idx) => {
       const statusColor = row.status === 'Hadir' ? '#16a34a' : (row.status === 'Terlambat' ? '#d97706' : '#dc2626');
@@ -317,12 +314,15 @@ export default function AbsensiManager() {
       `;
     });
 
-    printWindow.document.write(`
+    const htmlContent = `
+      <!DOCTYPE html>
       <html>
         <head>
+          <meta charset="utf-8">
           <title>Laporan Kehadiran - ${getFormattedDate(selectedDate)}</title>
           <style>
-            body { font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; color: #1e293b; line-height: 1.4; }
+            @page { size: A4; margin: 15mm; }
+            body { font-family: 'Segoe UI', Arial, sans-serif; padding: 24px; color: #1e293b; line-height: 1.4; background: #fff; }
             .header-box { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #2563eb; padding-bottom: 14px; margin-bottom: 20px; }
             .header-title h1 { margin: 0; font-size: 22px; color: #0f172a; font-weight: 800; letter-spacing: -0.5px; }
             .header-title p { margin: 4px 0 0 0; font-size: 13px; color: #64748b; }
@@ -340,6 +340,9 @@ export default function AbsensiManager() {
             .footer-sign { margin-top: 40px; display: flex; justify-content: flex-end; }
             .sign-box { text-align: center; width: 220px; }
             .sign-space { height: 60px; }
+            @media print {
+              body { padding: 0; }
+            }
           </style>
         </head>
         <body>
@@ -401,11 +404,34 @@ export default function AbsensiManager() {
           </div>
         </body>
       </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
+    `;
+
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(htmlContent);
+    doc.close();
+
+    iframe.contentWindow.focus();
     setTimeout(() => {
-      printWindow.print();
+      try {
+        iframe.contentWindow.print();
+      } catch (err) {
+        console.error("Print error:", err);
+      }
+      setTimeout(() => {
+        try {
+          document.body.removeChild(iframe);
+        } catch (e) {}
+      }, 2000);
     }, 500);
   };
 
