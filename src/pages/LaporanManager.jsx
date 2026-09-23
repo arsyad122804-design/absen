@@ -558,7 +558,7 @@ export default function LaporanManager() {
               doc.setFontSize(8);
               doc.setTextColor(51, 65, 85);
               doc.setFont('helvetica', 'bold');
-              doc.text(`📅 ${fullDateText}`, 14, currentY + 3);
+              doc.text(`Tanggal: ${fullDateText}`, 14, currentY + 3);
               currentY += 5;
 
               autoTable(doc, {
