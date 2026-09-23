@@ -215,6 +215,63 @@ export default function LaporanManager() {
         return 'Sesi 2 (Sore)';
       };
 
+      // Generate Weeks (Senin - Jumat) for the selected period
+      const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+      const mIdx = monthNames.indexOf(activeSelectedMonth) >= 0 ? monthNames.indexOf(activeSelectedMonth) : new Date().getMonth();
+      const year = Number(activeSelectedYear) || new Date().getFullYear();
+
+      let weeks = [];
+      if (activeReportType === 'Harian') {
+        const d = new Date(activeSelectedDate);
+        weeks = [[d]];
+      } else if (activeReportType === 'Mingguan') {
+        const d = new Date(activeSelectedDate);
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+        const mon = new Date(d.setDate(diff));
+        const w = [];
+        for (let i = 0; i < 5; i++) {
+          const cd = new Date(mon);
+          cd.setDate(mon.getDate() + i);
+          w.push(cd);
+        }
+        weeks = [w];
+      } else if (activeReportType === 'Bulanan') {
+        const lastDay = new Date(year, mIdx + 1, 0).getDate();
+        let curWeek = [];
+        for (let day = 1; day <= lastDay; day++) {
+          const cd = new Date(year, mIdx, day);
+          const dow = cd.getDay(); // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
+          if (dow >= 1 && dow <= 5) {
+            curWeek.push(cd);
+            if (dow === 5 || day === lastDay) {
+              weeks.push([...curWeek]);
+              curWeek = [];
+            }
+          } else if (dow === 0 && curWeek.length > 0) {
+            weeks.push([...curWeek]);
+            curWeek = [];
+          }
+        }
+        if (curWeek.length > 0) weeks.push([...curWeek]);
+      } else {
+        const lastDay = new Date(year, 12, 0).getDate();
+        const d1 = new Date(year, 0, 1);
+        weeks = [[d1]];
+      }
+
+      let bulanRangeStr = '';
+      if (activeReportType === 'Bulanan') {
+        const lastDay = new Date(year, mIdx + 1, 0).getDate();
+        bulanRangeStr = `01 ${activeSelectedMonth} ${year} - ${String(lastDay).padStart(2, '0')} ${activeSelectedMonth} ${year}`;
+      } else if (activeReportType === 'Harian') {
+        bulanRangeStr = activeSelectedDate;
+      } else if (activeReportType === 'Mingguan') {
+        bulanRangeStr = activePeriodStr;
+      } else {
+        bulanRangeStr = `Tahun ${year}`;
+      }
+
       // Per-Employee Accumulation Calculation
       const summaryDataPerEmp = filteredEmps.map((emp, index) => {
         const records = filteredAbs.filter(a => 
@@ -256,7 +313,8 @@ export default function LaporanManager() {
         return {
           no: index + 1,
           name: emp.name || 'Karyawan',
-          divisi: emp.divisi || emp.div || 'Operasional',
+          jabatan: emp.jabatan || emp.role || (index === 0 ? 'Kepala Unit' : 'Pengajar'),
+          divisi: emp.divisi || emp.div || 'SDM',
           hadir,
           terlambat,
           izin,
@@ -273,35 +331,97 @@ export default function LaporanManager() {
       const totalSakitAll = summaryDataPerEmp.reduce((sum, e) => sum + e.sakit, 0);
       const totalAlpaAll = summaryDataPerEmp.reduce((sum, e) => sum + e.alpa, 0);
 
-      const reportName = `Laporan_Kehadiran_${activeReportType}_${activePeriodStr.replace(/[^a-zA-Z0-9]/g, '_')}`;
-
-      // Group absensi by date (sorted descending)
-      const absByDate = {};
-      filteredAbs.forEach(a => {
-        const d = a.tanggal || 'Tanpa Tanggal';
-        if (!absByDate[d]) absByDate[d] = [];
-        absByDate[d].push(a);
-      });
-
-      const sortedDates = Object.keys(absByDate).sort((a, b) => b.localeCompare(a));
+      const reportName = `Daftar_Hadir_SDM_${activeReportType}_${activePeriodStr.replace(/[^a-zA-Z0-9]/g, '_')}`;
 
       if (type === 'Excel') {
-        // GENERATE DIRECT .XLSX FILE WITH 2 SHEETS: REKAP AKUMULASI + LOG HARIAN
+        // GENERATE DIRECT .XLSX FILE WITH GRID & REKAP SHEETS
         const wb = XLSX.utils.book_new();
 
-        // Sheet 1: Rekapitulasi Akumulasi Per Karyawan
+        // Sheet 1: Daftar Hadir Grid Mingguan
+        const wsGridData = [
+          ["DAFTAR HADIR SDM HIBATULLAH IIBS"],
+          [`BULAN  : ${bulanRangeStr}`],
+          [`BIDANG : ${activeFilterDivisi === 'Semua Divisi' ? 'Operasional & SDM' : activeFilterDivisi}`],
+          []
+        ];
+
+        const dayNamesIndo = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const monthNamesShort = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+        weeks.forEach((weekDays, wIdx) => {
+          if (weekDays.length === 0) return;
+
+          // Header row 1
+          const r1 = ["No", "Nama", "Jabatan", "Unit"];
+          weekDays.forEach(d => {
+            const dayName = dayNamesIndo[d.getDay()];
+            const dateText = `${String(d.getDate()).padStart(2, '0')} ${monthNamesShort[d.getMonth()]} ${d.getFullYear()}`;
+            r1.push(`${dayName} (${dateText})`, "", "", "", "");
+          });
+
+          // Header row 2
+          const r2 = ["", "", "", ""];
+          weekDays.forEach(() => {
+            r2.push("In", "Prf", "Istrht", "Out", "Prf");
+          });
+
+          wsGridData.push(r1);
+          wsGridData.push(r2);
+
+          // Body rows
+          summaryDataPerEmp.forEach((emp, empIdx) => {
+            const row = [empIdx + 1, emp.name, emp.jabatan, emp.divisi];
+            weekDays.forEach(d => {
+              const tzDateStr = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+              const records = allAbs.filter(a =>
+                a.tanggal === tzDateStr &&
+                ((a.karyawan_id && String(a.karyawan_id) === String(emp.id)) ||
+                 (a.nama && emp.name && a.nama.toLowerCase() === emp.name.toLowerCase()) ||
+                 (a.nama_karyawan && emp.name && a.nama_karyawan.toLowerCase() === emp.name.toLowerCase()) ||
+                 (a.name && emp.name && a.name.toLowerCase() === emp.name.toLowerCase()))
+              );
+
+              if (records.length > 0) {
+                const rec = records[0];
+                const st = (rec.status || '').trim();
+                if (st === 'Hadir' || st === 'Tepat Waktu' || st === 'Terlambat') {
+                  const inTime = rec.waktu_masuk ? rec.waktu_masuk.substring(0, 5).replace(':', '.') : '-';
+                  const outTime = rec.waktu_keluar ? rec.waktu_keluar.substring(0, 5).replace(':', '.') : '-';
+                  row.push(inTime, inTime !== '-' ? 'v' : '', '', outTime, outTime !== '-' ? 'v' : '');
+                } else if (st === 'Izin') {
+                  row.push("ijin", "", "", "", "");
+                } else if (st === 'Sakit') {
+                  row.push("Sakit", "", "", "", "");
+                } else {
+                  row.push("Alpa", "", "", "", "");
+                }
+              } else {
+                row.push("Alpa", "", "", "", "");
+              }
+            });
+            wsGridData.push(row);
+          });
+
+          wsGridData.push([]);
+        });
+
+        const wsGrid = XLSX.utils.aoa_to_sheet(wsGridData);
+        XLSX.utils.book_append_sheet(wb, wsGrid, "Daftar Hadir SDM");
+
+        // Sheet 2: Rekapitulasi Akumulasi Per Karyawan
         const wsSummaryData = [
           ["LAPORAN REKAPITULASI AKUMULASI KEHADIRAN KARYAWAN"],
           ["Hibatullah International Islamic Boarding School"],
           [`Periode: ${activePeriodStr}`, `Divisi: ${activeFilterDivisi}`, `Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}`],
           [],
-          ["No", "Nama Karyawan", "Divisi", "Hadir (Tepat Waktu)", "Terlambat", "Izin", "Sakit", "Alpa / Cuti", "Total Kehadiran", "% Kehadiran"]
+          ["No", "Nama Karyawan", "Jabatan", "Unit", "Hadir (Tepat Waktu)", "Terlambat", "Izin", "Sakit", "Alpa / Cuti", "Total Kehadiran", "% Kehadiran"]
         ];
 
         summaryDataPerEmp.forEach(e => {
           wsSummaryData.push([
             e.no,
             e.name,
+            e.jabatan,
             e.divisi,
             e.hadir,
             e.terlambat,
@@ -318,6 +438,7 @@ export default function LaporanManager() {
           "",
           "TOTAL KESELURUHAN",
           "",
+          "",
           totalHadirAll,
           totalTelatAll,
           totalIzinAll,
@@ -328,291 +449,197 @@ export default function LaporanManager() {
         ]);
 
         const wsSummary = XLSX.utils.aoa_to_sheet(wsSummaryData);
-        wsSummary['!cols'] = [
-          { wch: 6 },
-          { wch: 28 },
-          { wch: 18 },
-          { wch: 20 },
-          { wch: 14 },
-          { wch: 10 },
-          { wch: 10 },
-          { wch: 14 },
-          { wch: 18 },
-          { wch: 16 }
-        ];
         XLSX.utils.book_append_sheet(wb, wsSummary, "Rekap Akumulasi");
-
-        // Sheet 2: Rincian Log Harian
-        const wsLogData = [
-          ["LOG DETAIL KEHADIRAN HARIAN"],
-          ["Hibatullah International Islamic Boarding School"],
-          [`Periode: ${activePeriodStr}`, `Divisi: ${activeFilterDivisi}`, `Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}`],
-          [],
-          ["No", "Nama Karyawan", "Divisi", "Sesi / Shift", "Tanggal", "Jam Masuk", "Jam Pulang", "Status", "Lokasi"]
-        ];
-
-        if (sortedDates.length === 0) {
-          filteredEmps.forEach((emp, idx) => {
-            const sess = getSessionLabel(emp.divisi, '07:00');
-            wsLogData.push([
-              idx + 1,
-              emp.name || 'Karyawan',
-              emp.divisi || 'Operasional',
-              sess,
-              activeSelectedDate,
-              '-',
-              '-',
-              'Tidak Hadir',
-              '-'
-            ]);
-          });
-        } else {
-          sortedDates.forEach(dateKey => {
-            const fullDateText = formatFullDateId(dateKey);
-            wsLogData.push([]);
-            wsLogData.push([`=== ${fullDateText.toUpperCase()} ===`]);
-            let dayCount = 0;
-            absByDate[dateKey].forEach(a => {
-              const emp = filteredEmps.find(e => 
-                (a.karyawan_id && String(e.id) === String(a.karyawan_id)) ||
-                (a.nama && e.name && a.nama.toLowerCase() === e.name.toLowerCase())
-              );
-              const empName = emp ? emp.name : (a.nama || a.karyawan_id || 'Karyawan');
-              const empDiv = emp ? (emp.divisi || emp.div || 'Operasional') : 'Operasional';
-
-              if (activeFilterDivisi !== 'Semua Divisi' && !empDiv.toLowerCase().includes(activeFilterDivisi.toLowerCase())) return;
-
-              dayCount++;
-              const sess = getSessionLabel(empDiv, a.waktu_masuk);
-              wsLogData.push([
-                dayCount,
-                empName,
-                empDiv,
-                sess,
-                a.tanggal || '-',
-                a.waktu_masuk || '-',
-                a.waktu_keluar || '-',
-                a.status || '-',
-                a.lokasi || '-'
-              ]);
-            });
-          });
-        }
-
-        const wsLog = XLSX.utils.aoa_to_sheet(wsLogData);
-        wsLog['!cols'] = [
-          { wch: 6 },
-          { wch: 26 },
-          { wch: 18 },
-          { wch: 16 },
-          { wch: 14 },
-          { wch: 12 },
-          { wch: 12 },
-          { wch: 16 },
-          { wch: 25 }
-        ];
-        XLSX.utils.book_append_sheet(wb, wsLog, "Log Harian");
 
         XLSX.writeFile(wb, `${reportName}.xlsx`);
         setDownloadSuccess(`Berhasil mengunduh ${reportName}.xlsx`);
       } else {
-        // GENERATE DIRECT .PDF FILE WITH AKUMULASI SUMMARY TABLE & DAILY DETAIL
-        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        // GENERATE LANDSCAPE SDM GRID PDF (EXACT REPLICA OF USER REFERENCE IMAGES)
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
-        // Header Banner
-        doc.setFillColor(37, 99, 235); // Blue #2563EB
-        doc.rect(0, 0, 210, 24, 'F');
-
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        doc.text('HIBATULLAH INTERNATIONAL ISLAMIC BOARDING SCHOOL', 105, 9, { align: 'center' });
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        doc.text('LAPORAN REKAPITULASI & AKUMULASI KEHADIRAN KARYAWAN', 105, 16, { align: 'center' });
-
-        // Info Metadata Box
-        doc.setTextColor(30, 41, 59);
-        doc.setFontSize(8.5);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Periode:', 14, 31);
-        doc.setFont('helvetica', 'normal');
-        doc.text(String(activePeriodStr), 30, 31);
-
-        doc.setFont('helvetica', 'bold');
-        doc.text('Divisi:', 14, 36);
-        doc.setFont('helvetica', 'normal');
-        doc.text(String(activeFilterDivisi), 30, 36);
-
-        doc.setFont('helvetica', 'bold');
-        doc.text('Tanggal Cetak:', 135, 31);
-        doc.setFont('helvetica', 'normal');
-        doc.text(new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }), 158, 31);
-
-        // SECTION 1: TABEL REKAPITULASI AKUMULASI PER KARYAWAN
-        doc.setFillColor(239, 246, 255);
-        doc.rect(14, 42, 182, 6.5, 'F');
-        doc.setTextColor(37, 99, 235);
-        doc.setFontSize(8.5);
-        doc.setFont('helvetica', 'bold');
-        doc.text('A. REKAPITULASI AKUMULASI KEHADIRAN (PER KARYAWAN)', 17, 46.5);
-
-        const summaryTableBody = summaryDataPerEmp.map(e => [
-          e.no,
-          e.name,
-          e.divisi,
-          e.hadir,
-          e.terlambat,
-          e.izin,
-          e.sakit,
-          e.alpa,
-          e.totalHadir,
-          e.persentase
-        ]);
-
-        autoTable(doc, {
-          startY: 50,
-          head: [['No', 'Nama Karyawan', 'Divisi', 'Hadir', 'Telat', 'Izin', 'Sakit', 'Alpa', 'Total Hadir', '% Hadir']],
-          body: summaryTableBody,
-          foot: [[
-            '', 'TOTAL KESELURUHAN', '',
-            String(totalHadirAll),
-            String(totalTelatAll),
-            String(totalIzinAll),
-            String(totalSakitAll),
-            String(totalAlpaAll),
-            String(totalHadirAll + totalTelatAll),
-            ''
-          ]],
-          theme: 'grid',
-          headStyles: { fillColor: [241, 245, 249], textColor: [51, 65, 85], fontSize: 8, fontStyle: 'bold', halign: 'center' },
-          footStyles: { fillColor: [226, 232, 240], textColor: [15, 23, 42], fontSize: 8, fontStyle: 'bold', halign: 'center' },
-          styles: { fontSize: 7.5, cellPadding: 2 },
-          columnStyles: {
-            0: { halign: 'center', cellWidth: 8 },
-            1: { fontStyle: 'bold' },
-            2: { cellWidth: 24 },
-            3: { halign: 'center', textColor: [22, 163, 74], fontStyle: 'bold' },
-            4: { halign: 'center', textColor: [217, 119, 6], fontStyle: 'bold' },
-            5: { halign: 'center', textColor: [59, 130, 246] },
-            6: { halign: 'center', textColor: [219, 39, 119] },
-            7: { halign: 'center', textColor: [220, 38, 38], fontStyle: 'bold' },
-            8: { halign: 'center', textColor: [37, 99, 235], fontStyle: 'bold' },
-            9: { halign: 'center', fontStyle: 'bold' }
-          }
-        });
-
-        let currentY = doc.lastAutoTable.finalY + 10;
-
-        // SECTION 2: RINCIAN LOG HARIAN (Jika ada)
-        if (sortedDates.length > 0) {
-          if (currentY > 240) {
-            doc.addPage();
-            currentY = 16;
-          }
-
-          doc.setFillColor(239, 246, 255);
-          doc.rect(14, currentY, 182, 6.5, 'F');
-          doc.setTextColor(37, 99, 235);
-          doc.setFontSize(8.5);
-          doc.setFont('helvetica', 'bold');
-          doc.text('B. RINCIAN LOG KEHADIRAN HARIAN', 17, currentY + 4.5);
-          currentY += 8;
-
-          sortedDates.forEach((dateKey) => {
-            const fullDateText = formatFullDateId(dateKey);
-            const rows = [];
-            let dayCount = 0;
-
-            absByDate[dateKey].forEach(a => {
-              const emp = filteredEmps.find(e => 
-                (a.karyawan_id && String(e.id) === String(a.karyawan_id)) ||
-                (a.nama && e.name && a.nama.toLowerCase() === e.name.toLowerCase())
-              );
-              const empName = emp ? emp.name : (a.nama || a.karyawan_id || 'Karyawan');
-              const empDiv = emp ? (emp.divisi || emp.div || 'Operasional') : 'Operasional';
-
-              if (activeFilterDivisi !== 'Semua Divisi' && !empDiv.toLowerCase().includes(activeFilterDivisi.toLowerCase())) return;
-
-              dayCount++;
-              const sess = getSessionLabel(empDiv, a.waktu_masuk);
-              rows.push([
-                dayCount,
-                empName,
-                empDiv,
-                sess,
-                a.tanggal || dateKey,
-                a.waktu_masuk ? a.waktu_masuk.substring(0, 5) : '-',
-                a.waktu_keluar ? a.waktu_keluar.substring(0, 5) : '-',
-                a.status || 'Hadir'
-              ]);
-            });
-
-            if (rows.length > 0) {
-              if (currentY > 245) {
-                doc.addPage();
-                currentY = 16;
-              }
-
-              // Sub-header date
-              doc.setFontSize(8);
-              doc.setTextColor(51, 65, 85);
-              doc.setFont('helvetica', 'bold');
-              doc.text(`Tanggal: ${fullDateText}`, 14, currentY + 3);
-              currentY += 5;
-
-              autoTable(doc, {
-                startY: currentY,
-                head: [['No', 'Nama Karyawan', 'Divisi', 'Sesi', 'Tanggal', 'Jam Masuk', 'Jam Pulang', 'Status']],
-                body: rows,
-                theme: 'grid',
-                headStyles: { fillColor: [248, 250, 252], textColor: [51, 65, 85], fontSize: 7.5, fontStyle: 'bold' },
-                styles: { fontSize: 7.5, cellPadding: 1.8 },
-                columnStyles: {
-                  0: { halign: 'center', cellWidth: 8 },
-                  1: { fontStyle: 'bold' },
-                  7: { fontStyle: 'bold' }
-                },
-                didParseCell: function(data) {
-                  if (data.section === 'body' && data.column.index === 7) {
-                    const val = data.cell.raw;
-                    if (val === 'Terlambat') {
-                      data.cell.styles.textColor = [217, 119, 6];
-                    } else if (val === 'Hadir' || val === 'Tepat Waktu') {
-                      data.cell.styles.textColor = [22, 163, 74];
-                    } else {
-                      data.cell.styles.textColor = [220, 38, 38];
-                    }
-                  }
-                }
-              });
-              currentY = doc.lastAutoTable.finalY + 6;
-            }
-          });
-        }
-
-        // Tanda Tangan
-        let signY = currentY + 8;
-        if (signY > 245) {
-          doc.addPage();
-          signY = 24;
-        }
-
-        doc.setFontSize(8);
-        doc.setTextColor(71, 85, 105);
-        doc.text(`Bojonegoro, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`, 145, signY);
+        // Document Header
+        doc.setFontSize(13);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(15, 23, 42);
-        doc.text('Manager Operasional & HR', 145, signY + 4.5);
-        doc.text('( Tanda Tangan & Cap )', 145, signY + 22);
+        doc.text('DAFTAR HADIR SDM HIBATULLAH IIBS', 14, 14);
+
+        doc.setFontSize(8.5);
+        doc.setFont('helvetica', 'bold');
+        doc.text('BULAN  :', 14, 21);
+        doc.setFont('helvetica', 'normal');
+        doc.text(bulanRangeStr, 34, 21);
+
+        doc.setFont('helvetica', 'bold');
+        doc.text('BIDANG :', 14, 26);
+        doc.setFont('helvetica', 'normal');
+        doc.text(activeFilterDivisi === 'Semua Divisi' ? 'Operasional & SDM' : activeFilterDivisi, 34, 26);
+
+        let currentY = 30;
+        const dayNamesIndo = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const monthNamesShort = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+        weeks.forEach((weekDays, weekIdx) => {
+          if (weekDays.length === 0) return;
+
+          // Header Row 1
+          const headRow1 = [
+            { content: 'No', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } },
+            { content: 'Nama', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } },
+            { content: 'Jabatan', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } },
+            { content: 'Unit', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } }
+          ];
+
+          weekDays.forEach(d => {
+            const dayName = dayNamesIndo[d.getDay()];
+            const dateText = `${String(d.getDate()).padStart(2, '0')} ${monthNamesShort[d.getMonth()]} ${d.getFullYear()}`;
+            headRow1.push({
+              content: `${dayName}\n${dateText}`,
+              colSpan: 5,
+              styles: { halign: 'center', valign: 'middle' }
+            });
+          });
+
+          // Header Row 2
+          const headRow2 = [];
+          weekDays.forEach(() => {
+            headRow2.push(
+              { content: 'In', styles: { halign: 'center' } },
+              { content: 'Prf', styles: { halign: 'center' } },
+              { content: 'Istrht', styles: { halign: 'center', fillColor: [187, 247, 208] } },
+              { content: 'Out', styles: { halign: 'center' } },
+              { content: 'Prf', styles: { halign: 'center' } }
+            );
+          });
+
+          // Body Rows
+          const bodyRows = summaryDataPerEmp.map((emp, empIdx) => {
+            const row = [
+              empIdx + 1,
+              emp.name,
+              emp.jabatan,
+              emp.divisi
+            ];
+
+            weekDays.forEach(d => {
+              const tzDateStr = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+              const records = allAbs.filter(a =>
+                a.tanggal === tzDateStr &&
+                ((a.karyawan_id && String(a.karyawan_id) === String(emp.id)) ||
+                 (a.nama && emp.name && a.nama.toLowerCase() === emp.name.toLowerCase()) ||
+                 (a.nama_karyawan && emp.name && a.nama_karyawan.toLowerCase() === emp.name.toLowerCase()) ||
+                 (a.name && emp.name && a.name.toLowerCase() === emp.name.toLowerCase()))
+              );
+
+              if (records.length > 0) {
+                const rec = records[0];
+                const st = (rec.status || '').trim();
+                if (st === 'Hadir' || st === 'Tepat Waktu' || st === 'Terlambat') {
+                  const inTime = rec.waktu_masuk ? rec.waktu_masuk.substring(0, 5).replace(':', '.') : '-';
+                  const outTime = rec.waktu_keluar ? rec.waktu_keluar.substring(0, 5).replace(':', '.') : '-';
+                  row.push(inTime, inTime !== '-' ? 'v' : '', '', outTime, outTime !== '-' ? 'v' : '');
+                } else if (st === 'Izin') {
+                  row.push({ content: 'ijin', colSpan: 5, styles: { halign: 'center', fillColor: [255, 255, 255], textColor: [71, 85, 105] } });
+                } else if (st === 'Sakit') {
+                  row.push({ content: 'Sakit', colSpan: 5, styles: { halign: 'center', fillColor: [255, 255, 255], textColor: [71, 85, 105] } });
+                } else {
+                  row.push({ content: '', colSpan: 5, styles: { fillColor: [239, 68, 68] } }); // Red block for absent
+                }
+              } else {
+                row.push({ content: '', colSpan: 5, styles: { fillColor: [239, 68, 68] } }); // Red block for absent
+              }
+            });
+
+            return row;
+          });
+
+          // Check if table fits on current page
+          const estTableHeight = (bodyRows.length + 2) * 6.5 + 8;
+          if (currentY + estTableHeight > 195 && weekIdx > 0) {
+            doc.addPage();
+            currentY = 15;
+          }
+
+          autoTable(doc, {
+            startY: currentY,
+            head: [headRow1, headRow2],
+            body: bodyRows,
+            theme: 'grid',
+            headStyles: {
+              fillColor: [254, 240, 138], // Warm cream #FEF08A
+              textColor: [15, 23, 42],
+              fontStyle: 'bold',
+              fontSize: 7.2,
+              lineWidth: 0.15,
+              lineColor: [40, 40, 40]
+            },
+            bodyStyles: {
+              fontSize: 7.2,
+              textColor: [15, 23, 42],
+              cellPadding: 1.4,
+              lineWidth: 0.1,
+              lineColor: [80, 80, 80],
+              halign: 'center'
+            },
+            columnStyles: {
+              0: { halign: 'center', cellWidth: 8 },
+              1: { fontStyle: 'bold', halign: 'left', cellWidth: 36 },
+              2: { halign: 'left', cellWidth: 20 },
+              3: { halign: 'center', cellWidth: 14 }
+            },
+            didParseCell: function(data) {
+              if (data.section === 'body' && data.column.index >= 4) {
+                const subCol = (data.column.index - 4) % 5;
+                if (subCol === 2 && !data.cell.styles.fillColor) {
+                  data.cell.styles.fillColor = [187, 247, 208]; // Light green #BBF7D0
+                }
+              }
+            }
+          });
+
+          currentY = doc.lastAutoTable.finalY + 8;
+        });
+
+        // Footer Boxes (Legend & Signature Box matching Image 2)
+        if (currentY + 38 > 195) {
+          doc.addPage();
+          currentY = 15;
+        }
+
+        // Left Legend Box
+        doc.setDrawColor(80, 80, 80);
+        doc.setLineWidth(0.15);
+        doc.rect(14, currentY, 44, 28);
+        doc.setFontSize(7.5);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(15, 23, 42);
+        doc.text('Keterangan :', 17, currentY + 5.5);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Paraf = Hadir', 17, currentY + 11);
+        doc.text('I = Izin', 17, currentY + 16);
+        doc.text('S = Sakit', 17, currentY + 21);
+        doc.text('A = Alpa', 17, currentY + 26);
+
+        // Right Signature Box
+        doc.setDrawColor(80, 80, 80);
+        doc.setLineWidth(0.15);
+        doc.rect(215, currentY, 68, 28);
+        doc.setFontSize(7.5);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Bojonegoro, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`, 218, currentY + 5.5);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Kepala / Manager SDM', 218, currentY + 11);
+
+        const headName = (summaryDataPerEmp.length > 0 && summaryDataPerEmp[0].name) ? summaryDataPerEmp[0].name : 'Manager Operasional & HR';
+        doc.setFont('helvetica', 'bold');
+        doc.text(headName, 218, currentY + 25);
 
         // Page Numbers
         const pageCount = doc.internal.getNumberOfPages();
         for (let i = 1; i <= pageCount; i++) {
           doc.setPage(i);
-          doc.setFontSize(7.5);
+          doc.setFontSize(7);
           doc.setTextColor(148, 163, 184);
-          doc.text(`Halaman ${i} dari ${pageCount} | Hibatullah IIBS Attendance Report`, 105, 290, { align: 'center' });
+          doc.text(`Halaman ${i} dari ${pageCount} | Hibatullah IIBS SDM Attendance Report`, 148, 204, { align: 'center' });
         }
 
         doc.save(`${reportName}.pdf`);
