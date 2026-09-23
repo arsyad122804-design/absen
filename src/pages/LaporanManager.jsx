@@ -333,6 +333,18 @@ export default function LaporanManager() {
 
       const reportName = `Daftar_Hadir_SDM_${activeReportType}_${activePeriodStr.replace(/[^a-zA-Z0-9]/g, '_')}`;
 
+      const formatTimeDot = (timeStr) => {
+        if (!timeStr || timeStr === '-' || timeStr === 'null' || timeStr === 'undefined') return '-';
+        const clean = String(timeStr).trim();
+        const match = clean.match(/^(\d{1,2})[:.](\d{2})/);
+        if (match) {
+          const hh = match[1].padStart(2, '0');
+          const mm = match[2];
+          return `${hh}.${mm}`;
+        }
+        return clean.replace(':', '.');
+      };
+
       if (type === 'Excel') {
         // GENERATE DIRECT .XLSX FILE WITH GRID & REKAP SHEETS
         const wb = XLSX.utils.book_new();
@@ -373,30 +385,37 @@ export default function LaporanManager() {
             const row = [empIdx + 1, emp.name, emp.jabatan, emp.divisi];
             weekDays.forEach(d => {
               const tzDateStr = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-              const records = allAbs.filter(a =>
-                a.tanggal === tzDateStr &&
-                ((a.karyawan_id && String(a.karyawan_id) === String(emp.id)) ||
-                 (a.nama && emp.name && a.nama.toLowerCase() === emp.name.toLowerCase()) ||
-                 (a.nama_karyawan && emp.name && a.nama_karyawan.toLowerCase() === emp.name.toLowerCase()) ||
-                 (a.name && emp.name && a.name.toLowerCase() === emp.name.toLowerCase()))
-              );
+              const records = allAbs.filter(a => {
+                if (!a.tanggal) return false;
+                const aDate = String(a.tanggal).split('T')[0];
+                const isDateMatch = aDate === tzDateStr;
+                const isEmpMatch = (a.karyawan_id && String(a.karyawan_id) === String(emp.id)) ||
+                                   (a.nama && emp.name && a.nama.toLowerCase().trim() === emp.name.toLowerCase().trim()) ||
+                                   (a.nama_karyawan && emp.name && a.nama_karyawan.toLowerCase().trim() === emp.name.toLowerCase().trim()) ||
+                                   (a.name && emp.name && a.name.toLowerCase().trim() === emp.name.toLowerCase().trim()) ||
+                                   (a.user_name && emp.name && a.user_name.toLowerCase().trim() === emp.name.toLowerCase().trim());
+                return isDateMatch && isEmpMatch;
+              });
 
               if (records.length > 0) {
-                const rec = records[0];
-                const st = (rec.status || '').trim();
+                records.sort((a, b) => (a.waktu_masuk || '').localeCompare(b.waktu_masuk || ''));
+                const firstRec = records[0];
+                const lastRec = records[records.length - 1];
+                const st = (firstRec.status || '').trim();
+
                 if (st === 'Hadir' || st === 'Tepat Waktu' || st === 'Terlambat') {
-                  const inTime = rec.waktu_masuk ? rec.waktu_masuk.substring(0, 5).replace(':', '.') : '-';
-                  const outTime = rec.waktu_keluar ? rec.waktu_keluar.substring(0, 5).replace(':', '.') : '-';
+                  const inTime = formatTimeDot(firstRec.waktu_masuk || firstRec.jam_masuk || firstRec.jam);
+                  const outTime = formatTimeDot(lastRec.waktu_keluar || lastRec.jam_pulang);
                   row.push(inTime, inTime !== '-' ? 'v' : '', '', outTime, outTime !== '-' ? 'v' : '');
                 } else if (st === 'Izin') {
-                  row.push("ijin", "", "", "", "");
+                  row.push("ijin", "I", "", "-", "");
                 } else if (st === 'Sakit') {
-                  row.push("Sakit", "", "", "", "");
+                  row.push("Sakit", "S", "", "-", "");
                 } else {
-                  row.push("Alpa", "", "", "", "");
+                  row.push("Alpa", "A", "", "-", "");
                 }
               } else {
-                row.push("Alpa", "", "", "", "");
+                row.push("-", "A", "", "-", "");
               }
             });
             wsGridData.push(row);
@@ -522,20 +541,27 @@ export default function LaporanManager() {
 
             weekDays.forEach(d => {
               const tzDateStr = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-              const records = allAbs.filter(a =>
-                a.tanggal === tzDateStr &&
-                ((a.karyawan_id && String(a.karyawan_id) === String(emp.id)) ||
-                 (a.nama && emp.name && a.nama.toLowerCase() === emp.name.toLowerCase()) ||
-                 (a.nama_karyawan && emp.name && a.nama_karyawan.toLowerCase() === emp.name.toLowerCase()) ||
-                 (a.name && emp.name && a.name.toLowerCase() === emp.name.toLowerCase()))
-              );
+              const records = allAbs.filter(a => {
+                if (!a.tanggal) return false;
+                const aDate = String(a.tanggal).split('T')[0];
+                const isDateMatch = aDate === tzDateStr;
+                const isEmpMatch = (a.karyawan_id && String(a.karyawan_id) === String(emp.id)) ||
+                                   (a.nama && emp.name && a.nama.toLowerCase().trim() === emp.name.toLowerCase().trim()) ||
+                                   (a.nama_karyawan && emp.name && a.nama_karyawan.toLowerCase().trim() === emp.name.toLowerCase().trim()) ||
+                                   (a.name && emp.name && a.name.toLowerCase().trim() === emp.name.toLowerCase().trim()) ||
+                                   (a.user_name && emp.name && a.user_name.toLowerCase().trim() === emp.name.toLowerCase().trim());
+                return isDateMatch && isEmpMatch;
+              });
 
               if (records.length > 0) {
-                const rec = records[0];
-                const st = (rec.status || '').trim();
+                records.sort((a, b) => (a.waktu_masuk || '').localeCompare(b.waktu_masuk || ''));
+                const firstRec = records[0];
+                const lastRec = records[records.length - 1];
+                const st = (firstRec.status || '').trim();
+
                 if (st === 'Hadir' || st === 'Tepat Waktu' || st === 'Terlambat') {
-                  const inTime = rec.waktu_masuk ? rec.waktu_masuk.substring(0, 5).replace(':', '.') : '-';
-                  const outTime = rec.waktu_keluar ? rec.waktu_keluar.substring(0, 5).replace(':', '.') : '-';
+                  const inTime = formatTimeDot(firstRec.waktu_masuk || firstRec.jam_masuk || firstRec.jam);
+                  const outTime = formatTimeDot(lastRec.waktu_keluar || lastRec.jam_pulang);
                   row.push(inTime, inTime !== '-' ? 'v' : '', '', outTime, outTime !== '-' ? 'v' : '');
                 } else if (st === 'Izin') {
                   row.push({ content: 'ijin', colSpan: 5, styles: { halign: 'center', fillColor: [255, 255, 255], textColor: [71, 85, 105] } });
