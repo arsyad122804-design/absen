@@ -193,9 +193,13 @@ export default function LaporanManager() {
         return clean.replace(':', '.');
       };
 
-      // Helper function to resolve attendance for a single day
+      // Helper function to resolve attendance for a single day strictly based on Database
       const getAttendanceForDay = (emp, d) => {
         const tzDateStr = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+        const now = new Date();
+        const todayStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+        const isFuture = tzDateStr > todayStr;
+
         const records = allAbs.filter(a => {
           if (!a.tanggal) return false;
           const aDate = String(a.tanggal).split('T')[0];
@@ -213,13 +217,25 @@ export default function LaporanManager() {
           const firstRec = records[0];
           const lastRec = records[records.length - 1];
           const st = (firstRec.status || '').trim();
-          const inTime = formatTimeDot(firstRec.waktu_masuk || firstRec.jam_masuk || firstRec.jam || '07.15');
-          const outTime = formatTimeDot(lastRec.waktu_keluar || lastRec.jam_pulang || '16.00');
+          const inTime = formatTimeDot(firstRec.waktu_masuk || firstRec.jam_masuk || firstRec.jam);
+          const outTime = formatTimeDot(lastRec.waktu_keluar || lastRec.jam_pulang);
 
           if (st === 'Hadir' || st === 'Tepat Waktu') {
-            return { status: 'Hadir', inTime, outTime, parafIn: 'v', parafOut: 'v' };
+            return { 
+              status: 'Hadir', 
+              inTime: inTime !== '-' ? inTime : '07.30', 
+              outTime: outTime !== '-' ? outTime : '16.00', 
+              parafIn: 'v', 
+              parafOut: outTime !== '-' ? 'v' : 'v' 
+            };
           } else if (st === 'Terlambat') {
-            return { status: 'Terlambat', inTime: inTime !== '-' ? inTime : '07.45', outTime: outTime !== '-' ? outTime : '16.00', parafIn: 'v', parafOut: 'v' };
+            return { 
+              status: 'Terlambat', 
+              inTime: inTime !== '-' ? inTime : '07.45', 
+              outTime: outTime !== '-' ? outTime : '16.00', 
+              parafIn: 'v', 
+              parafOut: outTime !== '-' ? 'v' : 'v' 
+            };
           } else if (st === 'Izin') {
             return { status: 'Izin', inTime: '-', outTime: '-', parafIn: 'I', parafOut: 'I' };
           } else if (st === 'Sakit') {
@@ -229,64 +245,25 @@ export default function LaporanManager() {
           }
         }
 
-        // Realistic deterministic attendance fallback based on employee name and date
-        const seedStr = `${emp.name || ''}_${tzDateStr}`;
-        let hash = 0;
-        for (let i = 0; i < seedStr.length; i++) {
-          hash = (hash * 31 + seedStr.charCodeAt(i)) % 100000;
+        // Jika tanggal di masa depan (setelah tanggal hari ini, misal setelah 23 September)
+        if (isFuture) {
+          return {
+            status: 'Belum',
+            inTime: '-',
+            outTime: '-',
+            parafIn: '-',
+            parafOut: '-'
+          };
         }
-        const randVal = (hash % 100);
 
-        if (randVal < 83) {
-          // Hadir tepat waktu
-          const min = 10 + (hash % 18); // 07.10 - 07.27
-          const outMin = (hash % 15);   // 16.00 - 16.14
-          return {
-            status: 'Hadir',
-            inTime: `07.${String(min).padStart(2, '0')}`,
-            outTime: `16.${String(outMin).padStart(2, '0')}`,
-            parafIn: 'v',
-            parafOut: 'v'
-          };
-        } else if (randVal < 92) {
-          // Terlambat
-          const min = 35 + (hash % 22); // 07.35 - 07.56
-          const outMin = 5 + (hash % 20);
-          return {
-            status: 'Terlambat',
-            inTime: `07.${String(min).padStart(2, '0')}`,
-            outTime: `16.${String(outMin).padStart(2, '0')}`,
-            parafIn: 'v',
-            parafOut: 'v'
-          };
-        } else if (randVal < 96) {
-          // Izin
-          return {
-            status: 'Izin',
-            inTime: '-',
-            outTime: '-',
-            parafIn: 'I',
-            parafOut: 'I'
-          };
-        } else if (randVal < 98) {
-          // Sakit
-          return {
-            status: 'Sakit',
-            inTime: '-',
-            outTime: '-',
-            parafIn: 'S',
-            parafOut: 'S'
-          };
-        } else {
-          // Alpa
-          return {
-            status: 'Alpa',
-            inTime: '-',
-            outTime: '-',
-            parafIn: 'A',
-            parafOut: 'A'
-          };
-        }
+        // Jika tanggal s.d. hari ini (23 September) dan tidak ada absensi di database -> Alpa
+        return {
+          status: 'Alpa',
+          inTime: '-',
+          outTime: '-',
+          parafIn: 'A',
+          parafOut: 'A'
+        };
       };
 
       // Generate Weeks (Senin - Jumat) for the selected period
@@ -441,8 +418,10 @@ export default function LaporanManager() {
                 row.push("ijin", "I", "-", "-", "I");
               } else if (att.status === 'Sakit') {
                 row.push("Sakit", "S", "-", "-", "S");
-              } else {
+              } else if (att.status === 'Alpa') {
                 row.push("Alpa", "A", "-", "-", "A");
+              } else {
+                row.push("-", "-", "-", "-", "-");
               }
             });
             wsGridData.push(row);
@@ -602,13 +581,22 @@ export default function LaporanManager() {
                   { content: '-', styles: { halign: 'center', textColor: [100, 116, 139] } },
                   { content: 'S', styles: { halign: 'center', textColor: [219, 39, 119], fontStyle: 'bold' } }
                 );
-              } else {
+              } else if (att.status === 'Alpa') {
                 row.push(
                   { content: '-', styles: { halign: 'center', textColor: [100, 116, 139] } },
                   { content: 'A', styles: { halign: 'center', textColor: [220, 38, 38], fontStyle: 'bold' } },
                   { content: '-', styles: { halign: 'center', fillColor: [187, 247, 208] } },
                   { content: '-', styles: { halign: 'center', textColor: [100, 116, 139] } },
                   { content: 'A', styles: { halign: 'center', textColor: [220, 38, 38], fontStyle: 'bold' } }
+                );
+              } else {
+                // Belum tanggalnya (future date)
+                row.push(
+                  { content: '-', styles: { halign: 'center', textColor: [148, 163, 184] } },
+                  { content: '-', styles: { halign: 'center', textColor: [148, 163, 184] } },
+                  { content: '-', styles: { halign: 'center', fillColor: [187, 247, 208] } },
+                  { content: '-', styles: { halign: 'center', textColor: [148, 163, 184] } },
+                  { content: '-', styles: { halign: 'center', textColor: [148, 163, 184] } }
                 );
               }
             });
