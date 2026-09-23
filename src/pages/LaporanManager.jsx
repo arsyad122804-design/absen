@@ -570,20 +570,46 @@ export default function LaporanManager() {
             weekDays.forEach(d => {
               const att = getAttendanceForDay(rawEmp, d);
 
-              if (att.status === 'Hadir' || att.status === 'Terlambat') {
+              if (att.status === 'Hadir') {
                 row.push(
-                  { content: att.inTime, styles: { halign: 'center', textColor: att.status === 'Terlambat' ? [217, 119, 6] : [15, 23, 42] } },
+                  { content: att.inTime, styles: { halign: 'center', textColor: [15, 23, 42] } },
                   { content: 'v', styles: { halign: 'center', textColor: [22, 163, 74], fontStyle: 'bold' } },
                   { content: '-', styles: { halign: 'center', fillColor: [187, 247, 208] } },
-                  { content: att.outTime, styles: { halign: 'center' } },
+                  { content: att.outTime, styles: { halign: 'center', textColor: [15, 23, 42] } },
+                  { content: 'v', styles: { halign: 'center', textColor: [22, 163, 74], fontStyle: 'bold' } }
+                );
+              } else if (att.status === 'Terlambat') {
+                row.push(
+                  { content: att.inTime, styles: { halign: 'center', textColor: [217, 119, 6], fontStyle: 'bold' } },
+                  { content: 'v', styles: { halign: 'center', textColor: [217, 119, 6], fontStyle: 'bold' } },
+                  { content: '-', styles: { halign: 'center', fillColor: [187, 247, 208] } },
+                  { content: att.outTime, styles: { halign: 'center', textColor: [15, 23, 42] } },
                   { content: 'v', styles: { halign: 'center', textColor: [22, 163, 74], fontStyle: 'bold' } }
                 );
               } else if (att.status === 'Izin') {
-                row.push({ content: 'ijin', colSpan: 5, styles: { halign: 'center', fillColor: [254, 249, 195], textColor: [161, 98, 7], fontStyle: 'bold' } });
+                row.push(
+                  { content: '-', styles: { halign: 'center', textColor: [100, 116, 139] } },
+                  { content: 'I', styles: { halign: 'center', textColor: [217, 119, 6], fontStyle: 'bold' } },
+                  { content: '-', styles: { halign: 'center', fillColor: [187, 247, 208] } },
+                  { content: '-', styles: { halign: 'center', textColor: [100, 116, 139] } },
+                  { content: 'I', styles: { halign: 'center', textColor: [217, 119, 6], fontStyle: 'bold' } }
+                );
               } else if (att.status === 'Sakit') {
-                row.push({ content: 'Sakit', colSpan: 5, styles: { halign: 'center', fillColor: [252, 231, 243], textColor: [190, 24, 93], fontStyle: 'bold' } });
+                row.push(
+                  { content: '-', styles: { halign: 'center', textColor: [100, 116, 139] } },
+                  { content: 'S', styles: { halign: 'center', textColor: [219, 39, 119], fontStyle: 'bold' } },
+                  { content: '-', styles: { halign: 'center', fillColor: [187, 247, 208] } },
+                  { content: '-', styles: { halign: 'center', textColor: [100, 116, 139] } },
+                  { content: 'S', styles: { halign: 'center', textColor: [219, 39, 119], fontStyle: 'bold' } }
+                );
               } else {
-                row.push({ content: 'A', colSpan: 5, styles: { halign: 'center', fillColor: [254, 226, 226], textColor: [220, 38, 38], fontStyle: 'bold' } });
+                row.push(
+                  { content: '-', styles: { halign: 'center', textColor: [100, 116, 139] } },
+                  { content: 'A', styles: { halign: 'center', textColor: [220, 38, 38], fontStyle: 'bold' } },
+                  { content: '-', styles: { halign: 'center', fillColor: [187, 247, 208] } },
+                  { content: '-', styles: { halign: 'center', textColor: [100, 116, 139] } },
+                  { content: 'A', styles: { halign: 'center', textColor: [220, 38, 38], fontStyle: 'bold' } }
+                );
               }
             });
 
