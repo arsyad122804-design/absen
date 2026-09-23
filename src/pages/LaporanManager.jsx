@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { 
   FileText, Download, Calendar, Filter, FileSpreadsheet, 
-  BarChart2, FileIcon, Search, CheckCircle2 
+  BarChart2, FileIcon, Search, CheckCircle2, Check
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import { supabase } from '../lib/supabase';
 import './LaporanManager.css';
 
@@ -22,6 +25,7 @@ export default function LaporanManager() {
   const [chartData, setChartData] = useState([]);
   const [reportType, setReportType] = useState('Bulanan');
   const [isExporting, setIsExporting] = useState(false);
+  const [downloadSuccess, setDownloadSuccess] = useState('');
   const [historyList, setHistoryList] = useState(() => {
     return safeJsonParse('laporan_history', []);
   });
@@ -111,38 +115,9 @@ export default function LaporanManager() {
 
   const [filterDivisi, setFilterDivisi] = useState('Semua Divisi');
 
-  const printDocumentIframe = (htmlContent, title) => {
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'fixed';
-    iframe.style.right = '0';
-    iframe.style.bottom = '0';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
-    iframe.style.border = '0';
-    document.body.appendChild(iframe);
-
-    const doc = iframe.contentWindow.document;
-    doc.open();
-    doc.write(htmlContent);
-    doc.close();
-
-    iframe.contentWindow.focus();
-    setTimeout(() => {
-      try {
-        iframe.contentWindow.print();
-      } catch (err) {
-        console.error("Print error:", err);
-      }
-      setTimeout(() => {
-        try {
-          document.body.removeChild(iframe);
-        } catch (e) {}
-      }, 2000);
-    }, 500);
-  };
-
   const handleExport = async (type, overrideItem = null) => {
     setIsExporting(true);
+    setDownloadSuccess('');
     try {
       const activeReportType = overrideItem?.reportType || reportType;
       const activeSelectedDate = overrideItem?.selectedDate || selectedDate;
@@ -253,24 +228,35 @@ export default function LaporanManager() {
       const sortedDates = Object.keys(absByDate).sort((a, b) => b.localeCompare(a));
 
       if (type === 'Excel') {
-        let csvContent = "\uFEFF";
-        csvContent += `LAPORAN REKAPITULASI KEHADIRAN KARYAWAN - HIBATULLAH IIBS\n`;
-        csvContent += `Periode:;${activePeriodStr}\n`;
-        csvContent += `Divisi:;${activeFilterDivisi}\n`;
-        csvContent += `Tanggal Cetak:;${new Date().toLocaleDateString('id-ID')}\n\n`;
+        // GENERATE DIRECT .XLSX FILE
+        const wsData = [
+          ["LAPORAN REKAPITULASI KEHADIRAN KARYAWAN"],
+          ["Hibatullah International Islamic Boarding School"],
+          [`Periode: ${activePeriodStr}`, `Divisi: ${activeFilterDivisi}`, `Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}`],
+          [],
+          ["No", "Nama Karyawan", "Divisi", "Sesi / Shift", "Tanggal", "Jam Masuk", "Jam Pulang", "Status Kehadiran", "Lokasi Presisi"]
+        ];
 
         if (sortedDates.length === 0) {
-          csvContent += `No;Nama Karyawan;Divisi;Sesi / Shift;Tanggal;Waktu Masuk;Waktu Pulang;Status Kehadiran;Lokasi Presisi\n`;
           filteredEmps.forEach((emp, idx) => {
             const sess = getSessionLabel(emp.divisi, '07:00');
-            csvContent += `${idx + 1};"${emp.name}";"${emp.divisi || 'Operasional'}";"${sess}";"${activeSelectedDate}";"-";"-";"Tidak Hadir";"-"\n`;
+            wsData.push([
+              idx + 1,
+              emp.name || 'Karyawan',
+              emp.divisi || 'Operasional',
+              sess,
+              activeSelectedDate,
+              '-',
+              '-',
+              'Tidak Hadir',
+              '-'
+            ]);
           });
         } else {
           sortedDates.forEach(dateKey => {
             const fullDateText = formatFullDateId(dateKey);
-            csvContent += `\n;;;=== ${fullDateText.toUpperCase()} ===;;;;\n`;
-            csvContent += `No;Nama Karyawan;Divisi;Sesi / Shift;Tanggal;Waktu Masuk;Waktu Pulang;Status Kehadiran;Lokasi Presisi\n`;
-
+            wsData.push([]);
+            wsData.push([`=== ${fullDateText.toUpperCase()} ===`]);
             let dayCount = 0;
             absByDate[dateKey].forEach(a => {
               const emp = filteredEmps.find(e => String(e.id) === String(a.karyawan_id));
@@ -281,152 +267,189 @@ export default function LaporanManager() {
 
               dayCount++;
               const sess = getSessionLabel(empDiv, a.waktu_masuk);
-              csvContent += `${dayCount};"${empName}";"${empDiv}";"${sess}";"${a.tanggal || '-'}"`;
-              csvContent += `;"${a.waktu_masuk || '-'}"`;
-              csvContent += `;"${a.waktu_keluar || '-'}"`;
-              csvContent += `;"${a.status || '-'}"`;
-              csvContent += `;"${a.lokasi || '-'}"\n`;
+              wsData.push([
+                dayCount,
+                empName,
+                empDiv,
+                sess,
+                a.tanggal || '-',
+                a.waktu_masuk || '-',
+                a.waktu_keluar || '-',
+                a.status || '-',
+                a.lokasi || '-'
+              ]);
             });
           });
         }
 
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.setAttribute('href', url);
-        link.setAttribute('download', `${reportName}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        // Column widths
+        ws['!cols'] = [
+          { wch: 6 },
+          { wch: 26 },
+          { wch: 18 },
+          { wch: 16 },
+          { wch: 14 },
+          { wch: 12 },
+          { wch: 12 },
+          { wch: 16 },
+          { wch: 25 }
+        ];
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Rekap Kehadiran");
+        XLSX.writeFile(wb, `${reportName}.xlsx`);
+        setDownloadSuccess(`Berhasil mengunduh ${reportName}.xlsx`);
       } else {
-        let fullHtmlBody = '';
+        // GENERATE DIRECT .PDF FILE
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+        // Header Banner
+        doc.setFillColor(37, 99, 235); // Blue #2563EB
+        doc.rect(0, 0, 210, 24, 'F');
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('HIBATULLAH INTERNATIONAL ISLAMIC BOARDING SCHOOL', 105, 9, { align: 'center' });
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text('LAPORAN REKAPITULASI KEHADIRAN KARYAWAN', 105, 16, { align: 'center' });
+
+        // Info Metadata Box
+        doc.setTextColor(30, 41, 59);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Periode:', 14, 32);
+        doc.setFont('helvetica', 'normal');
+        doc.text(String(activePeriodStr), 32, 32);
+
+        doc.setFont('helvetica', 'bold');
+        doc.text('Divisi:', 14, 37);
+        doc.setFont('helvetica', 'normal');
+        doc.text(String(activeFilterDivisi), 32, 37);
+
+        doc.setFont('helvetica', 'bold');
+        doc.text('Tanggal Cetak:', 130, 32);
+        doc.setFont('helvetica', 'normal');
+        doc.text(new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }), 155, 32);
+
+        let currentY = 43;
 
         if (sortedDates.length === 0) {
-          let emptyRows = '';
-          filteredEmps.forEach((emp, idx) => {
+          const tableBody = filteredEmps.map((emp, idx) => {
             const sess = getSessionLabel(emp.divisi, '07:00');
-            emptyRows += `
-              <tr>
-                <td style="padding:8px;border:1px solid #ddd;text-align:center">${idx + 1}</td>
-                <td style="padding:8px;border:1px solid #ddd;font-weight:bold">${emp.name}</td>
-                <td style="padding:8px;border:1px solid #ddd">${emp.divisi || 'Operasional'}</td>
-                <td style="padding:8px;border:1px solid #ddd;font-size:11px;color:#475569">${sess}</td>
-                <td style="padding:8px;border:1px solid #ddd">${activeSelectedDate}</td>
-                <td style="padding:8px;border:1px solid #ddd">-</td>
-                <td style="padding:8px;border:1px solid #ddd">-</td>
-                <td style="padding:8px;border:1px solid #ddd;color:#dc2626;font-weight:bold">Tidak Hadir</td>
-              </tr>
-            `;
+            return [
+              idx + 1,
+              emp.name || 'Karyawan',
+              emp.divisi || 'Operasional',
+              sess,
+              activeSelectedDate,
+              '-',
+              '-',
+              'Tidak Hadir'
+            ];
           });
-          fullHtmlBody += `
-            <div style="background:#f1f5f9;padding:10px 14px;border-radius:8px;font-weight:bold;color:#0f172a;margin-top:20px;margin-bottom:8px;border-left:4px solid #2563eb;">
-              📅 ${formatFullDateId(activeSelectedDate)}
-            </div>
-            <table>
-              <thead>
-                <tr>
-                  <th>No</th>
-                  <th>Nama Karyawan</th>
-                  <th>Divisi</th>
-                  <th>Sesi / Shift</th>
-                  <th>Tanggal</th>
-                  <th>Jam Masuk</th>
-                  <th>Jam Pulang</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>${emptyRows}</tbody>
-            </table>
-          `;
+
+          autoTable(doc, {
+            startY: currentY,
+            head: [['No', 'Nama Karyawan', 'Divisi', 'Sesi', 'Tanggal', 'Jam Masuk', 'Jam Pulang', 'Status']],
+            body: tableBody,
+            theme: 'grid',
+            headStyles: { fillColor: [241, 245, 249], textColor: [51, 65, 85], fontSize: 8, fontStyle: 'bold' },
+            styles: { fontSize: 8, cellPadding: 2.5 },
+            columnStyles: {
+              0: { halign: 'center', cellWidth: 10 },
+              1: { fontStyle: 'bold' },
+              7: { textColor: [220, 38, 38], fontStyle: 'bold' }
+            }
+          });
         } else {
-          sortedDates.forEach(dateKey => {
-            let dayRowsHtml = '';
+          sortedDates.forEach((dateKey, dateIdx) => {
+            const fullDateText = formatFullDateId(dateKey);
+            const rows = [];
             let dayCount = 0;
 
             absByDate[dateKey].forEach(a => {
               const emp = filteredEmps.find(e => String(e.id) === String(a.karyawan_id));
               const empName = emp ? emp.name : (a.nama || 'Karyawan');
-              const empDiv = emp ? (emp.divisi || 'Operasional') : 'Operasional';
+              const empDiv = emp ? (emp.divisi || emp.div || 'Operasional') : 'Operasional';
 
               if (activeFilterDivisi !== 'Semua Divisi' && !empDiv.toLowerCase().includes(activeFilterDivisi.toLowerCase())) return;
 
               dayCount++;
               const sess = getSessionLabel(empDiv, a.waktu_masuk);
-              dayRowsHtml += `
-                <tr>
-                  <td style="padding:8px;border:1px solid #ddd;text-align:center">${dayCount}</td>
-                  <td style="padding:8px;border:1px solid #ddd;font-weight:bold">${empName}</td>
-                  <td style="padding:8px;border:1px solid #ddd">${empDiv}</td>
-                  <td style="padding:8px;border:1px solid #ddd;font-size:12px;color:#2563eb;font-weight:600">${sess}</td>
-                  <td style="padding:8px;border:1px solid #ddd">${a.tanggal}</td>
-                  <td style="padding:8px;border:1px solid #ddd">${a.waktu_masuk || '-'}</td>
-                  <td style="padding:8px;border:1px solid #ddd">${a.waktu_keluar || '-'}</td>
-                  <td style="padding:8px;border:1px solid #ddd;color:${a.status==='Terlambat'?'#d97706':'#16a34a'};font-weight:bold">${a.status}</td>
-                </tr>
-              `;
+              rows.push([
+                dayCount,
+                empName,
+                empDiv,
+                sess,
+                a.tanggal || dateKey,
+                a.waktu_masuk ? a.waktu_masuk.substring(0, 5) : '-',
+                a.waktu_keluar ? a.waktu_keluar.substring(0, 5) : '-',
+                a.status || 'Hadir'
+              ]);
             });
 
-            if (dayCount > 0) {
-              fullHtmlBody += `
-                <div style="background:#EFF6FF;padding:12px 16px;border-radius:10px;font-weight:bold;color:#1E40AF;margin-top:24px;margin-bottom:10px;border-left:5px solid #2563EB;font-size:14px;display:flex;align-items:center;gap:8px;">
-                  📅 ${formatFullDateId(dateKey)}
-                </div>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>No</th>
-                      <th>Nama Karyawan</th>
-                      <th>Divisi</th>
-                      <th>Sesi / Shift</th>
-                      <th>Tanggal</th>
-                      <th>Jam Masuk</th>
-                      <th>Jam Pulang</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${dayRowsHtml}
-                  </tbody>
-                </table>
-              `;
+            if (rows.length > 0) {
+              if (dateIdx > 0) {
+                currentY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 8 : currentY + 8;
+                if (currentY > 255) {
+                  doc.addPage();
+                  currentY = 16;
+                }
+              }
+
+              // Section date title
+              doc.setFillColor(239, 246, 255);
+              doc.rect(14, currentY, 182, 6.5, 'F');
+              doc.setTextColor(37, 99, 235);
+              doc.setFontSize(8.5);
+              doc.setFont('helvetica', 'bold');
+              doc.text(`* ${fullDateText}`, 17, currentY + 4.5);
+              currentY += 8;
+
+              autoTable(doc, {
+                startY: currentY,
+                head: [['No', 'Nama Karyawan', 'Divisi', 'Sesi', 'Tanggal', 'Jam Masuk', 'Jam Pulang', 'Status']],
+                body: rows,
+                theme: 'grid',
+                headStyles: { fillColor: [248, 250, 252], textColor: [51, 65, 85], fontSize: 8, fontStyle: 'bold' },
+                styles: { fontSize: 8, cellPadding: 2 },
+                columnStyles: {
+                  0: { halign: 'center', cellWidth: 10 },
+                  1: { fontStyle: 'bold' },
+                  7: { fontStyle: 'bold' }
+                },
+                didParseCell: function(data) {
+                  if (data.section === 'body' && data.column.index === 7) {
+                    const val = data.cell.raw;
+                    if (val === 'Terlambat') {
+                      data.cell.styles.textColor = [217, 119, 6];
+                    } else if (val === 'Hadir' || val === 'Tepat Waktu') {
+                      data.cell.styles.textColor = [22, 163, 74];
+                    } else {
+                      data.cell.styles.textColor = [220, 38, 38];
+                    }
+                  }
+                }
+              });
+              currentY = doc.lastAutoTable.finalY;
             }
           });
         }
 
-        const htmlContent = `
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <meta charset="utf-8">
-              <title>Laporan Kehadiran - ${activePeriodStr}</title>
-              <style>
-                @page { size: A4; margin: 15mm; }
-                body { font-family: 'Segoe UI', Arial, sans-serif; padding: 24px; color: #1e293b; line-height: 1.5; background: #fff; }
-                h1 { color: #0f172a; margin-bottom: 4px; font-size: 20px; font-weight: 800; }
-                p { color: #64748b; font-size: 13px; margin-top: 0; }
-                table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; }
-                th { background: #F8FAFC; padding: 8px 6px; border: 1px solid #CBD5E1; text-align: left; font-size: 11px; color: #334155; text-transform: uppercase; font-weight: 700; }
-                td { padding: 6px 8px; border: 1px solid #E2E8F0; }
-                .header-box { border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-bottom: 16px; }
-                @media print {
-                  body { padding: 0; }
-                  .header-box { border-bottom: 2px solid #000; }
-                }
-              </style>
-            </head>
-            <body>
-              <div class="header-box">
-                <h1>LAPORAN REKAPITULASI KEHADIRAN KARYAWAN</h1>
-                <p>Hibatullah International Islamic Boarding School • Periode: ${activePeriodStr} • Divisi: ${activeFilterDivisi}</p>
-                <p style="font-size: 11px; color: #94a3b8; margin: 0;">Dicetak pada: ${new Date().toLocaleString('id-ID')}</p>
-              </div>
-              ${fullHtmlBody}
-            </body>
-          </html>
-        `;
+        // Add page numbers
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+          doc.setPage(i);
+          doc.setFontSize(7.5);
+          doc.setTextColor(148, 163, 184);
+          doc.text(`Halaman ${i} dari ${pageCount} | Hibatullah IIBS Attendance Report`, 105, 290, { align: 'center' });
+        }
 
-        printDocumentIframe(htmlContent, `Laporan Kehadiran - ${activePeriodStr}`);
+        doc.save(`${reportName}.pdf`);
+        setDownloadSuccess(`Berhasil mengunduh ${reportName}.pdf`);
       }
 
       if (!overrideItem) {
@@ -450,7 +473,7 @@ export default function LaporanManager() {
       }
     } catch (e) {
       console.error("Export error:", e);
-      alert("Terjadi kesalahan saat memproses laporan: " + (e.message || e));
+      alert("Terjadi kesalahan saat mengunduh laporan: " + (e.message || e));
     } finally {
       setIsExporting(false);
     }
@@ -603,6 +626,25 @@ export default function LaporanManager() {
                 Ekspor ke Excel
               </button>
             </div>
+
+            {downloadSuccess && (
+              <div style={{
+                marginTop: '16px',
+                padding: '10px 14px',
+                background: '#ECFDF5',
+                border: '1px solid #A7F3D0',
+                borderRadius: '10px',
+                color: '#065F46',
+                fontSize: '13px',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <CheckCircle2 size={16} color="#10B981" />
+                <span>{downloadSuccess}</span>
+              </div>
+            )}
           </div>
 
         </div>
