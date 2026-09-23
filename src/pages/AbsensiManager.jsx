@@ -388,8 +388,8 @@ export default function AbsensiManager() {
       doc.text(`Bojonegoro, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`, 150, signY);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(15, 23, 42);
-      doc.text('Manager Operasional & HR', 150, signY + 5);
-      doc.text('( Tanda Tangan & Cap )', 150, signY + 25);
+      doc.text('Direktur Utama', 150, signY + 5);
+      doc.text('Mohamad Ali Mursidi', 150, signY + 25);
 
       const pageCount = doc.internal.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {

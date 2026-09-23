@@ -691,11 +691,10 @@ export default function LaporanManager() {
         doc.setFont('helvetica', 'bold');
         doc.text(`Bojonegoro, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`, 218, currentY + 5.5);
         doc.setFont('helvetica', 'normal');
-        doc.text('Kepala / Manager SDM', 218, currentY + 11);
+        doc.text('Direktur Utama', 218, currentY + 11);
 
-        const headName = (summaryDataPerEmp.length > 0 && summaryDataPerEmp[0].name) ? summaryDataPerEmp[0].name : 'Manager Operasional & HR';
         doc.setFont('helvetica', 'bold');
-        doc.text(headName, 218, currentY + 25);
+        doc.text('Mohamad Ali Mursidi', 218, currentY + 25);
 
         // Page Numbers
         const pageCount = doc.internal.getNumberOfPages();
