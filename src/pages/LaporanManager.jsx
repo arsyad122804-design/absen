@@ -256,7 +256,6 @@ export default function LaporanManager() {
           hash = (hash * 31 + seedStr.charCodeAt(i)) % 100000;
         }
         const min = 10 + (hash % 16); // 07.10 - 07.25
-        const outMin = (hash % 15);   // 16.00 - 16.14
 
         const records = allAbs.filter(a => {
           if (!a.tanggal && !a.created_at) return false;
@@ -269,22 +268,18 @@ export default function LaporanManager() {
         if (records.length > 0) {
           records.sort((a, b) => (a.waktu_masuk || a.jam_masuk || a.jam || '').localeCompare(b.waktu_masuk || b.jam_masuk || b.jam || ''));
           const firstRec = records[0];
-          const lastRec = records[records.length - 1];
           const st = (firstRec.status || '').trim();
           const rawInTime = firstRec.waktu_masuk || firstRec.jam_masuk || firstRec.jam || firstRec.check_in;
-          const rawOutTime = lastRec.waktu_keluar || lastRec.jam_pulang || lastRec.check_out;
-
           const inTime = formatTimeDot(rawInTime);
-          const outTime = formatTimeDot(rawOutTime);
 
-          // Jika Fikri, Andi, atau Maryam -> Selalu Hadir
+          // Jika Fikri, Andi, atau Maryam -> Selalu Hadir (jam pulang belum diisi)
           if (isAlwaysHadir) {
             return { 
               status: 'Hadir', 
               inTime: inTime !== '-' ? inTime : `07.${String(min).padStart(2, '0')}`, 
-              outTime: outTime !== '-' ? outTime : `16.${String(outMin).padStart(2, '0')}`, 
+              outTime: '-', 
               parafIn: 'v', 
-              parafOut: 'v' 
+              parafOut: '-' 
             };
           }
 
@@ -292,43 +287,43 @@ export default function LaporanManager() {
             return { 
               status: 'Hadir', 
               inTime: inTime !== '-' ? inTime : '07.15', 
-              outTime: outTime !== '-' ? outTime : '16.00', 
+              outTime: '-', 
               parafIn: 'v', 
-              parafOut: 'v' 
+              parafOut: '-' 
             };
           } else if (st === 'Terlambat') {
             return { 
               status: 'Terlambat', 
               inTime: inTime !== '-' ? inTime : '07.45', 
-              outTime: outTime !== '-' ? outTime : '16.00', 
+              outTime: '-', 
               parafIn: 'v', 
-              parafOut: 'v' 
+              parafOut: '-' 
             };
           } else if (st === 'Izin') {
-            return { status: 'Izin', inTime: '-', outTime: '-', parafIn: 'I', parafOut: 'I' };
+            return { status: 'Izin', inTime: '-', outTime: '-', parafIn: 'I', parafOut: '-' };
           } else if (st === 'Sakit') {
-            return { status: 'Sakit', inTime: '-', outTime: '-', parafIn: 'S', parafOut: 'S' };
+            return { status: 'Sakit', inTime: '-', outTime: '-', parafIn: 'S', parafOut: '-' };
           } else if (st === 'Alpa' || st === 'Tidak Hadir') {
-            return { status: 'Alpa', inTime: '-', outTime: '-', parafIn: 'A', parafOut: 'A' };
+            return { status: 'Alpa', inTime: '-', outTime: '-', parafIn: 'A', parafOut: '-' };
           } else {
             return {
               status: 'Hadir',
               inTime: inTime !== '-' ? inTime : '07.15',
-              outTime: outTime !== '-' ? outTime : '16.00',
+              outTime: '-',
               parafIn: 'v',
-              parafOut: 'v'
+              parafOut: '-'
             };
           }
         }
 
-        // Jika Fikri, Andi, atau Maryam -> Selalu Hadir penuh pada hari kerja
+        // Jika Fikri, Andi, atau Maryam -> Selalu Hadir penuh pada hari kerja (jam pulang belum diisi)
         if (isAlwaysHadir) {
           return {
             status: 'Hadir',
             inTime: `07.${String(min).padStart(2, '0')}`,
-            outTime: `16.${String(outMin).padStart(2, '0')}`,
+            outTime: '-',
             parafIn: 'v',
-            parafOut: 'v'
+            parafOut: '-'
           };
         }
 
@@ -343,13 +338,13 @@ export default function LaporanManager() {
           };
         }
 
-        // Karyawan yang belum ada record di database: diisi HADIR
+        // Karyawan yang belum ada record di database: diisi HADIR (jam pulang belum diisi)
         return {
           status: 'Hadir',
           inTime: `07.${String(min).padStart(2, '0')}`,
-          outTime: `16.${String(outMin).padStart(2, '0')}`,
+          outTime: '-',
           parafIn: 'v',
-          parafOut: 'v'
+          parafOut: '-'
         };
       };
 
