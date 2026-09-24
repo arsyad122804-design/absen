@@ -347,10 +347,11 @@ export default function LaporanManager() {
           // Jika Fikri, Andi, atau Maryam -> Selalu Hadir Tepat Waktu
           if (isAlwaysHadir) {
             let fixedIn = isKep ? '04.25' : (empNorm.includes('andi') || empNorm.includes('rifki') ? '07.03' : '06.58');
-            let fixedOut = (dayNum === 24) ? '-' : (isKep ? '17.00' : (empNorm.includes('andi') ? '16.02' : '16.05'));
+            let fixedOut = (dayNum === 24) ? '-' : (isKep ? '21.00' : (empNorm.includes('andi') ? '16.02' : '16.05'));
             return { 
               status: 'Hadir', 
               inTime: inTime !== '-' ? inTime : fixedIn, 
+              midTime: isKep ? '07.30' : '-',
               outTime: (dayNum === 24) ? '-' : (finalOut !== '-' ? finalOut : fixedOut), 
               parafIn: 'v', 
               parafOut: (dayNum === 24) ? '-' : (finalPrfOut !== '-' ? finalPrfOut : 'v')
@@ -361,6 +362,7 @@ export default function LaporanManager() {
             return { 
               status: 'Hadir', 
               inTime: inTime !== '-' ? inTime : (isKep ? '04.25' : '07.00'), 
+              midTime: isKep ? '07.30' : '-',
               outTime: finalOut, 
               parafIn: 'v', 
               parafOut: finalPrfOut 
@@ -369,26 +371,28 @@ export default function LaporanManager() {
             return { 
               status: 'Terlambat', 
               inTime: inTime !== '-' ? inTime : (isKep ? '04.45' : '07.08'), 
+              midTime: isKep ? '07.30' : '-',
               outTime: finalOut, 
               parafIn: 'v', 
               parafOut: finalPrfOut 
             };
           } else if (st === 'Izin') {
-            return { status: 'Izin', inTime: '-', outTime: '-', parafIn: 'I', parafOut: '-' };
+            return { status: 'Izin', inTime: '-', midTime: '-', outTime: '-', parafIn: 'I', parafOut: '-' };
           } else if (st === 'Sakit') {
-            return { status: 'Sakit', inTime: '-', outTime: '-', parafIn: 'S', parafOut: '-' };
+            return { status: 'Sakit', inTime: '-', midTime: '-', outTime: '-', parafIn: 'S', parafOut: '-' };
           } else if (st === 'Alpa' || st === 'Tidak Hadir') {
-            return { status: 'Alpa', inTime: '-', outTime: '-', parafIn: 'A', parafOut: '-' };
+            return { status: 'Alpa', inTime: '-', midTime: '-', outTime: '-', parafIn: 'A', parafOut: '-' };
           }
         }
 
         // Jika Fikri, Andi, atau Maryam -> Selalu Hadir Tepat Waktu s.d. tanggal 24
         if (isAlwaysHadir) {
           let fixedIn = isKep ? '04.25' : (empNorm.includes('andi') || empNorm.includes('rifki') ? '07.01' : '06.57');
-          let fixedOut = (dayNum === 24) ? '-' : (isKep ? '17.00' : (empNorm.includes('andi') ? '16.02' : '16.05'));
+          let fixedOut = (dayNum === 24) ? '-' : (isKep ? '21.00' : (empNorm.includes('andi') ? '16.02' : '16.05'));
           return {
             status: 'Hadir',
             inTime: fixedIn,
+            midTime: isKep ? '07.30' : '-',
             outTime: fixedOut,
             parafIn: 'v',
             parafOut: (dayNum === 24) ? '-' : 'v'
@@ -431,6 +435,7 @@ export default function LaporanManager() {
             return {
               status: 'Hadir',
               inTime: todayIn,
+              midTime: isKep ? '07.30' : '-',
               outTime: '-',
               parafIn: 'v',
               parafOut: '-'
@@ -440,6 +445,7 @@ export default function LaporanManager() {
             return {
               status: 'Alpa',
               inTime: '-',
+              midTime: '-',
               outTime: '-',
               parafIn: 'A',
               parafOut: '-'
@@ -671,7 +677,7 @@ export default function LaporanManager() {
           // Header row 2
           const r2 = ["", "", "", ""];
           weekDays.forEach(() => {
-            r2.push("In", "Prf", "Istrht", "Out", "Prf");
+            r2.push("In/Pagi", "Prf", "Istrht", "Out/Sore", "Prf");
           });
 
           wsGridData.push(r1);
@@ -684,7 +690,7 @@ export default function LaporanManager() {
             weekDays.forEach(d => {
               const att = getAttendanceForDay(rawEmp, d);
               if (att.status === 'Hadir' || att.status === 'Terlambat') {
-                row.push(att.inTime, att.parafIn, "-", att.outTime, att.parafOut);
+                row.push(att.inTime, att.parafIn, att.midTime || "-", att.outTime, att.parafOut);
               } else if (att.status === 'Izin') {
                 row.push("ijin", "I", "-", "-", "I");
               } else if (att.status === 'Sakit') {
@@ -833,14 +839,14 @@ export default function LaporanManager() {
             });
           });
 
-          // Header Row 2
+          // Header Row 2: In/Pagi, Prf, Istrht, Out/Sore, Prf
           const headRow2 = [];
           weekDays.forEach(() => {
             headRow2.push(
-              { content: 'In', styles: { halign: 'center' } },
+              { content: 'In/Pagi', styles: { halign: 'center' } },
               { content: 'Prf', styles: { halign: 'center' } },
               { content: 'Istrht', styles: { halign: 'center', fillColor: [187, 247, 208] } },
-              { content: 'Out', styles: { halign: 'center' } },
+              { content: 'Out/Sore', styles: { halign: 'center' } },
               { content: 'Prf', styles: { halign: 'center' } }
             );
           });
@@ -862,7 +868,7 @@ export default function LaporanManager() {
                 row.push(
                   { content: att.inTime, styles: { halign: 'center', textColor: [15, 23, 42] } },
                   { content: att.parafIn || 'v', styles: { halign: 'center', textColor: [22, 163, 74], fontStyle: 'bold' } },
-                  { content: '-', styles: { halign: 'center', fillColor: [187, 247, 208] } },
+                  { content: att.midTime || '-', styles: { halign: 'center', fillColor: [187, 247, 208] } },
                   { content: att.outTime || '-', styles: { halign: 'center', textColor: [15, 23, 42] } },
                   { content: att.parafOut || '-', styles: { halign: 'center', textColor: att.parafOut === 'v' ? [22, 163, 74] : [100, 116, 139], fontStyle: att.parafOut === 'v' ? 'bold' : 'normal' } }
                 );
@@ -870,7 +876,7 @@ export default function LaporanManager() {
                 row.push(
                   { content: att.inTime, styles: { halign: 'center', textColor: [217, 119, 6], fontStyle: 'bold' } },
                   { content: att.parafIn || 'v', styles: { halign: 'center', textColor: [217, 119, 6], fontStyle: 'bold' } },
-                  { content: '-', styles: { halign: 'center', fillColor: [187, 247, 208] } },
+                  { content: att.midTime || '-', styles: { halign: 'center', fillColor: [187, 247, 208] } },
                   { content: att.outTime || '-', styles: { halign: 'center', textColor: [15, 23, 42] } },
                   { content: att.parafOut || '-', styles: { halign: 'center', textColor: att.parafOut === 'v' ? [22, 163, 74] : [100, 116, 139], fontStyle: att.parafOut === 'v' ? 'bold' : 'normal' } }
                 );
@@ -971,7 +977,7 @@ export default function LaporanManager() {
         // Left Legend Box
         doc.setDrawColor(80, 80, 80);
         doc.setLineWidth(0.15);
-        doc.rect(14, currentY, 52, 28);
+        doc.rect(14, currentY, 50, 28);
         doc.setFontSize(7.5);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(15, 23, 42);
@@ -1011,10 +1017,26 @@ export default function LaporanManager() {
 
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(220, 38, 38);
-        doc.text('A', 36, currentY + 23.5);
+        doc.text('A', 35, currentY + 23.5);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(15, 23, 42);
-        doc.text('= Alpa / Kosong', 41, currentY + 23.5);
+        doc.text('= Alpa / Kosong', 40, currentY + 23.5);
+
+        // Center Shift Note Box (Ketentuan Sesi Kepesantrenan Pagi & Sore)
+        doc.setDrawColor(80, 80, 80);
+        doc.setLineWidth(0.15);
+        doc.rect(68, currentY, 142, 28);
+        doc.setFontSize(7.5);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(15, 23, 42);
+        doc.text('Ketentuan Jam Kerja & Sesi Presensi SDM :', 71, currentY + 5.5);
+        
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(6.8);
+        doc.text('• Divisi Sekolah & Operasional : 07.05 - 15.00 / 16.00 WIB (Masuk: In, Pulang: Out)', 71, currentY + 11.5);
+        doc.text('• Divisi Kepesantrenan (2 Sesi per Hari) :', 71, currentY + 16.5);
+        doc.text('   - Sesi 1 (Pagi / Subuh)   : 04.30 - 07.30 WIB (Kolom In/Pagi & Jeda Istrht)', 71, currentY + 21);
+        doc.text('   - Sesi 2 (Sore / Malam)   : 17.00 - 21.00 WIB (Kolom Out/Sore)', 71, currentY + 25.5);
 
         // Right Signature Box
         doc.setDrawColor(80, 80, 80);
