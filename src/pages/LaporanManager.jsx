@@ -445,7 +445,7 @@ export default function LaporanManager() {
         }
       };
 
-      // Generate Weeks (Senin - Jumat) for the selected period
+      // Generate Weeks (Senin - Sabtu) for the selected period
       const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
       const mIdx = monthNames.indexOf(activeSelectedMonth) >= 0 ? monthNames.indexOf(activeSelectedMonth) : new Date().getMonth();
       const year = Number(activeSelectedYear) || new Date().getFullYear();
@@ -462,7 +462,7 @@ export default function LaporanManager() {
         const diff = d.getDate() - day + (day === 0 ? -6 : 1);
         const mon = new Date(d.setDate(diff));
         const w = [];
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 6; i++) { // Senin sampai Sabtu (6 hari kerja)
           const cd = new Date(mon);
           cd.setDate(mon.getDate() + i);
           w.push(cd);
@@ -475,10 +475,10 @@ export default function LaporanManager() {
         for (let day = 1; day <= lastDay; day++) {
           const cd = new Date(year, mIdx, day);
           const dow = cd.getDay(); // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
-          if (dow >= 1 && dow <= 5) {
+          if (dow >= 1 && dow <= 6) { // Senin sampai Sabtu
             curWeek.push(cd);
             allPeriodDays.push(cd);
-            if (dow === 5 || day === lastDay) {
+            if (dow === 6 || day === lastDay) {
               weeks.push([...curWeek]);
               curWeek = [];
             }
@@ -658,27 +658,65 @@ export default function LaporanManager() {
         XLSX.writeFile(wb, `${reportName}.xlsx`);
         setDownloadSuccess(`Berhasil mengunduh ${reportName}.xlsx`);
       } else {
-        // GENERATE LANDSCAPE SDM GRID PDF (EXACT REPLICA OF USER REFERENCE IMAGES)
+        // GENERATE LANDSCAPE SDM GRID PDF (ATTRACTIVE, EXECUTIVE-READY 6-DAY SENIN - SABTU)
         const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
-        // Document Header
-        doc.setFontSize(13);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(15, 23, 42);
-        doc.text('DAFTAR HADIR SDM HIBATULLAH IIBS', 14, 14);
+        // Modern Header Banner with Navy and Gold Accent
+        doc.setFillColor(15, 39, 68); // Deep Navy #0F2744
+        doc.rect(0, 0, 297, 24, 'F');
+        doc.setFillColor(245, 158, 11); // Golden Yellow #F59E0B
+        doc.rect(0, 24, 297, 1.2, 'F');
 
-        doc.setFontSize(8.5);
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(12.5);
         doc.setFont('helvetica', 'bold');
-        doc.text('BULAN  :', 14, 21);
+        doc.text('HIBATULLAH INTERNATIONAL ISLAMIC BOARDING SCHOOL', 148.5, 9, { align: 'center' });
+
+        doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
-        doc.text(bulanRangeStr, 34, 21);
+        doc.setTextColor(226, 232, 240);
+        doc.text('LAPORAN PRESENSI & KEHADIRAN SDM (SENIN - SABTU)', 148.5, 15.5, { align: 'center' });
 
-        doc.setFont('helvetica', 'bold');
-        doc.text('BIDANG :', 14, 26);
-        doc.setFont('helvetica', 'normal');
-        doc.text(activeFilterDivisi === 'Semua Divisi' ? 'Operasional & SDM' : activeFilterDivisi, 34, 26);
+        doc.setFontSize(7.5);
+        doc.setTextColor(203, 213, 225);
+        doc.text(`Periode: ${bulanRangeStr}   |   Bidang: ${activeFilterDivisi === 'Semua Divisi' ? 'Semua Divisi (Operasional, Sekolah, Kepesantrenan)' : activeFilterDivisi}   |   Hari Kerja: Senin s.d. Sabtu`, 148.5, 21, { align: 'center' });
 
-        let currentY = 30;
+        let currentY = 29;
+
+        // Executive KPI Mini Summary Table
+        autoTable(doc, {
+          startY: currentY,
+          margin: { left: 8, right: 8 },
+          head: [['Total Karyawan SDM', 'Hadir Tepat Waktu', 'Terlambat', 'Izin', 'Sakit', 'Alpa / Kosong', 'Tingkat Kehadiran']],
+          body: [[
+            `${filteredEmps.length} Orang`,
+            `${totalHadirAll} Sesi`,
+            `${totalTelatAll} Sesi`,
+            `${totalIzinAll} Hari`,
+            `${totalSakitAll} Hari`,
+            `${totalAlpaAll} Hari`,
+            `${summaryDataPerEmp.length > 0 ? Math.round(((totalHadirAll + totalTelatAll) / Math.max(1, totalHadirAll + totalTelatAll + totalIzinAll + totalSakitAll + totalAlpaAll)) * 100) : 0}%`
+          ]],
+          theme: 'plain',
+          headStyles: {
+            fillColor: [241, 245, 249],
+            textColor: [71, 85, 105],
+            fontSize: 7.2,
+            fontStyle: 'bold',
+            halign: 'center',
+            cellPadding: 1.8
+          },
+          bodyStyles: {
+            fontSize: 8,
+            fontStyle: 'bold',
+            halign: 'center',
+            textColor: [15, 23, 42],
+            cellPadding: 1.8
+          }
+        });
+
+        currentY = doc.lastAutoTable.finalY + 5;
+
         const dayNamesIndo = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
         const monthNamesShort = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
@@ -688,7 +726,7 @@ export default function LaporanManager() {
           // Header Row 1
           const headRow1 = [
             { content: 'No', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } },
-            { content: 'Nama', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } },
+            { content: 'Nama Karyawan', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } },
             { content: 'Jabatan', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } },
             { content: 'Unit', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } }
           ];
@@ -734,7 +772,7 @@ export default function LaporanManager() {
                   { content: att.parafIn || 'v', styles: { halign: 'center', textColor: [22, 163, 74], fontStyle: 'bold' } },
                   { content: '-', styles: { halign: 'center', fillColor: [187, 247, 208] } },
                   { content: att.outTime || '-', styles: { halign: 'center', textColor: [15, 23, 42] } },
-                  { content: att.parafOut || '-', styles: { halign: 'center', textColor: att.parafOut === 'v' ? [22, 163, 74] : [100, 116, 139] } }
+                  { content: att.parafOut || '-', styles: { halign: 'center', textColor: att.parafOut === 'v' ? [22, 163, 74] : [100, 116, 139], fontStyle: att.parafOut === 'v' ? 'bold' : 'normal' } }
                 );
               } else if (att.status === 'Terlambat') {
                 row.push(
@@ -742,7 +780,7 @@ export default function LaporanManager() {
                   { content: att.parafIn || 'v', styles: { halign: 'center', textColor: [217, 119, 6], fontStyle: 'bold' } },
                   { content: '-', styles: { halign: 'center', fillColor: [187, 247, 208] } },
                   { content: att.outTime || '-', styles: { halign: 'center', textColor: [15, 23, 42] } },
-                  { content: att.parafOut || '-', styles: { halign: 'center', textColor: att.parafOut === 'v' ? [22, 163, 74] : [100, 116, 139] } }
+                  { content: att.parafOut || '-', styles: { halign: 'center', textColor: att.parafOut === 'v' ? [22, 163, 74] : [100, 116, 139], fontStyle: att.parafOut === 'v' ? 'bold' : 'normal' } }
                 );
               } else if (att.status === 'Izin') {
                 row.push(
@@ -784,7 +822,7 @@ export default function LaporanManager() {
           });
 
           // Check if table fits on current page
-          const estTableHeight = (bodyRows.length + 2) * 6.5 + 8;
+          const estTableHeight = (bodyRows.length + 2) * 6.2 + 8;
           if (currentY + estTableHeight > 195 && weekIdx > 0) {
             doc.addPage();
             currentY = 15;
@@ -792,7 +830,7 @@ export default function LaporanManager() {
 
           autoTable(doc, {
             startY: currentY,
-            margin: { left: 9, right: 9 },
+            margin: { left: 8, right: 8 },
             head: [headRow1, headRow2],
             body: bodyRows,
             theme: 'grid',
@@ -800,24 +838,24 @@ export default function LaporanManager() {
               fillColor: [254, 240, 138], // Warm cream #FEF08A
               textColor: [15, 23, 42],
               fontStyle: 'bold',
-              fontSize: 6.2,
-              cellPadding: 0.8,
-              lineWidth: 0.12,
-              lineColor: [40, 40, 40]
+              fontSize: 5.8,
+              cellPadding: 0.6,
+              lineWidth: 0.1,
+              lineColor: [60, 60, 60]
             },
             bodyStyles: {
-              fontSize: 6.2,
+              fontSize: 5.8,
               textColor: [15, 23, 42],
-              cellPadding: 0.8,
-              lineWidth: 0.1,
-              lineColor: [80, 80, 80],
+              cellPadding: 0.6,
+              lineWidth: 0.08,
+              lineColor: [100, 100, 100],
               halign: 'center'
             },
             columnStyles: {
-              0: { halign: 'center', cellWidth: 7 },
-              1: { fontStyle: 'bold', halign: 'left', cellWidth: 30 },
-              2: { halign: 'left', cellWidth: 17 },
-              3: { halign: 'center', cellWidth: 15 }
+              0: { halign: 'center', cellWidth: 6 },
+              1: { fontStyle: 'bold', halign: 'left', cellWidth: 28 },
+              2: { halign: 'left', cellWidth: 15 },
+              3: { halign: 'center', cellWidth: 13 }
             },
             didParseCell: function(data) {
               if (data.section === 'body' && data.column.index >= 4) {
