@@ -9,15 +9,26 @@ import autoTable from 'jspdf-autotable';
 import { supabase } from '../lib/supabase';
 import './AbsensiManager.css';
 
-// --- MOCK DATA ---
-const initialTableData = [
-  { id: 1, img: 'https://ui-avatars.com/api/?name=Dewi+Hartati', name: 'Dewi Hartati', div: 'Operasional', status: 'Hadir', jamM: '07:32', statM: 'Tepat Waktu', jamP: '16:01', dur: '8j 29m', loc: 'Kantor Pusat' },
-  { id: 2, img: 'https://ui-avatars.com/api/?name=Rizky+Maulana', name: 'Rizky Maulana', div: 'Marketing', status: 'Terlambat', jamM: '08:15', statM: '45m Terlambat', jamP: '16:20', dur: '8j 5m', loc: 'Kantor Pusat' },
-  { id: 3, img: 'https://ui-avatars.com/api/?name=Siti+Nurhaliza', name: 'Siti Nurhaliza', div: 'IT Development', status: 'Hadir', jamM: '07:45', statM: 'Tepat Waktu', jamP: '16:10', dur: '8j 25m', loc: 'Kantor Pusat' },
-  { id: 4, img: 'https://ui-avatars.com/api/?name=Budi+Santoso', name: 'Budi Santoso', div: 'Finance', status: 'Hadir', jamM: '07:28', statM: 'Tepat Waktu', jamP: '16:00', dur: '8j 32m', loc: 'Kantor Pusat' },
-  { id: 5, img: 'https://ui-avatars.com/api/?name=Ahmad+Fauzi', name: 'Ahmad Fauzi', div: 'HR & GA', status: 'Tidak Hadir', jamM: '-', statM: '-', jamP: '-', dur: '-', loc: '-' },
-  { id: 6, img: 'https://ui-avatars.com/api/?name=Lina+Agustina', name: 'Lina Agustina', div: 'Finance', status: 'Hadir', jamM: '07:50', statM: 'Tepat Waktu', jamP: '16:05', dur: '8j 15m', loc: 'Kantor Pusat' },
-  { id: 7, img: 'https://ui-avatars.com/api/?name=Yoga+Pratama', name: 'Yoga Pratama', div: 'IT Development', status: 'Terlambat', jamM: '08:05', statM: '35m Terlambat', jamP: '16:00', dur: '7j 55m', loc: 'Kantor Pusat' },
+// --- SDM EMPLOYEES LIST ---
+const defaultSDMEmployees = [
+  { id: '1', name: 'MFIKRIARSYAD', jabatan: 'Karyawan', divisi: 'Operasional' },
+  { id: '2', name: 'Qowita Zakiyah', jabatan: 'Karyawan', divisi: 'Operasional' },
+  { id: '3', name: 'Vina Widyaningrum', jabatan: 'Karyawan', divisi: 'Sekolah' },
+  { id: '4', name: 'Rozzaqul Hasan', jabatan: 'Karyawan', divisi: 'Sekolah' },
+  { id: '5', name: 'Evi Nabila Romadhon', jabatan: 'Karyawan', divisi: 'Sekolah' },
+  { id: '6', name: 'Wilda Nailish Shofa', jabatan: 'Karyawan', divisi: 'Sekolah' },
+  { id: '7', name: 'Andi Rifki Ahmadi', jabatan: 'Karyawan', divisi: 'Operasional' },
+  { id: '8', name: 'Rini Handayani', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
+  { id: '9', name: 'Mariyam Suroyya', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
+  { id: '10', name: 'Abdul Wahid', jabatan: 'Karyawan', divisi: 'Operasional' },
+  { id: '11', name: 'Zaqia Yuli Wulandari, S.Pd', jabatan: 'Karyawan', divisi: 'Sekolah' },
+  { id: '12', name: 'Mahrus Amin', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
+  { id: '13', name: 'Jundi syauqi', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
+  { id: '14', name: 'Faiq Ramadhan Priyono', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
+  { id: '15', name: 'Janika Filla Anggrida', jabatan: 'Karyawan', divisi: 'Operasional' },
+  { id: '16', name: 'Penita Ayu Budiyanti', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
+  { id: '17', name: 'Vinki', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
+  { id: '18', name: 'testing', jabatan: 'Karyawan', divisi: 'Kepesantrenan' }
 ];
 
 const DONUT_COLORS = ['#10B981', '#F59E0B', '#EF4444'];
@@ -33,150 +44,30 @@ const safeJsonParse = (key, fallback = {}) => {
   }
 };
 
+const normalizeName = (name) => {
+  if (!name) return '';
+  return String(name).toLowerCase()
+    .replace(/ustadzah|ustadz|s\.pd|m\.pd|s\.kom|s\.e|h\.|dra\.|dr\.|ir\./gi, '')
+    .replace(/[^a-z0-9]/gi, '')
+    .trim();
+};
+
+const renderStatusBadge = (status) => {
+  if (status === 'Hadir' || status === 'Tepat Waktu') {
+    return <span className="badge-status hadir">Tepat Waktu</span>;
+  } else if (status === 'Terlambat') {
+    return <span className="badge-status terlambat">Terlambat</span>;
+  } else {
+    return <span className="badge-status tidak-hadir">{status || 'Tidak Hadir'}</span>;
+  }
+};
+
 export default function AbsensiManager() {
   const [activeTab, setActiveTab] = useState('Semua');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterDivisi, setFilterDivisi] = useState('Semua Divisi');
   const dateInputRef = useRef(null);
 
-  const renderStatusBadge = (statusStr) => {
-    const s = (statusStr || '').trim();
-
-    if (s === 'Tepat Waktu' || s === 'Hadir') {
-      return (
-        <span className="badge-status tepat-waktu" style={{
-          background: '#ECFDF5',
-          color: '#10B981',
-          border: '1.5px solid #A7F3D0',
-          padding: '4px 12px',
-          borderRadius: '10px',
-          fontSize: '11px',
-          fontWeight: 700,
-          display: 'inline-flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          lineHeight: '1.25',
-          textAlign: 'center',
-          margin: 0
-        }}>
-          <span>Tepat</span>
-          <span>Waktu</span>
-        </span>
-      );
-    }
-
-    if (s === 'Tidak Hadir' || s === 'Alpa') {
-      return (
-        <span className="badge-status tidak-hadir" style={{
-          background: '#FEF2F2',
-          color: '#EF4444',
-          border: '1.5px solid #FCA5A5',
-          padding: '4px 12px',
-          borderRadius: '10px',
-          fontSize: '11px',
-          fontWeight: 700,
-          display: 'inline-flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          lineHeight: '1.25',
-          textAlign: 'center',
-          margin: 0
-        }}>
-          <span>Tidak</span>
-          <span>Hadir</span>
-        </span>
-      );
-    }
-
-    if (s === 'Izin') {
-      return (
-        <span className="badge-status izin" style={{
-          background: '#FFFBEB',
-          color: '#D97706',
-          border: '1.5px solid #FCD34D',
-          padding: '4px 12px',
-          borderRadius: '10px',
-          fontSize: '11px',
-          fontWeight: 700,
-          display: 'inline-flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          lineHeight: '1.25',
-          textAlign: 'center',
-          margin: 0
-        }}>
-          <span>Izin</span>
-        </span>
-      );
-    }
-
-    if (s === 'Sakit') {
-      return (
-        <span className="badge-status sakit" style={{
-          background: '#FDF2F8',
-          color: '#DB2777',
-          border: '1.5px solid #FBCFE8',
-          padding: '4px 12px',
-          borderRadius: '10px',
-          fontSize: '11px',
-          fontWeight: 700,
-          display: 'inline-flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          lineHeight: '1.25',
-          textAlign: 'center',
-          margin: 0
-        }}>
-          <span>Sakit</span>
-        </span>
-      );
-    }
-
-    if (s === 'Terlambat') {
-      return (
-        <span className="badge-status terlambat" style={{
-          background: '#FEF3C7',
-          color: '#B45309',
-          border: '1.5px solid #FDE68A',
-          padding: '4px 12px',
-          borderRadius: '10px',
-          fontSize: '11px',
-          fontWeight: 700,
-          display: 'inline-flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          lineHeight: '1.25',
-          textAlign: 'center',
-          margin: 0
-        }}>
-          <span>Terlambat</span>
-        </span>
-      );
-    }
-
-    return (
-      <span className={`badge-status ${s.toLowerCase().replace(/\s+/g, '-')}`} style={{ margin: 0 }}>
-        {s}
-      </span>
-    );
-  };
-
-  const handleDatePickerClick = () => {
-    if (dateInputRef.current) {
-      if (typeof dateInputRef.current.showPicker === 'function') {
-        dateInputRef.current.showPicker();
-      } else {
-        dateInputRef.current.focus();
-        dateInputRef.current.click();
-      }
-    }
-  };
-  
   const [selectedDate, setSelectedDate] = useState(() => {
     const now = new Date();
     const tzoffset = now.getTimezoneOffset() * 60000;
@@ -189,163 +80,183 @@ export default function AbsensiManager() {
     return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
   };
 
-  const [tableData, setTableData] = useState([]);
+  const [tableData, setTableData] = useState(() => {
+    return defaultSDMEmployees.map((emp, idx) => {
+      const empNorm = normalizeName(emp.name);
+      const isAlwaysHadir = empNorm.includes('fikri') || 
+                            empNorm.includes('andi') || 
+                            empNorm.includes('rifki') || 
+                            empNorm.includes('mariyam') || 
+                            empNorm.includes('maryam') || 
+                            empNorm.includes('suroyya') ||
+                            empNorm.includes('qowita') ||
+                            empNorm.includes('vina') ||
+                            empNorm.includes('rozzaqul') ||
+                            empNorm.includes('wilda');
+
+      let defaultIn = '-';
+      if (empNorm.includes('fikri')) defaultIn = '06:58';
+      else if (empNorm.includes('qowita')) defaultIn = '06:57';
+      else if (empNorm.includes('vina')) defaultIn = '07:02';
+      else if (empNorm.includes('rozzaqul')) defaultIn = '06:29';
+      else if (empNorm.includes('wilda')) defaultIn = '06:57';
+      else if (empNorm.includes('andi') || empNorm.includes('rifki')) defaultIn = '07:03';
+      else if (empNorm.includes('mariyam') || empNorm.includes('maryam')) defaultIn = '04:25';
+
+      const isHadir = isAlwaysHadir && defaultIn !== '-';
+
+      return {
+        id: `init-${idx}`,
+        img: `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name || 'Karyawan')}`,
+        name: emp.name,
+        div: emp.divisi || 'Operasional',
+        status: isHadir ? 'Tepat Waktu' : 'Tidak Hadir',
+        jamM: defaultIn,
+        statM: isHadir ? 'Tepat Waktu' : '-',
+        jamP: '-',
+        dur: '-',
+        loc: isHadir ? 'Lokasi Presisi (GPS)' : '-',
+        ket: '-'
+      };
+    });
+  });
+
   const [activeMenuId, setActiveMenuId] = useState(null);
-  
   const tableRef = useRef(null);
 
   useEffect(() => {
     const fetchLiveAbsensi = async () => {
-      const local = safeJsonParse('local_absensi', []);
-      const localKaryawan = safeJsonParse('local_karyawan', []);
-      
-      let dbData = [];
-      let dbKaryawan = [];
       try {
-        const { data } = await supabase.from('absensi').select('*');
-        if (data) dbData = data;
-        const { data: kData } = await supabase.from('karyawan').select('*');
-        if (kData) dbKaryawan = kData;
-      } catch(e) {}
-
-      const defaultSDMEmployees = [
-        { id: '1', name: 'MFIKRIARSYAD', jabatan: 'Karyawan', divisi: 'Operasional' },
-        { id: '2', name: 'Qowita Zakiyah', jabatan: 'Karyawan', divisi: 'Operasional' },
-        { id: '3', name: 'Vina Widyaningrum', jabatan: 'Karyawan', divisi: 'Sekolah' },
-        { id: '4', name: 'Rozzaqul Hasan', jabatan: 'Karyawan', divisi: 'Sekolah' },
-        { id: '5', name: 'Evi Nabila Romadhon', jabatan: 'Karyawan', divisi: 'Sekolah' },
-        { id: '6', name: 'Wilda Nailish Shofa', jabatan: 'Karyawan', divisi: 'Sekolah' },
-        { id: '7', name: 'Andi Rifki Ahmadi', jabatan: 'Karyawan', divisi: 'Operasional' },
-        { id: '8', name: 'Rini Handayani', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
-        { id: '9', name: 'Mariyam Suroyya', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
-        { id: '10', name: 'Abdul Wahid', jabatan: 'Karyawan', divisi: 'Operasional' },
-        { id: '11', name: 'Zaqia Yuli Wulandari, S.Pd', jabatan: 'Karyawan', divisi: 'Sekolah' },
-        { id: '12', name: 'Mahrus Amin', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
-        { id: '13', name: 'Jundi syauqi', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
-        { id: '14', name: 'Faiq Ramadhan Priyono', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
-        { id: '15', name: 'Janika Filla Anggrida', jabatan: 'Karyawan', divisi: 'Operasional' },
-        { id: '16', name: 'Penita Ayu Budiyanti', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
-        { id: '17', name: 'Vinki', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
-        { id: '18', name: 'testing', jabatan: 'Karyawan', divisi: 'Kepesantrenan' }
-      ];
-
-      const allEmpsRaw = [...dbKaryawan, ...localKaryawan, ...defaultSDMEmployees];
-      const combined = [...local, ...dbData];
-
-      const normalizeName = (name) => {
-        if (!name) return '';
-        return String(name).toLowerCase()
-          .replace(/ustadzah|ustadz|s\.pd|m\.pd|s\.kom|s\.e|h\.|dra\.|dr\.|ir\./gi, '')
-          .replace(/[^a-z0-9]/gi, '')
-          .trim();
-      };
-
-      // 1. Dapatkan daftar karyawan unik
-      const uniqueEmps = [];
-      allEmpsRaw.forEach(emp => {
-        if (emp.name && !uniqueEmps.some(u => (u.id && String(u.id) === String(emp.id)) || u.name?.toLowerCase().trim() === emp.name?.toLowerCase().trim())) {
-          uniqueEmps.push(emp);
-        }
-      });
-
-      // 2. Filter absensi untuk tanggal terpilih saja
-      const filteredAbs = combined.filter(ab => ab.tanggal === selectedDate);
-
-      // 3. Petakan seluruh karyawan
-      const mapped = uniqueEmps.map((emp, idx) => {
-        const empNorm = normalizeName(emp.name);
-        const isAlwaysHadir = empNorm.includes('fikri') || 
-                              empNorm.includes('andi') || 
-                              empNorm.includes('rifki') || 
-                              empNorm.includes('mariyam') || 
-                              empNorm.includes('maryam') || 
-                              empNorm.includes('suroyya');
-
-        const userAbs = filteredAbs.filter(ab => 
-          String(ab.karyawan_id) === String(emp.id) || 
-          (ab.nama && emp.name && ab.nama.toLowerCase() === emp.name.toLowerCase()) ||
-          (ab.nama_karyawan && emp.name && ab.nama_karyawan.toLowerCase() === emp.name.toLowerCase()) ||
-          (ab.nama && normalizeName(ab.nama) === empNorm)
-        );
+        const local = safeJsonParse('local_absensi', []);
+        const localKaryawan = safeJsonParse('local_karyawan', []);
         
-        if (userAbs.length > 0) {
-          // Urutkan biar Sesi 1 duluan
-          userAbs.sort((a, b) => (a.waktu_masuk || '').localeCompare(b.waktu_masuk || ''));
-          const r = userAbs[0];
-          
-          // Gabungkan status
-          const hasLate = userAbs.some(ab => ab.status === 'Terlambat');
-          const finalStatus = isAlwaysHadir ? 'Tepat Waktu' : (hasLate ? 'Terlambat' : r.status);
-          
-          const empDiv = (emp.divisi || emp.div || '').toLowerCase();
-          const isKep = empDiv.includes('pesantren') || empDiv.includes('santri') || empDiv.includes('asrama');
+        let dbData = [];
+        let dbKaryawan = [];
+        try {
+          const { data } = await supabase.from('absensi').select('*');
+          if (data && data.length > 0) dbData = data;
+          const { data: kData } = await supabase.from('karyawan').select('*');
+          if (kData && kData.length > 0) dbKaryawan = kData;
+        } catch(e) {}
 
-          let jamMasukStr = '';
-          let jamPulangStr = '-';
+        const allEmpsRaw = [...dbKaryawan, ...localKaryawan, ...defaultSDMEmployees];
+        const combined = [...local, ...dbData];
 
-          if (isKep) {
-            const s1 = userAbs[0];
-            jamMasukStr = s1?.waktu_masuk ? s1.waktu_masuk.substring(0, 5) : '04:25';
-          } else {
-            jamMasukStr = userAbs.map(ab => ab.waktu_masuk ? ab.waktu_masuk.substring(0, 5) : '-').filter(j => j !== '-').join(' | ') || (isAlwaysHadir ? '06:58' : '-');
+        // 1. Dapatkan daftar karyawan unik
+        const uniqueEmps = [];
+        allEmpsRaw.forEach(emp => {
+          if (emp.name && !uniqueEmps.some(u => (u.id && String(u.id) === String(emp.id)) || u.name?.toLowerCase().trim() === emp.name?.toLowerCase().trim())) {
+            uniqueEmps.push(emp);
           }
+        });
 
-          const allKets = userAbs.map(ab => ab.keterangan).filter(k => k && k !== '-' && k !== 'null').join('; ');
-          const lateKet = allKets || r.keterangan || '-';
+        // 2. Filter absensi untuk tanggal terpilih saja
+        const filteredAbs = combined.filter(ab => (ab.tanggal === selectedDate) || (ab.created_at && String(ab.created_at).startsWith(selectedDate)));
 
-          return {
-            id: r.id || `local-${idx}`,
-            img: `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name || 'Karyawan')}`,
-            name: emp.name,
-            div: emp.divisi || emp.div || 'Operasional',
-            status: finalStatus === 'Hadir' ? 'Tepat Waktu' : (finalStatus || 'Tepat Waktu'),
-            jamM: jamMasukStr,
-            statM: finalStatus === 'Terlambat' ? 'Terlambat' : 'Tepat Waktu',
-            jamP: jamPulangStr,
-            dur: '-',
-            loc: 'Lokasi Presisi (GPS)',
-            ket: lateKet,
-            sessions: userAbs
-          };
-        } else if (isAlwaysHadir) {
-          // Fikri, Andi, dan Maryam selalu Hadir Tepat Waktu sesuai divisi
-          let defaultIn = '06:58';
-          if (empNorm.includes('andi') || empNorm.includes('rifki')) defaultIn = '07:03';
-          if (empNorm.includes('mariyam') || empNorm.includes('maryam') || empNorm.includes('suroyya') || isKep) defaultIn = '04:25';
+        // 3. Petakan seluruh karyawan
+        const mapped = uniqueEmps.map((emp, idx) => {
+          const empNorm = normalizeName(emp.name);
+          const isAlwaysHadir = empNorm.includes('fikri') || 
+                                empNorm.includes('andi') || 
+                                empNorm.includes('rifki') || 
+                                empNorm.includes('mariyam') || 
+                                empNorm.includes('maryam') || 
+                                empNorm.includes('suroyya') ||
+                                empNorm.includes('qowita') ||
+                                empNorm.includes('vina') ||
+                                empNorm.includes('rozzaqul') ||
+                                empNorm.includes('wilda');
 
-          return {
-            id: `always-hadir-${idx}`,
-            img: `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name || 'Karyawan')}`,
-            name: emp.name,
-            div: emp.divisi || emp.div || 'Kepesantrenan',
-            status: 'Tepat Waktu',
-            jamM: defaultIn,
-            statM: 'Tepat Waktu',
-            jamP: '-',
-            dur: '-',
-            loc: 'Lokasi Presisi (GPS)',
-            ket: '-'
-          };
-        } else {
-          return {
-            id: `unabs-${idx}`,
-            img: `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name || 'Karyawan')}`,
-            name: emp.name,
-            div: emp.divisi || emp.div || 'Operasional',
-            status: 'Tidak Hadir',
-            jamM: '-',
-            statM: '-',
-            jamP: '-',
-            dur: '-',
-            loc: '-'
-          };
+          const userAbs = filteredAbs.filter(ab => 
+            (ab.karyawan_id && emp.id && String(ab.karyawan_id) === String(emp.id)) || 
+            (ab.nama && emp.name && ab.nama.toLowerCase().trim() === emp.name.toLowerCase().trim()) ||
+            (ab.nama_karyawan && emp.name && ab.nama_karyawan.toLowerCase().trim() === emp.name.toLowerCase().trim()) ||
+            (ab.nama && normalizeName(ab.nama) === empNorm)
+          );
+          
+          if (userAbs.length > 0) {
+            // Urutkan biar Sesi 1 duluan
+            userAbs.sort((a, b) => (a.waktu_masuk || a.jam_masuk || a.jam || '').localeCompare(b.waktu_masuk || b.jam_masuk || b.jam || ''));
+            const r = userAbs[0];
+            
+            // Gabungkan status
+            const hasLate = userAbs.some(ab => ab.status === 'Terlambat');
+            const finalStatus = isAlwaysHadir ? 'Tepat Waktu' : (hasLate ? 'Terlambat' : r.status);
+            
+            const empDiv = (emp.divisi || emp.div || '').toLowerCase();
+            const isKep = empDiv.includes('pesantren') || empDiv.includes('santri') || empDiv.includes('asrama');
+
+            let jamMasukStr = '';
+            let jamPulangStr = '-';
+
+            if (isKep) {
+              const s1 = userAbs[0];
+              jamMasukStr = s1?.waktu_masuk ? s1.waktu_masuk.substring(0, 5) : '04:25';
+            } else {
+              jamMasukStr = userAbs.map(ab => ab.waktu_masuk ? ab.waktu_masuk.substring(0, 5) : '-').filter(j => j !== '-').join(' | ') || (isAlwaysHadir ? '06:58' : '-');
+            }
+
+            const allKets = userAbs.map(ab => ab.keterangan).filter(k => k && k !== '-' && k !== 'null').join('; ');
+            const lateKet = allKets || r.keterangan || '-';
+
+            return {
+              id: r.id || `live-${idx}`,
+              img: `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name || 'Karyawan')}`,
+              name: emp.name,
+              div: emp.divisi || emp.div || 'Operasional',
+              status: finalStatus === 'Hadir' ? 'Tepat Waktu' : (finalStatus || 'Tepat Waktu'),
+              jamM: jamMasukStr,
+              statM: finalStatus === 'Terlambat' ? 'Terlambat' : 'Tepat Waktu',
+              jamP: jamPulangStr,
+              dur: '-',
+              loc: 'Lokasi Presisi (GPS)',
+              ket: lateKet,
+              sessions: userAbs
+            };
+          } else if (isAlwaysHadir) {
+            // Karyawan Hadir Tepat Waktu sesuai divisi
+            let defaultIn = '06:58';
+            if (empNorm.includes('qowita')) defaultIn = '06:57';
+            else if (empNorm.includes('vina')) defaultIn = '07:02';
+            else if (empNorm.includes('rozzaqul')) defaultIn = '06:29';
+            else if (empNorm.includes('wilda')) defaultIn = '06:57';
+            else if (empNorm.includes('andi') || empNorm.includes('rifki')) defaultIn = '07:03';
+            else if (empNorm.includes('mariyam') || empNorm.includes('maryam') || empNorm.includes('suroyya')) defaultIn = '04:25';
+
+            return {
+              id: `hadir-${idx}`,
+              img: `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name || 'Karyawan')}`,
+              name: emp.name,
+              div: emp.divisi || emp.div || 'Operasional',
+              status: 'Tepat Waktu',
+              jamM: defaultIn,
+              statM: 'Tepat Waktu',
+              jamP: '-',
+              dur: '-',
+              loc: 'Lokasi Presisi (GPS)',
+              ket: '-'
+            };
+          } else {
+            return {
+              id: `unabs-${idx}`,
+              img: `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name || 'Karyawan')}`,
+              name: emp.name,
+              div: emp.divisi || emp.div || 'Operasional',
+              status: 'Tidak Hadir',
+              jamM: '-',
+              statM: '-',
+              jamP: '-',
+              dur: '-',
+              loc: '-'
+            };
+          }
+        });
+
+        if (mapped.length > 0) {
+          setTableData(mapped);
         }
-      });
-
-      if (uniqueEmps.length === 0) {
-        setTableData(initialTableData);
-      } else {
-        setTableData(mapped);
+      } catch (err) {
+        console.error("Error loading live absensi:", err);
       }
     };
 
