@@ -457,89 +457,89 @@ export default function LaporanManager() {
         const defaultOut = getRealisticOut(false);
 
         if (dayNum === 1) {
-          if (empNorm.includes('fikri')) return { status: 'Hadir', inTime: '06.58', outTime: '16.05', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('fikri')) return { status: 'Hadir', inTime: '06.58', midTime: '-', outTime: '16.05', parafIn: 'v', parafOut: 'v' };
           if (isKep) {
             const min = empNorm.includes('penita') || empNorm.includes('vinki') ? '04.22' : '03.30';
-            const outH = empNorm.includes('penita') ? '17.00' : (empNorm.includes('vinki') ? '-' : '17.05');
-            return { status: 'Hadir', inTime: min, outTime: outH, parafIn: 'v', parafOut: outH !== '-' ? 'v' : '-' };
+            const outH = empNorm.includes('penita') ? '21.00' : (empNorm.includes('vinki') ? '-' : '21.00');
+            return { status: 'Hadir', inTime: min, midTime: '17.00', outTime: outH, parafIn: 'v', parafOut: outH !== '-' ? 'v' : '-' };
           }
           const outH = empNorm.includes('wilda') ? '-' : '16.00';
-          return { status: 'Hadir', inTime: '07.00', outTime: outH, parafIn: 'v', parafOut: outH !== '-' ? 'v' : '-' };
+          return { status: 'Hadir', inTime: '07.00', midTime: '-', outTime: outH, parafIn: 'v', parafOut: outH !== '-' ? 'v' : '-' };
         } else if (dayNum === 2) {
-          if (empNorm.includes('fikri')) return { status: 'Hadir', inTime: '07.01', outTime: '16.05', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('qowita')) return { status: 'Hadir', inTime: '06.53', outTime: '16.02', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('vina')) return { status: 'Terlambat', inTime: '07.07', outTime: '16.10', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('rozzaqul')) return { status: 'Terlambat', inTime: '07.03', outTime: '16.05', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('evi')) return { status: 'Hadir', inTime: '06.57', outTime: '16.00', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('wilda')) return { status: 'Terlambat', inTime: '07.03', outTime: '16.02', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('andi')) return { status: 'Hadir', inTime: '07.00', outTime: '16.03', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('rini')) return { status: 'Hadir', inTime: '04.23', outTime: '17.00', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('mariyam') || empNorm.includes('maryam')) return { status: 'Hadir', inTime: '03.31', outTime: '17.05', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('wahid')) return { status: 'Terlambat', inTime: '07.17', outTime: '-', parafIn: 'v', parafOut: '-' };
-          if (empNorm.includes('zaqia')) return { status: 'Hadir', inTime: '06.38', outTime: '16.00', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('mahrus')) return { status: 'Terlambat', inTime: '06.59', outTime: '17.00', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('jundi')) return { status: 'Terlambat', inTime: '06.55', outTime: '17.10', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('faiq')) return { status: 'Hadir', inTime: '03.43', outTime: '17.00', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('janika')) return { status: 'Terlambat', inTime: '07.09', outTime: '16.05', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('penita')) return { status: 'Hadir', inTime: '04.23', outTime: '17.02', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('vinki')) return { status: 'Terlambat', inTime: '15.01', outTime: '21.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('fikri')) return { status: 'Hadir', inTime: '07.01', midTime: '-', outTime: '16.05', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('qowita')) return { status: 'Hadir', inTime: '06.53', midTime: '-', outTime: '16.02', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('vina')) return { status: 'Terlambat', inTime: '07.07', midTime: '-', outTime: '16.10', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('rozzaqul')) return { status: 'Terlambat', inTime: '07.03', midTime: '-', outTime: '16.05', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('evi')) return { status: 'Hadir', inTime: '06.57', midTime: '-', outTime: '16.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('wilda')) return { status: 'Terlambat', inTime: '07.03', midTime: '-', outTime: '16.02', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('andi')) return { status: 'Hadir', inTime: '07.00', midTime: '-', outTime: '16.03', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('rini')) return { status: 'Hadir', inTime: '04.23', midTime: '17.00', outTime: '21.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('mariyam') || empNorm.includes('maryam')) return { status: 'Hadir', inTime: '03.31', midTime: '17.00', outTime: '21.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('wahid')) return { status: 'Terlambat', inTime: '07.17', midTime: '-', outTime: '-', parafIn: 'v', parafOut: '-' };
+          if (empNorm.includes('zaqia')) return { status: 'Hadir', inTime: '06.38', midTime: '-', outTime: '16.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('mahrus')) return { status: 'Terlambat', inTime: '04.45', midTime: '17.00', outTime: '21.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('jundi')) return { status: 'Terlambat', inTime: '04.50', midTime: '17.00', outTime: '21.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('faiq')) return { status: 'Hadir', inTime: '03.43', midTime: '17.00', outTime: '21.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('janika')) return { status: 'Terlambat', inTime: '07.09', midTime: '-', outTime: '16.05', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('penita')) return { status: 'Hadir', inTime: '04.23', midTime: '17.00', outTime: '21.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('vinki')) return { status: 'Terlambat', inTime: '04.40', midTime: '17.00', outTime: '21.00', parafIn: 'v', parafOut: 'v' };
         } else if (dayNum === 3) {
-          if (empNorm.includes('fikri')) return { status: 'Hadir', inTime: '07.11', outTime: '16.05', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('qowita')) return { status: 'Hadir', inTime: '06.37', outTime: '16.00', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('vina')) return { status: 'Hadir', inTime: '07.00', outTime: '16.05', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('rozzaqul')) return { status: 'Hadir', inTime: '06.59', outTime: '16.00', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('evi')) return { status: 'Hadir', inTime: '07.24', outTime: '16.02', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('wilda')) return { status: 'Hadir', inTime: '06.57', outTime: '16.00', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('andi')) return { status: 'Hadir', inTime: '06.59', outTime: '16.03', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('rini')) return { status: 'Hadir', inTime: '04.24', outTime: '17.00', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('mariyam') || empNorm.includes('maryam')) return { status: 'Hadir', inTime: '03.30', outTime: '17.00', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('wahid')) return { status: 'Hadir', inTime: '07.00', outTime: '16.05', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('zaqia')) return { status: 'Terlambat', inTime: '07.06', outTime: '16.00', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('mahrus')) return { status: 'Terlambat', inTime: '04.00', outTime: '17.05', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('jundi')) return { status: 'Hadir', inTime: '04.27', outTime: '17.00', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('faiq')) return { status: 'Terlambat', inTime: '06.50', outTime: '-', parafIn: 'v', parafOut: '-' };
-          if (empNorm.includes('janika')) return { status: 'Hadir', inTime: '06.18', outTime: '16.05', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('penita')) return { status: 'Hadir', inTime: '04.24', outTime: '17.00', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('vinki')) return { status: 'Hadir', inTime: '03.43', outTime: '17.05', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('fikri')) return { status: 'Hadir', inTime: '07.11', midTime: '-', outTime: '16.05', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('qowita')) return { status: 'Hadir', inTime: '06.37', midTime: '-', outTime: '16.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('vina')) return { status: 'Hadir', inTime: '07.00', midTime: '-', outTime: '16.05', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('rozzaqul')) return { status: 'Hadir', inTime: '06.59', midTime: '-', outTime: '16.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('evi')) return { status: 'Hadir', inTime: '07.24', midTime: '-', outTime: '16.02', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('wilda')) return { status: 'Hadir', inTime: '06.57', midTime: '-', outTime: '16.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('andi')) return { status: 'Hadir', inTime: '06.59', midTime: '-', outTime: '16.03', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('rini')) return { status: 'Hadir', inTime: '04.24', midTime: '17.00', outTime: '21.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('mariyam') || empNorm.includes('maryam')) return { status: 'Hadir', inTime: '03.30', midTime: '17.00', outTime: '21.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('wahid')) return { status: 'Hadir', inTime: '07.00', midTime: '-', outTime: '16.05', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('zaqia')) return { status: 'Terlambat', inTime: '07.06', midTime: '-', outTime: '16.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('mahrus')) return { status: 'Terlambat', inTime: '04.40', midTime: '17.00', outTime: '21.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('jundi')) return { status: 'Hadir', inTime: '04.27', midTime: '17.00', outTime: '21.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('faiq')) return { status: 'Terlambat', inTime: '04.45', midTime: '-', outTime: '-', parafIn: 'v', parafOut: '-' };
+          if (empNorm.includes('janika')) return { status: 'Hadir', inTime: '06.18', midTime: '-', outTime: '16.05', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('penita')) return { status: 'Hadir', inTime: '04.24', midTime: '17.00', outTime: '21.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('vinki')) return { status: 'Hadir', inTime: '03.43', midTime: '17.00', outTime: '21.00', parafIn: 'v', parafOut: 'v' };
         } else if (dayNum === 4) {
-          if (empNorm.includes('fikri')) return { status: 'Hadir', inTime: '07.00', outTime: '16.05', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('qowita')) return { status: 'Hadir', inTime: '06.35', outTime: '16.00', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('vina')) return { status: 'Hadir', inTime: '06.58', outTime: '16.02', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('rozzaqul')) return { status: 'Hadir', inTime: '06.29', outTime: '16.00', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('evi')) return { status: 'Izin', inTime: '-', outTime: '-', parafIn: 'I', parafOut: '-' };
-          if (empNorm.includes('wilda')) return { status: 'Terlambat', inTime: '07.04', outTime: '16.05', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('andi')) return { status: 'Hadir', inTime: '07.02', outTime: '16.03', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('rini')) return { status: 'Hadir', inTime: '04.25', outTime: '17.00', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('mariyam') || empNorm.includes('maryam')) return { status: 'Hadir', inTime: '04.41', outTime: '17.00', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('wahid')) return { status: 'Terlambat', inTime: '07.05', outTime: '16.00', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('zaqia')) return { status: 'Hadir', inTime: '06.59', outTime: '16.05', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('mahrus')) return { status: 'Hadir', inTime: '04.27', outTime: '17.00', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('jundi')) return { status: 'Hadir', inTime: '04.28', outTime: '17.05', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('faiq')) return { status: 'Hadir', inTime: '03.53', outTime: '17.00', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('janika')) return { status: 'Hadir', inTime: '06.20', outTime: '16.00', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('penita')) return { status: 'Hadir', inTime: '04.25', outTime: '17.00', parafIn: 'v', parafOut: 'v' };
-          if (empNorm.includes('vinki')) return { status: 'Hadir', inTime: '04.25', outTime: '17.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('fikri')) return { status: 'Hadir', inTime: '07.00', midTime: '-', outTime: '16.05', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('qowita')) return { status: 'Hadir', inTime: '06.35', midTime: '-', outTime: '16.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('vina')) return { status: 'Hadir', inTime: '06.58', midTime: '-', outTime: '16.02', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('rozzaqul')) return { status: 'Hadir', inTime: '06.29', midTime: '-', outTime: '16.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('evi')) return { status: 'Izin', inTime: '-', midTime: '-', outTime: '-', parafIn: 'I', parafOut: '-' };
+          if (empNorm.includes('wilda')) return { status: 'Terlambat', inTime: '07.04', midTime: '-', outTime: '16.05', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('andi')) return { status: 'Hadir', inTime: '07.02', midTime: '-', outTime: '16.03', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('rini')) return { status: 'Hadir', inTime: '04.25', midTime: '17.00', outTime: '21.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('mariyam') || empNorm.includes('maryam')) return { status: 'Hadir', inTime: '04.41', midTime: '17.00', outTime: '21.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('wahid')) return { status: 'Terlambat', inTime: '07.05', midTime: '-', outTime: '16.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('zaqia')) return { status: 'Hadir', inTime: '06.59', midTime: '-', outTime: '16.05', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('mahrus')) return { status: 'Hadir', inTime: '04.27', midTime: '17.00', outTime: '21.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('jundi')) return { status: 'Hadir', inTime: '04.28', midTime: '17.00', outTime: '21.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('faiq')) return { status: 'Hadir', inTime: '03.53', midTime: '17.00', outTime: '21.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('janika')) return { status: 'Hadir', inTime: '06.20', midTime: '-', outTime: '16.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('penita')) return { status: 'Hadir', inTime: '04.25', midTime: '17.00', outTime: '21.00', parafIn: 'v', parafOut: 'v' };
+          if (empNorm.includes('vinki')) return { status: 'Hadir', inTime: '04.25', midTime: '17.00', outTime: '21.00', parafIn: 'v', parafOut: 'v' };
         }
 
         // For other dates up to 24:
         // Reflect ~25-30% absenteeism for employees without records
         const mod = hash % 20;
         if (mod === 0) {
-          return { status: 'Izin', inTime: '-', outTime: '-', parafIn: 'I', parafOut: '-' };
+          return { status: 'Izin', inTime: '-', midTime: '-', outTime: '-', parafIn: 'I', parafOut: '-' };
         } else if (mod === 1) {
-          return { status: 'Sakit', inTime: '-', outTime: '-', parafIn: 'S', parafOut: '-' };
+          return { status: 'Sakit', inTime: '-', midTime: '-', outTime: '-', parafIn: 'S', parafOut: '-' };
         } else if (mod >= 2 && mod <= 6) {
           // Tidak Hadir / Alpa (A)
-          return { status: 'Alpa', inTime: '-', outTime: '-', parafIn: 'A', parafOut: '-' };
+          return { status: 'Alpa', inTime: '-', midTime: '-', outTime: '-', parafIn: 'A', parafOut: '-' };
         } else if (mod === 7 || mod === 8) {
           const lateMin = isKep ? 35 + (hash % 20) : 4 + (hash % 15);
           const lateStr = isKep ? `04.${String(lateMin).padStart(2, '0')}` : `07.${String(lateMin).padStart(2, '0')}`;
-          return { status: 'Terlambat', inTime: lateStr, outTime: defaultOut.outTime, parafIn: 'v', parafOut: defaultOut.parafOut };
+          return { status: 'Terlambat', inTime: lateStr, midTime: isKep ? '17.00' : '-', outTime: defaultOut.outTime, parafIn: 'v', parafOut: defaultOut.parafOut };
         } else {
           const onTimeMin = isKep ? 20 + (hash % 10) : (hash % 4 === 0 ? '00' : String(50 + (hash % 10)));
           const onTimeHour = isKep ? '04' : (onTimeMin === '00' ? '07' : '06');
           const onTimeStr = `${onTimeHour}.${onTimeMin}`;
-          return { status: 'Hadir', inTime: onTimeStr, outTime: defaultOut.outTime, parafIn: 'v', parafOut: defaultOut.parafOut };
+          return { status: 'Hadir', inTime: onTimeStr, midTime: isKep ? '17.00' : '-', outTime: defaultOut.outTime, parafIn: 'v', parafOut: defaultOut.parafOut };
         }
       };
 
