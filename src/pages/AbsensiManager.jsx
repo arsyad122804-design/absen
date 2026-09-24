@@ -372,6 +372,16 @@ export default function AbsensiManager() {
     }
   };
 
+  const handleDatePickerClick = () => {
+    if (dateInputRef.current) {
+      if (dateInputRef.current.showPicker) {
+        dateInputRef.current.showPicker();
+      } else {
+        dateInputRef.current.focus();
+      }
+    }
+  };
+
   const scrollToTable = () => {
     tableRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
