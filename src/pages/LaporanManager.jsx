@@ -50,42 +50,50 @@ export default function LaporanManager() {
           if (!exists) combined.push(loc);
         });
 
+        // Also include approved pengajuan (izin / sakit / cuti) if recorded separately
+        try {
+          const { data: pengajuanDb } = await supabase.from('pengajuan').select('*');
+          const localPengajuan = safeJsonParse('local_pengajuan', []);
+          const allPengajuan = [...(pengajuanDb || []), ...localPengajuan];
+          
+          allPengajuan.forEach(p => {
+            const pStatus = (p.status || '').toLowerCase();
+            if (pStatus === 'disetujui' || pStatus === 'approved') {
+              const pType = (p.jenis || p.type || '').toLowerCase();
+              const pDate = p.tanggal || p.created_at;
+              if (pDate) {
+                combined.push({
+                  tanggal: pDate,
+                  status: pType.includes('sakit') ? 'sakit' : (pType.includes('izin') ? 'izin' : 'cuti')
+                });
+              }
+            }
+          });
+        } catch (e) {}
+
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
         const counts = months.map(m => ({ name: m, hadir: 0, telat: 0, izin: 0, sakit: 0, alpa: 0 }));
 
         combined.forEach(r => {
-          const dateObj = r.tanggal ? new Date(r.tanggal) : null;
-          if (dateObj) {
+          const dateObj = r.tanggal ? new Date(r.tanggal) : (r.created_at ? new Date(r.created_at) : null);
+          if (dateObj && !isNaN(dateObj.getTime())) {
             const monthIdx = dateObj.getMonth();
             if (monthIdx >= 0 && monthIdx < 12) {
               const st = (r.status || '').toLowerCase().trim();
               if (st === 'hadir' || st === 'tepat waktu') {
                 counts[monthIdx].hadir++;
-              } else if (st === 'terlambat') {
+              } else if (st === 'terlambat' || st === 'telat') {
                 counts[monthIdx].telat++;
-              } else if (st === 'izin') {
+              } else if (st.includes('izin')) {
                 counts[monthIdx].izin++;
-              } else if (st === 'sakit') {
+              } else if (st.includes('sakit')) {
                 counts[monthIdx].sakit++;
-              } else if (st === 'alpa' || st === 'tidak hadir') {
+              } else if (st === 'alpa' || st === 'alpha' || st === 'tidak hadir' || st === 'kosong') {
                 counts[monthIdx].alpa++;
               }
             }
           }
         });
-
-        // Ensure September analytics have full breakdown matching active staff attendance
-        if (counts[8].hadir === 0 && counts[8].telat === 0) {
-          counts[8].hadir = 238;
-          counts[8].telat = 28;
-          counts[8].izin = 6;
-          counts[8].sakit = 4;
-          counts[8].alpa = 3;
-        } else {
-          if (counts[8].izin === 0) counts[8].izin = 6;
-          if (counts[8].sakit === 0) counts[8].sakit = 4;
-          if (counts[8].alpa === 0) counts[8].alpa = 3;
-        }
 
         const currentMonth = new Date().getMonth();
         const filtered = counts.slice(0, currentMonth + 1);
