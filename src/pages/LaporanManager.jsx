@@ -238,9 +238,18 @@ export default function LaporanManager() {
       // Helper function to resolve attendance for a single day strictly based on Database + fallback Hadir
       const getAttendanceForDay = (emp, d) => {
         const tzDateStr = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-        const now = new Date();
-        const todayStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-        const isFuture = tzDateStr > todayStr;
+        const dayNum = d.getDate();
+        
+        // Pembatasan: Hanya sampai tanggal 25 (tanggal 26 ke atas dikosongkan dengan tanda -)
+        if (dayNum > 25) {
+          return {
+            status: 'Belum',
+            inTime: '-',
+            outTime: '-',
+            parafIn: '-',
+            parafOut: '-'
+          };
+        }
 
         const empDiv = (emp.divisi || emp.div || '').toLowerCase();
         const isKep = empDiv.includes('pesantren') || empDiv.includes('santri') || empDiv.includes('asrama');
@@ -321,7 +330,7 @@ export default function LaporanManager() {
           }
         }
 
-        // Jika Fikri, Andi, atau Maryam -> Selalu Hadir penuh pada hari kerja (jam pulang belum diisi)
+        // Jika Fikri, Andi, atau Maryam -> Selalu Hadir penuh pada hari kerja s.d. tanggal 25
         if (isAlwaysHadir) {
           return {
             status: 'Hadir',
@@ -332,18 +341,7 @@ export default function LaporanManager() {
           };
         }
 
-        // Tanggal setelah 23 September (Masa Depan)
-        if (isFuture) {
-          return {
-            status: 'Belum',
-            inTime: '-',
-            outTime: '-',
-            parafIn: '-',
-            parafOut: '-'
-          };
-        }
-
-        // Karyawan yang belum ada record di database: diisi HADIR (jam pulang belum diisi)
+        // Karyawan yang belum ada record di database s.d. tanggal 25: diisi HADIR (jam pulang belum diisi)
         return {
           status: 'Hadir',
           inTime: defaultTimeStr,
