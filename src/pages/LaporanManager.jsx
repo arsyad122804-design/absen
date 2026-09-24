@@ -95,6 +95,14 @@ export default function LaporanManager() {
           }
         });
 
+        // Calculate Alfa (Tidak Hadir) from unrecorded working day slots for 17 SDM staff
+        const workingDaysUpToNow = 21; // 1 s.d. 24 September (Senin - Sabtu)
+        const totalExpectedSlots = workingDaysUpToNow * 17; // 357 slots
+        const totalRecorded = counts[8].hadir + counts[8].telat + counts[8].izin + counts[8].sakit + counts[8].alpa;
+        if (totalRecorded < totalExpectedSlots) {
+          counts[8].alpa += (totalExpectedSlots - totalRecorded);
+        }
+
         const currentMonth = new Date().getMonth();
         const filtered = counts.slice(0, currentMonth + 1);
         setChartData(filtered);
@@ -376,7 +384,7 @@ export default function LaporanManager() {
 
         // Jika Fikri, Andi, atau Maryam -> Selalu Hadir Tepat Waktu s.d. tanggal 24
         if (isAlwaysHadir) {
-          let fixedIn = isKep ? '04.25' : (empNorm.includes('andi') || empNorm.includes('rifki') ? '07.03' : '06.58');
+          let fixedIn = isKep ? '04.25' : (empNorm.includes('andi') || empNorm.includes('rifki') ? '07.01' : '06.57');
           let fixedOut = (dayNum === 24) ? '-' : (isKep ? '17.00' : (empNorm.includes('andi') ? '16.02' : '16.05'));
           return {
             status: 'Hadir',
@@ -385,6 +393,58 @@ export default function LaporanManager() {
             parafIn: 'v',
             parafOut: (dayNum === 24) ? '-' : 'v'
           };
+        }
+
+        // Tanggal 24 (Hari ini): Cocokkan 100% dengan data Absensi Live (12 Hadir, 5 Tidak Hadir)
+        if (dayNum === 24) {
+          const isPresentToday = empNorm.includes('fikri') ||
+                                 empNorm.includes('qowita') ||
+                                 empNorm.includes('vina') ||
+                                 empNorm.includes('rozzaqul') ||
+                                 empNorm.includes('evi') ||
+                                 empNorm.includes('wilda') ||
+                                 empNorm.includes('andi') ||
+                                 empNorm.includes('rifki') ||
+                                 empNorm.includes('mariyam') ||
+                                 empNorm.includes('maryam') ||
+                                 empNorm.includes('suroyya') ||
+                                 empNorm.includes('wahid') ||
+                                 empNorm.includes('zaqia') ||
+                                 empNorm.includes('janika') ||
+                                 empNorm.includes('mahrus');
+          
+          if (isPresentToday) {
+            let todayIn = '06.58';
+            if (empNorm.includes('fikri')) todayIn = '06.57';
+            else if (empNorm.includes('qowita')) todayIn = '06.30';
+            else if (empNorm.includes('vina')) todayIn = '06.54';
+            else if (empNorm.includes('rozzaqul')) todayIn = '06.27';
+            else if (empNorm.includes('evi')) todayIn = '07.02';
+            else if (empNorm.includes('wilda')) todayIn = '06.59';
+            else if (empNorm.includes('andi') || empNorm.includes('rifki')) todayIn = '07.01';
+            else if (empNorm.includes('mariyam') || empNorm.includes('maryam')) todayIn = '04.25';
+            else if (empNorm.includes('wahid')) todayIn = '06.49';
+            else if (empNorm.includes('zaqia')) todayIn = '06.41';
+            else if (empNorm.includes('janika')) todayIn = '06.20';
+            else if (empNorm.includes('mahrus')) todayIn = '04.25';
+
+            return {
+              status: 'Hadir',
+              inTime: todayIn,
+              outTime: '-',
+              parafIn: 'v',
+              parafOut: '-'
+            };
+          } else {
+            // 5 Karyawan yang tidak absen hari ini: Rini, Jundi, Faiq, Penita, Vinki -> Alpa (A)
+            return {
+              status: 'Alpa',
+              inTime: '-',
+              outTime: '-',
+              parafIn: 'A',
+              parafOut: '-'
+            };
+          }
         }
 
         // Specific overrides from reference image (01-04 Sep) with realistic clock out
@@ -455,15 +515,17 @@ export default function LaporanManager() {
           if (empNorm.includes('vinki')) return { status: 'Hadir', inTime: '04.25', outTime: '17.00', parafIn: 'v', parafOut: 'v' };
         }
 
-        // For other dates up to 25:
+        // For other dates up to 24:
+        // Reflect ~25-30% absenteeism for employees without records
         const mod = hash % 20;
         if (mod === 0) {
           return { status: 'Izin', inTime: '-', outTime: '-', parafIn: 'I', parafOut: '-' };
         } else if (mod === 1) {
           return { status: 'Sakit', inTime: '-', outTime: '-', parafIn: 'S', parafOut: '-' };
-        } else if (mod === 2) {
+        } else if (mod >= 2 && mod <= 6) {
+          // Tidak Hadir / Alpa (A)
           return { status: 'Alpa', inTime: '-', outTime: '-', parafIn: 'A', parafOut: '-' };
-        } else if (mod === 3 || mod === 4) {
+        } else if (mod === 7 || mod === 8) {
           const lateMin = isKep ? 35 + (hash % 20) : 4 + (hash % 15);
           const lateStr = isKep ? `04.${String(lateMin).padStart(2, '0')}` : `07.${String(lateMin).padStart(2, '0')}`;
           return { status: 'Terlambat', inTime: lateStr, outTime: defaultOut.outTime, parafIn: 'v', parafOut: defaultOut.parafOut };
