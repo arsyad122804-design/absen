@@ -242,6 +242,9 @@ export default function LaporanManager() {
         const todayStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
         const isFuture = tzDateStr > todayStr;
 
+        const empDiv = (emp.divisi || emp.div || '').toLowerCase();
+        const isKep = empDiv.includes('pesantren') || empDiv.includes('santri') || empDiv.includes('asrama');
+
         const empNorm = normalizeName(emp.name);
         const isAlwaysHadir = empNorm.includes('fikri') || 
                               empNorm.includes('andi') || 
@@ -256,6 +259,8 @@ export default function LaporanManager() {
           hash = (hash * 31 + seedStr.charCodeAt(i)) % 100000;
         }
         const min = 10 + (hash % 16); // 07.10 - 07.25
+        const kepMin = 20 + (hash % 10); // 04.20 - 04.29
+        const defaultTimeStr = isKep ? `04.${String(kepMin).padStart(2, '0')}` : `07.${String(min).padStart(2, '0')}`;
 
         const records = allAbs.filter(a => {
           if (!a.tanggal && !a.created_at) return false;
@@ -276,7 +281,7 @@ export default function LaporanManager() {
           if (isAlwaysHadir) {
             return { 
               status: 'Hadir', 
-              inTime: inTime !== '-' ? inTime : `07.${String(min).padStart(2, '0')}`, 
+              inTime: inTime !== '-' ? inTime : defaultTimeStr, 
               outTime: '-', 
               parafIn: 'v', 
               parafOut: '-' 
@@ -286,7 +291,7 @@ export default function LaporanManager() {
           if (st === 'Hadir' || st === 'Tepat Waktu') {
             return { 
               status: 'Hadir', 
-              inTime: inTime !== '-' ? inTime : '07.15', 
+              inTime: inTime !== '-' ? inTime : defaultTimeStr, 
               outTime: '-', 
               parafIn: 'v', 
               parafOut: '-' 
@@ -294,7 +299,7 @@ export default function LaporanManager() {
           } else if (st === 'Terlambat') {
             return { 
               status: 'Terlambat', 
-              inTime: inTime !== '-' ? inTime : '07.45', 
+              inTime: inTime !== '-' ? inTime : (isKep ? '04.45' : '07.45'), 
               outTime: '-', 
               parafIn: 'v', 
               parafOut: '-' 
@@ -308,7 +313,7 @@ export default function LaporanManager() {
           } else {
             return {
               status: 'Hadir',
-              inTime: inTime !== '-' ? inTime : '07.15',
+              inTime: inTime !== '-' ? inTime : defaultTimeStr,
               outTime: '-',
               parafIn: 'v',
               parafOut: '-'
@@ -320,7 +325,7 @@ export default function LaporanManager() {
         if (isAlwaysHadir) {
           return {
             status: 'Hadir',
-            inTime: `07.${String(min).padStart(2, '0')}`,
+            inTime: defaultTimeStr,
             outTime: '-',
             parafIn: 'v',
             parafOut: '-'
@@ -341,7 +346,7 @@ export default function LaporanManager() {
         // Karyawan yang belum ada record di database: diisi HADIR (jam pulang belum diisi)
         return {
           status: 'Hadir',
-          inTime: `07.${String(min).padStart(2, '0')}`,
+          inTime: defaultTimeStr,
           outTime: '-',
           parafIn: 'v',
           parafOut: '-'

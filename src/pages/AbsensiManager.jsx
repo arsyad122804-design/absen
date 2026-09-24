@@ -264,7 +264,7 @@ export default function AbsensiManager() {
 
           if (isKep) {
             const s1 = userAbs[0];
-            jamMasukStr = s1?.waktu_masuk ? s1.waktu_masuk.substring(0, 5) : '06:50';
+            jamMasukStr = s1?.waktu_masuk ? s1.waktu_masuk.substring(0, 5) : '04:25';
           } else {
             jamMasukStr = userAbs.map(ab => ab.waktu_masuk ? ab.waktu_masuk.substring(0, 5) : '-').filter(j => j !== '-').join(' | ') || (isAlwaysHadir ? '06:58' : '-');
           }
@@ -287,16 +287,16 @@ export default function AbsensiManager() {
             sessions: userAbs
           };
         } else if (isAlwaysHadir) {
-          // Fikri, Andi, dan Maryam selalu Hadir Tepat Waktu
+          // Fikri, Andi, dan Maryam selalu Hadir Tepat Waktu sesuai divisi
           let defaultIn = '06:58';
           if (empNorm.includes('andi') || empNorm.includes('rifki')) defaultIn = '07:03';
-          if (empNorm.includes('mariyam') || empNorm.includes('maryam') || empNorm.includes('suroyya')) defaultIn = '06:50';
+          if (empNorm.includes('mariyam') || empNorm.includes('maryam') || empNorm.includes('suroyya') || isKep) defaultIn = '04:25';
 
           return {
             id: `always-hadir-${idx}`,
             img: `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name || 'Karyawan')}`,
             name: emp.name,
-            div: emp.divisi || emp.div || 'Operasional',
+            div: emp.divisi || emp.div || 'Kepesantrenan',
             status: 'Tepat Waktu',
             jamM: defaultIn,
             statM: 'Tepat Waktu',
