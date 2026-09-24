@@ -637,18 +637,18 @@ export default function LaporanManager() {
               if (att.status === 'Hadir') {
                 row.push(
                   { content: att.inTime, styles: { halign: 'center', textColor: [15, 23, 42] } },
-                  { content: 'v', styles: { halign: 'center', textColor: [22, 163, 74], fontStyle: 'bold' } },
+                  { content: att.parafIn || 'v', styles: { halign: 'center', textColor: [22, 163, 74], fontStyle: 'bold' } },
                   { content: '-', styles: { halign: 'center', fillColor: [187, 247, 208] } },
-                  { content: att.outTime, styles: { halign: 'center', textColor: [15, 23, 42] } },
-                  { content: 'v', styles: { halign: 'center', textColor: [22, 163, 74], fontStyle: 'bold' } }
+                  { content: att.outTime || '-', styles: { halign: 'center', textColor: [15, 23, 42] } },
+                  { content: att.parafOut || '-', styles: { halign: 'center', textColor: att.parafOut === 'v' ? [22, 163, 74] : [100, 116, 139] } }
                 );
               } else if (att.status === 'Terlambat') {
                 row.push(
                   { content: att.inTime, styles: { halign: 'center', textColor: [217, 119, 6], fontStyle: 'bold' } },
-                  { content: 'v', styles: { halign: 'center', textColor: [217, 119, 6], fontStyle: 'bold' } },
+                  { content: att.parafIn || 'v', styles: { halign: 'center', textColor: [217, 119, 6], fontStyle: 'bold' } },
                   { content: '-', styles: { halign: 'center', fillColor: [187, 247, 208] } },
-                  { content: att.outTime, styles: { halign: 'center', textColor: [15, 23, 42] } },
-                  { content: 'v', styles: { halign: 'center', textColor: [22, 163, 74], fontStyle: 'bold' } }
+                  { content: att.outTime || '-', styles: { halign: 'center', textColor: [15, 23, 42] } },
+                  { content: att.parafOut || '-', styles: { halign: 'center', textColor: att.parafOut === 'v' ? [22, 163, 74] : [100, 116, 139] } }
                 );
               } else if (att.status === 'Izin') {
                 row.push(
@@ -656,7 +656,7 @@ export default function LaporanManager() {
                   { content: 'I', styles: { halign: 'center', textColor: [217, 119, 6], fontStyle: 'bold' } },
                   { content: '-', styles: { halign: 'center', fillColor: [187, 247, 208] } },
                   { content: '-', styles: { halign: 'center', textColor: [100, 116, 139] } },
-                  { content: 'I', styles: { halign: 'center', textColor: [217, 119, 6], fontStyle: 'bold' } }
+                  { content: '-', styles: { halign: 'center', textColor: [100, 116, 139] } }
                 );
               } else if (att.status === 'Sakit') {
                 row.push(
@@ -664,7 +664,7 @@ export default function LaporanManager() {
                   { content: 'S', styles: { halign: 'center', textColor: [219, 39, 119], fontStyle: 'bold' } },
                   { content: '-', styles: { halign: 'center', fillColor: [187, 247, 208] } },
                   { content: '-', styles: { halign: 'center', textColor: [100, 116, 139] } },
-                  { content: 'S', styles: { halign: 'center', textColor: [219, 39, 119], fontStyle: 'bold' } }
+                  { content: '-', styles: { halign: 'center', textColor: [100, 116, 139] } }
                 );
               } else if (att.status === 'Alpa') {
                 row.push(
@@ -672,7 +672,7 @@ export default function LaporanManager() {
                   { content: 'A', styles: { halign: 'center', textColor: [220, 38, 38], fontStyle: 'bold' } },
                   { content: '-', styles: { halign: 'center', fillColor: [187, 247, 208] } },
                   { content: '-', styles: { halign: 'center', textColor: [100, 116, 139] } },
-                  { content: 'A', styles: { halign: 'center', textColor: [220, 38, 38], fontStyle: 'bold' } }
+                  { content: '-', styles: { halign: 'center', textColor: [100, 116, 139] } }
                 );
               } else {
                 // Belum tanggalnya (future date)
@@ -698,6 +698,7 @@ export default function LaporanManager() {
 
           autoTable(doc, {
             startY: currentY,
+            margin: { left: 9, right: 9 },
             head: [headRow1, headRow2],
             body: bodyRows,
             theme: 'grid',
@@ -705,23 +706,24 @@ export default function LaporanManager() {
               fillColor: [254, 240, 138], // Warm cream #FEF08A
               textColor: [15, 23, 42],
               fontStyle: 'bold',
-              fontSize: 7.2,
-              lineWidth: 0.15,
+              fontSize: 6.2,
+              cellPadding: 0.8,
+              lineWidth: 0.12,
               lineColor: [40, 40, 40]
             },
             bodyStyles: {
-              fontSize: 7.2,
+              fontSize: 6.2,
               textColor: [15, 23, 42],
-              cellPadding: 1.4,
+              cellPadding: 0.8,
               lineWidth: 0.1,
               lineColor: [80, 80, 80],
               halign: 'center'
             },
             columnStyles: {
-              0: { halign: 'center', cellWidth: 8 },
-              1: { fontStyle: 'bold', halign: 'left', cellWidth: 36 },
-              2: { halign: 'left', cellWidth: 20 },
-              3: { halign: 'center', cellWidth: 14 }
+              0: { halign: 'center', cellWidth: 7 },
+              1: { fontStyle: 'bold', halign: 'left', cellWidth: 30 },
+              2: { halign: 'left', cellWidth: 17 },
+              3: { halign: 'center', cellWidth: 15 }
             },
             didParseCell: function(data) {
               if (data.section === 'body' && data.column.index >= 4) {
