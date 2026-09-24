@@ -293,8 +293,8 @@ export default function AbsensiManager() {
       });
 
       let filteredEmps = allEmps;
-      if (selectedDiv !== 'Semua Divisi') {
-        filteredEmps = allEmps.filter(e => (e.divisi || e.div || '').toLowerCase().includes(selectedDiv.toLowerCase()));
+      if (filterDivisi && filterDivisi !== 'Semua Divisi') {
+        filteredEmps = allEmps.filter(e => (e.divisi || e.div || '').toLowerCase().includes(filterDivisi.toLowerCase()));
       }
 
       // Helper function to format time (07:15 -> 07.15)
@@ -720,7 +720,7 @@ export default function AbsensiManager() {
 
       doc.setFontSize(7.5);
       doc.setTextColor(203, 213, 225);
-      doc.text(`Periode: ${bulanRangeStr}   |   Bidang: ${selectedDiv === 'Semua Divisi' ? 'Semua Divisi (Operasional, Sekolah, Kepesantrenan)' : selectedDiv}   |   Hari Kerja: Senin s.d. Sabtu`, 148.5, 21, { align: 'center' });
+      doc.text(`Periode: ${bulanRangeStr}   |   Bidang: ${filterDivisi === 'Semua Divisi' ? 'Semua Divisi (Operasional, Sekolah, Kepesantrenan)' : filterDivisi}   |   Hari Kerja: Senin s.d. Sabtu`, 148.5, 21, { align: 'center' });
 
       let currentY = 29;
 
