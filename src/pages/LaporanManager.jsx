@@ -341,47 +341,33 @@ export default function LaporanManager() {
           const rawOutTime = firstRec.waktu_pulang || firstRec.jam_pulang || firstRec.check_out;
           const dbOut = formatTimeDot(rawOutTime);
           const defOut = getRealisticOut(false);
-          const finalOut = dbOut !== '-' ? dbOut : defOut.outTime;
-          const finalPrfOut = finalOut !== '-' ? 'v' : '-';
+          const finalOut = (dayNum === 24) ? '-' : (dbOut !== '-' ? dbOut : defOut.outTime);
+          const finalPrfOut = (dayNum === 24) ? '-' : (finalOut !== '-' ? 'v' : '-');
 
-          // Jika Fikri, Andi, atau Maryam -> Selalu Hadir Tepat Waktu
-          if (isAlwaysHadir) {
-            let fixedIn = isKep ? '04.25' : (empNorm.includes('andi') || empNorm.includes('rifki') ? '07.03' : '06.58');
-            let fixedOut = (dayNum === 24) ? '-' : (isKep ? '21.00' : (empNorm.includes('andi') ? '16.02' : '16.05'));
-            return { 
-              status: 'Hadir', 
-              inTime: inTime !== '-' ? inTime : fixedIn, 
-              midTime: isKep ? '07.30' : '-',
-              outTime: (dayNum === 24) ? '-' : (finalOut !== '-' ? finalOut : fixedOut), 
-              parafIn: 'v', 
-              parafOut: (dayNum === 24) ? '-' : (finalPrfOut !== '-' ? finalPrfOut : 'v')
-            };
-          }
-
-          if (st === 'Hadir' || st === 'Tepat Waktu') {
-            return { 
-              status: 'Hadir', 
-              inTime: inTime !== '-' ? inTime : (isKep ? '04.25' : '07.00'), 
-              midTime: isKep ? '07.30' : '-',
-              outTime: finalOut, 
-              parafIn: 'v', 
-              parafOut: finalPrfOut 
-            };
-          } else if (st === 'Terlambat') {
+          if (st.toLowerCase() === 'terlambat') {
             return { 
               status: 'Terlambat', 
               inTime: inTime !== '-' ? inTime : (isKep ? '04.45' : '07.08'), 
-              midTime: isKep ? '07.30' : '-',
+              midTime: isKep ? '17.00' : '-', 
               outTime: finalOut, 
               parafIn: 'v', 
               parafOut: finalPrfOut 
             };
-          } else if (st === 'Izin') {
-            return { status: 'Izin', inTime: '-', midTime: '-', outTime: '-', parafIn: 'I', parafOut: '-' };
-          } else if (st === 'Sakit') {
-            return { status: 'Sakit', inTime: '-', midTime: '-', outTime: '-', parafIn: 'S', parafOut: '-' };
-          } else if (st === 'Alpa' || st === 'Tidak Hadir') {
-            return { status: 'Alpa', inTime: '-', midTime: '-', outTime: '-', parafIn: 'A', parafOut: '-' };
+          } else if (st.toLowerCase() === 'izin' || st.toLowerCase() === 'ijin') {
+            return { status: 'Izin', inTime: 'Ijin', midTime: '-', outTime: '-', parafIn: 'I', parafOut: 'I' };
+          } else if (st.toLowerCase() === 'sakit') {
+            return { status: 'Sakit', inTime: 'Sakit', midTime: '-', outTime: '-', parafIn: 'S', parafOut: 'S' };
+          } else if (st.toLowerCase() === 'alpa' || st.toLowerCase() === 'tidak hadir') {
+            return { status: 'Alpa', inTime: 'Alpa', midTime: '-', outTime: '-', parafIn: 'A', parafOut: 'A' };
+          } else {
+            return { 
+              status: 'Hadir', 
+              inTime: inTime !== '-' ? inTime : (isKep ? '04.25' : '07.00'), 
+              midTime: isKep ? '17.00' : '-', 
+              outTime: finalOut, 
+              parafIn: 'v', 
+              parafOut: finalPrfOut 
+            };
           }
         }
 
@@ -392,7 +378,7 @@ export default function LaporanManager() {
           return {
             status: 'Hadir',
             inTime: fixedIn,
-            midTime: isKep ? '07.30' : '-',
+            midTime: isKep ? '17.00' : '-',
             outTime: fixedOut,
             parafIn: 'v',
             parafOut: (dayNum === 24) ? '-' : 'v'
