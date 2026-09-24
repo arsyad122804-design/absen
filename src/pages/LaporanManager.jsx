@@ -239,8 +239,8 @@ export default function LaporanManager() {
         const tzDateStr = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
         const dayNum = d.getDate();
         
-        // Pembatasan: Hanya sampai tanggal 25 (tanggal 26 ke atas dikosongkan dengan tanda -)
-        if (dayNum > 25) {
+        // Pembatasan: Hanya sampai hari ini (tanggal 24). Tanggal 25 ke atas dikosongkan dengan tanda -
+        if (dayNum > 24) {
           return {
             status: 'Belum',
             inTime: '-',
@@ -278,6 +278,10 @@ export default function LaporanManager() {
 
         // Realistic out-time generator:
         const getRealisticOut = (forceOut = false) => {
+          // Tanggal 24 (Hari ini): belum jam pulang sehingga outTime dan parafOut adalah strip '-'
+          if (dayNum === 24) {
+            return { outTime: '-', parafOut: '-' };
+          }
           // Fikri, Andi, Maryam always clock out reliably.
           // Other staff: 85% clock out, 15% forgot to clock out on certain days.
           const didClockOut = forceOut || isAlwaysHadir || (hash % 7 !== 0);
@@ -309,13 +313,13 @@ export default function LaporanManager() {
           // Jika Fikri, Andi, atau Maryam -> Selalu Hadir Tepat Waktu
           if (isAlwaysHadir) {
             let fixedIn = isKep ? '04.25' : (empNorm.includes('andi') || empNorm.includes('rifki') ? '07.03' : '06.58');
-            let fixedOut = isKep ? '17.00' : (empNorm.includes('andi') ? '16.02' : '16.05');
+            let fixedOut = (dayNum === 24) ? '-' : (isKep ? '17.00' : (empNorm.includes('andi') ? '16.02' : '16.05'));
             return { 
               status: 'Hadir', 
               inTime: inTime !== '-' ? inTime : fixedIn, 
-              outTime: finalOut !== '-' ? finalOut : fixedOut, 
+              outTime: (dayNum === 24) ? '-' : (finalOut !== '-' ? finalOut : fixedOut), 
               parafIn: 'v', 
-              parafOut: 'v' 
+              parafOut: (dayNum === 24) ? '-' : (finalPrfOut !== '-' ? finalPrfOut : 'v')
             };
           }
 
@@ -344,16 +348,16 @@ export default function LaporanManager() {
           }
         }
 
-        // Jika Fikri, Andi, atau Maryam -> Selalu Hadir Tepat Waktu s.d. tanggal 25
+        // Jika Fikri, Andi, atau Maryam -> Selalu Hadir Tepat Waktu s.d. tanggal 24
         if (isAlwaysHadir) {
           let fixedIn = isKep ? '04.25' : (empNorm.includes('andi') || empNorm.includes('rifki') ? '07.03' : '06.58');
-          let fixedOut = isKep ? '17.00' : (empNorm.includes('andi') ? '16.02' : '16.05');
+          let fixedOut = (dayNum === 24) ? '-' : (isKep ? '17.00' : (empNorm.includes('andi') ? '16.02' : '16.05'));
           return {
             status: 'Hadir',
             inTime: fixedIn,
             outTime: fixedOut,
             parafIn: 'v',
-            parafOut: 'v'
+            parafOut: (dayNum === 24) ? '-' : 'v'
           };
         }
 
