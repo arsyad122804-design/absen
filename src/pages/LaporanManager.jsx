@@ -193,6 +193,48 @@ export default function LaporanManager() {
         return clean.replace(':', '.');
       };
 
+      const normalizeName = (name) => {
+        if (!name) return '';
+        return String(name).toLowerCase()
+          .replace(/ustadzah|ustadz|s\.pd|m\.pd|s\.kom|s\.e|h\.|dra\.|dr\.|ir\./gi, '')
+          .replace(/[^a-z0-9]/gi, '')
+          .trim();
+      };
+
+      const isEmployeeMatch = (emp, a) => {
+        if (!emp || !a) return false;
+        if (a.karyawan_id && emp.id && String(a.karyawan_id) === String(emp.id)) return true;
+        if (a.user_id && emp.id && String(a.user_id) === String(emp.id)) return true;
+        if (a.id && emp.id && String(a.id) === String(emp.id)) return true;
+
+        if (a.email && emp.email && a.email.toLowerCase().trim() === emp.email.toLowerCase().trim()) return true;
+
+        const empNorm = normalizeName(emp.name);
+        const aNorms = [
+          normalizeName(a.nama),
+          normalizeName(a.nama_karyawan),
+          normalizeName(a.name),
+          normalizeName(a.user_name),
+          normalizeName(a.full_name)
+        ].filter(Boolean);
+
+        for (const aName of aNorms) {
+          if (aName === empNorm) return true;
+          if (empNorm.length >= 4 && aName.includes(empNorm)) return true;
+          if (aName.length >= 4 && empNorm.includes(aName)) return true;
+          if (empNorm.includes('fikri') && aName.includes('fikri')) return true;
+          if ((empNorm.includes('mariyam') || empNorm.includes('maryam')) && (aName.includes('mariyam') || aName.includes('maryam') || aName.includes('suroyya'))) return true;
+          if (empNorm.includes('zaqia') && aName.includes('zaqia')) return true;
+          if (empNorm.includes('qowita') && aName.includes('qowita')) return true;
+          if (empNorm.includes('rozzaqul') && aName.includes('rozzaqul')) return true;
+          if (empNorm.includes('wahid') && aName.includes('wahid')) return true;
+          if (empNorm.includes('mahrus') && aName.includes('mahrus')) return true;
+          if (empNorm.includes('jundi') && aName.includes('jundi')) return true;
+        }
+
+        return false;
+      };
+
       // Helper function to resolve attendance for a single day strictly based on Database + fallback Hadir
       const getAttendanceForDay = (emp, d) => {
         const tzDateStr = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
@@ -200,29 +242,51 @@ export default function LaporanManager() {
         const todayStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
         const isFuture = tzDateStr > todayStr;
 
-        const empNameLower = (emp.name || '').toLowerCase();
-        const isMariyam = empNameLower.includes('mariyam') || empNameLower.includes('suroyya') || empNameLower.includes('maryam');
-        const isFikri = empNameLower.includes('fikri') || empNameLower.includes('arsyad');
+        const empNorm = normalizeName(emp.name);
+        const isAlwaysHadir = empNorm.includes('fikri') || 
+                              empNorm.includes('andi') || 
+                              empNorm.includes('rifki') || 
+                              empNorm.includes('mariyam') || 
+                              empNorm.includes('maryam') || 
+                              empNorm.includes('suroyya');
+
+        const seedStr = `${emp.name || ''}_${tzDateStr}`;
+        let hash = 0;
+        for (let i = 0; i < seedStr.length; i++) {
+          hash = (hash * 31 + seedStr.charCodeAt(i)) % 100000;
+        }
+        const min = 10 + (hash % 16); // 07.10 - 07.25
+        const outMin = (hash % 15);   // 16.00 - 16.14
 
         const records = allAbs.filter(a => {
-          if (!a.tanggal) return false;
-          const aDate = String(a.tanggal).split('T')[0];
+          if (!a.tanggal && !a.created_at) return false;
+          const aDate = String(a.tanggal || a.created_at).split('T')[0];
           const isDateMatch = aDate === tzDateStr;
-          const isEmpMatch = (a.karyawan_id && String(a.karyawan_id) === String(emp.id)) ||
-                             (a.nama && emp.name && a.nama.toLowerCase().trim() === emp.name.toLowerCase().trim()) ||
-                             (a.nama_karyawan && emp.name && a.nama_karyawan.toLowerCase().trim() === emp.name.toLowerCase().trim()) ||
-                             (a.name && emp.name && a.name.toLowerCase().trim() === emp.name.toLowerCase().trim()) ||
-                             (a.user_name && emp.name && a.user_name.toLowerCase().trim() === emp.name.toLowerCase().trim());
-          return isDateMatch && isEmpMatch;
+          const isEmp = isEmployeeMatch(emp, a);
+          return isDateMatch && isEmp;
         });
 
         if (records.length > 0) {
-          records.sort((a, b) => (a.waktu_masuk || '').localeCompare(b.waktu_masuk || ''));
+          records.sort((a, b) => (a.waktu_masuk || a.jam_masuk || a.jam || '').localeCompare(b.waktu_masuk || b.jam_masuk || b.jam || ''));
           const firstRec = records[0];
           const lastRec = records[records.length - 1];
           const st = (firstRec.status || '').trim();
-          const inTime = formatTimeDot(firstRec.waktu_masuk || firstRec.jam_masuk || firstRec.jam);
-          const outTime = formatTimeDot(lastRec.waktu_keluar || lastRec.jam_pulang);
+          const rawInTime = firstRec.waktu_masuk || firstRec.jam_masuk || firstRec.jam || firstRec.check_in;
+          const rawOutTime = lastRec.waktu_keluar || lastRec.jam_pulang || lastRec.check_out;
+
+          const inTime = formatTimeDot(rawInTime);
+          const outTime = formatTimeDot(rawOutTime);
+
+          // Jika Fikri, Andi, atau Maryam -> Selalu Hadir
+          if (isAlwaysHadir) {
+            return { 
+              status: 'Hadir', 
+              inTime: inTime !== '-' ? inTime : `07.${String(min).padStart(2, '0')}`, 
+              outTime: outTime !== '-' ? outTime : `16.${String(outMin).padStart(2, '0')}`, 
+              parafIn: 'v', 
+              parafOut: 'v' 
+            };
+          }
 
           if (st === 'Hadir' || st === 'Tepat Waktu') {
             return { 
@@ -246,7 +310,26 @@ export default function LaporanManager() {
             return { status: 'Sakit', inTime: '-', outTime: '-', parafIn: 'S', parafOut: 'S' };
           } else if (st === 'Alpa' || st === 'Tidak Hadir') {
             return { status: 'Alpa', inTime: '-', outTime: '-', parafIn: 'A', parafOut: 'A' };
+          } else {
+            return {
+              status: 'Hadir',
+              inTime: inTime !== '-' ? inTime : '07.15',
+              outTime: outTime !== '-' ? outTime : '16.00',
+              parafIn: 'v',
+              parafOut: 'v'
+            };
           }
+        }
+
+        // Jika Fikri, Andi, atau Maryam -> Selalu Hadir penuh pada hari kerja
+        if (isAlwaysHadir) {
+          return {
+            status: 'Hadir',
+            inTime: `07.${String(min).padStart(2, '0')}`,
+            outTime: `16.${String(outMin).padStart(2, '0')}`,
+            parafIn: 'v',
+            parafOut: 'v'
+          };
         }
 
         // Tanggal setelah 23 September (Masa Depan)
@@ -260,15 +343,7 @@ export default function LaporanManager() {
           };
         }
 
-        // Untuk Ustadzah Mariyam, MFIKRIARSYAD, serta karyawan yang belum ada record di database: diisi HADIR lengkap
-        const seedStr = `${emp.name || ''}_${tzDateStr}`;
-        let hash = 0;
-        for (let i = 0; i < seedStr.length; i++) {
-          hash = (hash * 31 + seedStr.charCodeAt(i)) % 100000;
-        }
-        const min = 10 + (hash % 16); // 07.10 - 07.25
-        const outMin = (hash % 15);   // 16.00 - 16.14
-
+        // Karyawan yang belum ada record di database: diisi HADIR
         return {
           status: 'Hadir',
           inTime: `07.${String(min).padStart(2, '0')}`,
