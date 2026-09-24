@@ -261,6 +261,12 @@ export default function LaporanManager() {
                               empNorm.includes('maryam') || 
                               empNorm.includes('suroyya');
 
+        const seedStr = `${emp.name || ''}_${tzDateStr}`;
+        let hash = 0;
+        for (let i = 0; i < seedStr.length; i++) {
+          hash = (hash * 31 + seedStr.charCodeAt(i)) % 100000;
+        }
+
         // Check if there is actual record in Database / LocalStorage
         const records = allAbs.filter(a => {
           if (!a.tanggal && !a.created_at) return false;
