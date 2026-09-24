@@ -157,14 +157,13 @@ export default function LaporanManager() {
         { id: '14', name: 'Faiq Ramadhan Priyono', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
         { id: '15', name: 'Janika Filla Anggrida', jabatan: 'Karyawan', divisi: 'Operasional' },
         { id: '16', name: 'Penita Ayu Budiyanti', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
-        { id: '17', name: 'Vinki', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
-        { id: '18', name: 'testing', jabatan: 'Karyawan', divisi: 'Kepesantrenan' }
+        { id: '17', name: 'Vinki', jabatan: 'Karyawan', divisi: 'Kepesantrenan' }
       ];
 
       const allEmpsRaw = [...dbEmps, ...localEmps, ...defaultSDMEmployees];
       const allEmps = [];
       allEmpsRaw.forEach(emp => {
-        if (emp.name && !allEmps.some(u => (u.id && String(u.id) === String(emp.id)) || u.name?.toLowerCase().trim() === emp.name?.toLowerCase().trim())) {
+        if (emp.name && !emp.name.toLowerCase().includes('testing') && !allEmps.some(u => (u.id && String(u.id) === String(emp.id)) || u.name?.toLowerCase().trim() === emp.name?.toLowerCase().trim())) {
           allEmps.push(emp);
         }
       });
@@ -336,9 +335,9 @@ export default function LaporanManager() {
 
         // Specific overrides from reference image (01-04 Sep)
         if (dayNum === 1) {
-          if (empNorm.includes('fikri')) return { status: 'Hadir', inTime: '07.23', outTime: '-', parafIn: 'v', parafOut: '-' };
+          if (empNorm.includes('fikri')) return { status: 'Hadir', inTime: '06.58', outTime: '-', parafIn: 'v', parafOut: '-' };
           if (isKep) {
-            const min = empNorm.includes('penita') || empNorm.includes('vinki') ? '04.22' : (empNorm.includes('testing') ? '04.25' : '03.30');
+            const min = empNorm.includes('penita') || empNorm.includes('vinki') ? '04.22' : '03.30';
             return { status: 'Hadir', inTime: min, outTime: '-', parafIn: 'v', parafOut: '-' };
           }
           return { status: 'Hadir', inTime: '07.00', outTime: '-', parafIn: 'v', parafOut: '-' };
@@ -360,7 +359,6 @@ export default function LaporanManager() {
           if (empNorm.includes('janika')) return { status: 'Terlambat', inTime: '07.09', outTime: '-', parafIn: 'v', parafOut: '-' };
           if (empNorm.includes('penita')) return { status: 'Hadir', inTime: '04.23', outTime: '-', parafIn: 'v', parafOut: '-' };
           if (empNorm.includes('vinki')) return { status: 'Terlambat', inTime: '15.01', outTime: '-', parafIn: 'v', parafOut: '-' };
-          if (empNorm.includes('testing')) return { status: 'Hadir', inTime: '04.26', outTime: '-', parafIn: 'v', parafOut: '-' };
         } else if (dayNum === 3) {
           if (empNorm.includes('fikri')) return { status: 'Hadir', inTime: '07.11', outTime: '-', parafIn: 'v', parafOut: '-' };
           if (empNorm.includes('qowita')) return { status: 'Hadir', inTime: '06.37', outTime: '-', parafIn: 'v', parafOut: '-' };
@@ -379,7 +377,6 @@ export default function LaporanManager() {
           if (empNorm.includes('janika')) return { status: 'Hadir', inTime: '06.18', outTime: '-', parafIn: 'v', parafOut: '-' };
           if (empNorm.includes('penita')) return { status: 'Hadir', inTime: '04.24', outTime: '-', parafIn: 'v', parafOut: '-' };
           if (empNorm.includes('vinki')) return { status: 'Hadir', inTime: '03.43', outTime: '-', parafIn: 'v', parafOut: '-' };
-          if (empNorm.includes('testing')) return { status: 'Hadir', inTime: '04.27', outTime: '-', parafIn: 'v', parafOut: '-' };
         } else if (dayNum === 4) {
           if (empNorm.includes('fikri')) return { status: 'Hadir', inTime: '07.00', outTime: '-', parafIn: 'v', parafOut: '-' };
           if (empNorm.includes('qowita')) return { status: 'Hadir', inTime: '06.35', outTime: '-', parafIn: 'v', parafOut: '-' };
@@ -398,7 +395,6 @@ export default function LaporanManager() {
           if (empNorm.includes('janika')) return { status: 'Hadir', inTime: '06.20', outTime: '-', parafIn: 'v', parafOut: '-' };
           if (empNorm.includes('penita')) return { status: 'Hadir', inTime: '04.25', outTime: '-', parafIn: 'v', parafOut: '-' };
           if (empNorm.includes('vinki')) return { status: 'Hadir', inTime: '04.25', outTime: '-', parafIn: 'v', parafOut: '-' };
-          if (empNorm.includes('testing')) return { status: 'Terlambat', inTime: '08.55', outTime: '-', parafIn: 'v', parafOut: '-' };
         }
 
         // For other dates up to 25:

@@ -27,8 +27,7 @@ const defaultSDMEmployees = [
   { id: '14', name: 'Faiq Ramadhan Priyono', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
   { id: '15', name: 'Janika Filla Anggrida', jabatan: 'Karyawan', divisi: 'Operasional' },
   { id: '16', name: 'Penita Ayu Budiyanti', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
-  { id: '17', name: 'Vinki', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
-  { id: '18', name: 'testing', jabatan: 'Karyawan', divisi: 'Kepesantrenan' }
+  { id: '17', name: 'Vinki', jabatan: 'Karyawan', divisi: 'Kepesantrenan' }
 ];
 
 const DONUT_COLORS = ['#10B981', '#F59E0B', '#EF4444'];
@@ -145,7 +144,7 @@ export default function AbsensiManager() {
         // 1. Dapatkan daftar karyawan unik
         const uniqueEmps = [];
         allEmpsRaw.forEach(emp => {
-          if (emp.name && !uniqueEmps.some(u => (u.id && String(u.id) === String(emp.id)) || u.name?.toLowerCase().trim() === emp.name?.toLowerCase().trim())) {
+          if (emp.name && !emp.name.toLowerCase().includes('testing') && !uniqueEmps.some(u => (u.id && String(u.id) === String(emp.id)) || u.name?.toLowerCase().trim() === emp.name?.toLowerCase().trim())) {
             uniqueEmps.push(emp);
           }
         });
