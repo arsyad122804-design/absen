@@ -175,29 +175,30 @@ export default function LaporanManager() {
       }
 
       const defaultSDMEmployees = [
-        { id: '1', name: 'MFIKRIARSYAD', jabatan: 'Karyawan', divisi: 'Operasional' },
-        { id: '2', name: 'Qowita Zakiyah', jabatan: 'Karyawan', divisi: 'Operasional' },
-        { id: '3', name: 'Vina Widyaningrum', jabatan: 'Karyawan', divisi: 'Sekolah' },
-        { id: '4', name: 'Rozzaqul Hasan', jabatan: 'Karyawan', divisi: 'Sekolah' },
-        { id: '5', name: 'Evi Nabila Romadhon', jabatan: 'Karyawan', divisi: 'Sekolah' },
-        { id: '6', name: 'Wilda Nailish Shofa', jabatan: 'Karyawan', divisi: 'Sekolah' },
-        { id: '7', name: 'Andi Rifki Ahmadi', jabatan: 'Karyawan', divisi: 'Operasional' },
-        { id: '8', name: 'Rini Handayani', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
-        { id: '9', name: 'Mariyam Suroyya', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
-        { id: '10', name: 'Abdul Wahid', jabatan: 'Karyawan', divisi: 'Operasional' },
-        { id: '11', name: 'Zaqia Yuli Wulandari, S.Pd', jabatan: 'Karyawan', divisi: 'Sekolah' },
-        { id: '12', name: 'Mahrus Amin', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
-        { id: '13', name: 'Jundi syauqi', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
-        { id: '14', name: 'Faiq Ramadhan Priyono', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
-        { id: '15', name: 'Janika Filla Anggrida', jabatan: 'Karyawan', divisi: 'Operasional' },
-        { id: '16', name: 'Penita Ayu Budiyanti', jabatan: 'Karyawan', divisi: 'Kepesantrenan' },
-        { id: '17', name: 'Vinki', jabatan: 'Karyawan', divisi: 'Kepesantrenan' }
+        { id: '1', name: 'MFIKRIARSYAD', jabatan: 'Karyawan', divisi: 'Operasional', status: 'Non-Aktif' },
+        { id: '2', name: 'Qowita Zakiyah', jabatan: 'Karyawan', divisi: 'Operasional', status: 'Aktif' },
+        { id: '3', name: 'Vina Widyaningrum', jabatan: 'Karyawan', divisi: 'Sekolah', status: 'Aktif' },
+        { id: '4', name: 'Rozzaqul Hasan', jabatan: 'Karyawan', divisi: 'Sekolah', status: 'Aktif' },
+        { id: '5', name: 'Evi Nabila Romadhon', jabatan: 'Karyawan', divisi: 'Sekolah', status: 'Aktif' },
+        { id: '6', name: 'Wilda Nailish Shofa', jabatan: 'Karyawan', divisi: 'Sekolah', status: 'Aktif' },
+        { id: '7', name: 'Andi Rifki Ahmadi', jabatan: 'Karyawan', divisi: 'Operasional', status: 'Aktif' },
+        { id: '8', name: 'Rini Handayani', jabatan: 'Karyawan', divisi: 'Kepesantrenan', status: 'Aktif' },
+        { id: '9', name: 'Mariyam Suroyya', jabatan: 'Karyawan', divisi: 'Kepesantrenan', status: 'Aktif' },
+        { id: '10', name: 'Abdul Wahid', jabatan: 'Karyawan', divisi: 'Operasional', status: 'Aktif' },
+        { id: '11', name: 'Zaqia Yuli Wulandari, S.Pd', jabatan: 'Karyawan', divisi: 'Sekolah', status: 'Aktif' },
+        { id: '12', name: 'Mahrus Amin', jabatan: 'Karyawan', divisi: 'Kepesantrenan', status: 'Aktif' },
+        { id: '13', name: 'Jundi syauqi', jabatan: 'Karyawan', divisi: 'Kepesantrenan', status: 'Aktif' },
+        { id: '14', name: 'Faiq Ramadhan Priyono', jabatan: 'Karyawan', divisi: 'Kepesantrenan', status: 'Aktif' },
+        { id: '15', name: 'Janika Filla Anggrida', jabatan: 'Karyawan', divisi: 'Operasional', status: 'Aktif' },
+        { id: '16', name: 'Penita Ayu Budiyanti', jabatan: 'Karyawan', divisi: 'Kepesantrenan', status: 'Aktif' },
+        { id: '17', name: 'Vinki', jabatan: 'Karyawan', divisi: 'Kepesantrenan', status: 'Aktif' }
       ];
 
       const allEmpsRaw = [...dbEmps, ...localEmps, ...defaultSDMEmployees];
       const allEmps = [];
       allEmpsRaw.forEach(emp => {
-        if (emp.name && !emp.name.toLowerCase().includes('testing') && !allEmps.some(u => (u.id && String(u.id) === String(emp.id)) || u.name?.toLowerCase().trim() === emp.name?.toLowerCase().trim())) {
+        const isNonAktif = emp.status === 'Non-Aktif' || emp.status === 'Nonaktif' || emp.name?.toLowerCase().includes('fikri');
+        if (emp.name && !emp.name.toLowerCase().includes('testing') && !isNonAktif && !allEmps.some(u => (u.id && String(u.id) === String(emp.id)) || u.name?.toLowerCase().trim() === emp.name?.toLowerCase().trim())) {
           allEmps.push(emp);
         }
       });
@@ -288,8 +289,7 @@ export default function LaporanManager() {
         const isKep = empDiv.includes('pesantren') || empDiv.includes('santri') || empDiv.includes('asrama');
 
         const empNorm = normalizeName(emp.name);
-        const isAlwaysHadir = empNorm.includes('fikri') || 
-                              empNorm.includes('andi') || 
+        const isAlwaysHadir = empNorm.includes('andi') || 
                               empNorm.includes('rifki') || 
                               empNorm.includes('mariyam') || 
                               empNorm.includes('maryam') || 

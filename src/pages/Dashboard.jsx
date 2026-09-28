@@ -84,7 +84,8 @@ export default function DashboardManager() {
       const allKaryawan = [...localKaryawan, ...dbKaryawan];
       const uniqueKaryawan = [];
       allKaryawan.forEach(emp => {
-        if (emp.name && !uniqueKaryawan.some(u => u.name?.toLowerCase() === emp.name?.toLowerCase())) {
+        const isNonAktif = emp.status === 'Non-Aktif' || emp.status === 'Nonaktif';
+        if (emp.name && !emp.name.toLowerCase().includes('testing') && !isNonAktif && !uniqueKaryawan.some(u => u.name?.toLowerCase() === emp.name?.toLowerCase())) {
           uniqueKaryawan.push(emp);
         }
       });

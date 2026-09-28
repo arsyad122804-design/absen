@@ -55,6 +55,10 @@ export default function Login() {
     );
 
     if (foundLocal) {
+      if (foundLocal.status === 'Non-Aktif' || foundLocal.status === 'Nonaktif') {
+        setErrorMsg('Akun Anda telah dinonaktifkan. Silakan hubungi Manajer/Admin.');
+        return;
+      }
       const userData = {
         id: foundLocal.id || `kry-${Date.now()}`,
         name: foundLocal.name,
@@ -80,6 +84,10 @@ export default function Login() {
 
       if (!error && data && data.length > 0) {
         const userData = data[0];
+        if (userData.status === 'Non-Aktif' || userData.status === 'Nonaktif') {
+          setErrorMsg('Akun Anda telah dinonaktifkan. Silakan hubungi Manajer/Admin.');
+          return;
+        }
         localStorage.setItem('user', JSON.stringify(userData));
         if (userData.role?.toLowerCase() === 'manager') {
           navigate('/manager/dashboard');
